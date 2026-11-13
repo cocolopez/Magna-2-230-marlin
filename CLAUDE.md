@@ -42,6 +42,27 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - Solución solo con configuración: `HOST_ACTION_COMMANDS` + `HOST_PROMPT_SUPPORT` + `PARK_HEAD_ON_PAUSE` en `Configuration_adv.h`. No se tocó el código de Marlin.
 - Se armó la compilación sin PlatformIO (`pruebas/compilacion-manual/`): xPack GCC 13.3, núcleo STM32 1.9.0, CMSIS 5.7, LVGL 6.1.2 MKS y QRCode MKS, todo bajado de GitHub. Reproduce el error de GitHub y, con la solución, compila y enlaza el firmware completo: 351.328 bytes (71 % de 480 KB), RAM 80 KB de 128 KB, vector table en 0x08008000.
 
+### Etapa 7 (2026-11-13) — primera compilación OK en GitHub; revisión de warnings
+- La build de GitHub salió bien: 345.616 bytes, RAM 59 % (PlatformIO calcula el % de flash sobre 1 MB, pero el F407VE tiene 512 KB menos 32 KB de bootloader, o sea que el uso real es ~72 %).
+- Warning `PRINTCOUNTER auto-save`: en STM32F4 con EEPROM emulada en flash, guardar las estadísticas cada 60 min pausa el movimiento (`PRINTCOUNTER_SYNC`). Se puso `PRINTCOUNTER_SAVE_INTERVAL 0`, así se guardan al terminar la impresión.
+- Warning `-Wformat` en `mks_ui/draw_printing.cpp:249` (`%02d` con `uint32_t`): es de Marlin; en ARM los dos tipos son de 32 bits, sin efecto.
+- Avisos de Node 20 en las actions y DeprecationWarning de node: son de GitHub/PlatformIO, sin efecto.
+
+### Etapa 8 (2026-11-13) — tema visual propio "Negro y Rojo"
+- `assets-tema/`: `generar_assets.py` dibuja con Pillow (sobremuestreo x4) los 138 assets de la UI MKS con el mismo nombre, tamaño y encabezado LVGL que los originales (verificado archivo por archivo), más el logo de arranque de 480×320 RGB565 sin encabezado (fondo propio: pieza en capas en perspectiva). Estilo: fondo #1A1A1A, trazo blanco #EEEEEE, acento rojo #D62027, franja `_sel` en las filas 100-139.
+- `aplicar_colores.py`: reemplazos exactos de 9 colores fijos en `mks_ui` (draw_ui.h/.cpp, draw_keyboard.cpp). Es idempotente y avisa si no encuentra alguno. Probado: compila (351.304 bytes).
+- Workflow: después de aplicar la configuración corre `aplicar_colores.py`; en "Preparar archivos para la SD" copia `assets-tema/assets/*.bin` encima de los assets de Makerbase (se conservan `FontUNIGBK.bin` y `bmp_preview.bin`). Simulado OK.
+- La pantalla carga la carpeta `assets` de la SD al arrancar y la renombra a `_assets`.
+
+### Etapa 9 (2026-11-13) — ajustes de la pantalla de arranque
+- El usuario pidió el logo de Marlin como pieza impresa. No se dibujó, por ser una marca registrada. Primero se puso una "M" y después, a pedido del usuario, un pez espada genérico de diseño propio (dorsal en hoz, cola en media luna; `pez_espada_mask()`). El usuario mandó una ilustración de banco de imágenes (Dreamstime) como referencia: NO se copió. Solo se tomó la idea genérica de "saltando": la silueta propia se curva por código (radio 135, giro 58°) y se encaja en la columna derecha (x 285-472, y 12-248), con soporte y base sobre la cama. Va 55 % impreso, con el resto en contorno gris.
+- Texto: "MAGNA" con un "2" grande rojo detrás de la N y la A; "MARLIN 2.1.3-BETA3", que sale de `MARLIN_VERSION`; "DUAL EXTRUSION". Se quitaron "230" y las medidas de la cama.
+
+### Etapa 10 (2026-11-13) — pieza final de la pantalla de arranque: tornillo
+- Se probaron varias piezas (pez espada recto y saltando, torre, cohete, faro, jarrón, engranaje, diamante, pino, montaña, tuerca, rodamiento). El usuario eligió el **tornillo** (`tornillo_mask()`, forma por defecto en `FORMA`).
+- La boquilla se ubica sobre el tramo con material de la capa actual más cercano al centro, así no queda sobre un hueco.
+- Todas las formas son diseño propio por código. No se usa ningún logo ni imagen de terceros.
+
 ## Estado / pendiente
 - PlatformIO no está disponible en el entorno de Claude. Igual se compila y enlaza todo con `pruebas/compilacion-manual/` (ver etapa 6). El firmware oficial lo compila GitHub Actions.
 - Los perfiles no se abrieron en los slicers reales; solo se validaron el formato y la coherencia con el firmware.

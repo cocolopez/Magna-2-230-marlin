@@ -46,6 +46,7 @@ El zip "Magna 2 230_2.1.2.1" no traía `Configuration.h`, solo el binario compil
 | `EMERGENCY_PARSER` | La pausa (`ADVANCED_PAUSE_FEATURE`) lo exige con la UI MKS |
 | `HOST_ACTION_COMMANDS` + `HOST_PROMPT_SUPPORT` | Habilitan "Purgar más / Continuar" (`M600_PURGE_MORE_RESUMABLE`), que usa la pantalla MKS |
 | `PARK_HEAD_ON_PAUSE` | En pausa o cambio de filamento aparta el cabezal de la pieza (y la pantalla MKS lo necesita para compilar) |
+| `PRINTCOUNTER_SAVE_INTERVAL 0` | Las estadísticas se guardan al terminar la impresión. Guardarlas a mitad de impresión en esta placa frena el movimiento un instante |
 | `FILAMENT_RUNOUT_SCRIPT "M600 T%c"` | Con 2 sensores, Marlin pide saber qué extrusor se quedó sin filamento |
 
 ## Mejoras agregadas en la versión 2

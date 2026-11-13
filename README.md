@@ -48,6 +48,10 @@ Doble extrusor con hotend 2 en 1 (`SINGLENOZZLE`) y **cambio de filamento autom�
 
 Calibración de las mejoras: `docs-magna/CALIBRACION.md`.
 
+## Tema visual
+
+Íconos y pantalla de arranque propios, en negro, rojo y blanco. Están en `assets-tema/`; ahí también hay imágenes de muestra en `preview/`. La compilación los pone en la carpeta `assets` del paquete para la SD y cambia los colores de los menús de la pantalla.
+
 ## Perfiles de slicer
 
 Cura, PrusaSlicer y OrcaSlicer en `perfiles-slicer/` (instrucciones en su README).

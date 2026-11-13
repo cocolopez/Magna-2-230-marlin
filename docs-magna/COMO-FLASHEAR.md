@@ -6,7 +6,7 @@
    - `Robin_nano35.bin`
    - la carpeta `assets` completa
 4. Con la impresora apagada, poné la SD y encendé. Vas a ver la barra de actualización (firmware y después las imágenes). Esperá ~1 minuto hasta que aparezca la pantalla principal.
-5. Apagá, sacá la SD. En la SD, el archivo debería haberse renombrado a `ROBIN_NANO35.CUR` (eso confirma que se grabó).
+5. Apagá y sacá la SD. La carpeta `assets` se habrá renombrado a `_assets`, lo que confirma que se cargaron los íconos del tema. Además, el archivo debería haberse renombrado a `ROBIN_NANO35.CUR` (eso confirma que se grabó).
 6. Encendé y reiniciá la EEPROM a los valores nuevos: `M502` y después `M500` (o desde la pantalla: Configuración → EEPROM → Restablecer).
 
 El WiFi (`MksWifi.bin`) no hace falta volver a cargarlo si ya funcionaba.

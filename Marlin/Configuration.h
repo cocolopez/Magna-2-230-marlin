@@ -2655,7 +2655,7 @@
  */
 #define PRINTCOUNTER  // Magna2-230
 #if ENABLED(PRINTCOUNTER)
-  #define PRINTCOUNTER_SAVE_INTERVAL 60 // (minutes) EEPROM save interval during print. A value of 0 will save stats at end of print.
+  #define PRINTCOUNTER_SAVE_INTERVAL 0  // Magna2-230: guardar estadisticas solo al terminar: en STM32F4 con EEPROM en flash, guardar durante la impresion pausa el movimiento
 #endif
 
 // @section security
