@@ -719,7 +719,8 @@ BG565 = ((BG[0] >> 3) << 11) | ((BG[1] >> 2) << 5) | (BG[2] >> 3)
 TRANSP565 = 0x07E0                    # LV_COLOR_TRANSP = LV_COLOR_LIME (verde puro) en lv_conf.h de LVGL MKS
 
 def lvgl_bin(im, transparente=False):
-    """transparente=True: cf=5 (TRUE_COLOR_CHROMA_KEYED). El fondo exacto del ícono pasa a verde puro y
+    """transparente=True: cf=6 (LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED en LVGL 6: 4=TRUE_COLOR, 5=TRUE_COLOR_ALPHA
+    (¡3 bytes por píxel, NO usar!), 6=TRUE_COLOR_CHROMA_KEYED). El fondo exacto del ícono pasa a verde puro y
     LVGL no lo dibuja, así se ve el fondo de la pantalla. Los bordes suavizados quedan mezclados con
     gris oscuro, que no se nota sobre el fondo oscuro de la pantalla."""
     w, h = im.size
@@ -728,7 +729,7 @@ def lvgl_bin(im, transparente=False):
     if transparente:
         px = struct.unpack("<%dH" % (w * h), datos)
         datos = struct.pack("<%dH" % (w * h), *[TRANSP565 if p == BG565 else (0x07E1 if p == TRANSP565 else p) for p in px])
-        cf = 5
+        cf = 6
     hdr = cf | (w << 10) | (h << 21)
     return struct.pack("<I", hdr) + datos + b"\x0a"
 

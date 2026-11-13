@@ -141,7 +141,7 @@ Todos se generan desde un único script ([`generar_perfiles.py`](perfiles-slicer
 
 ### Con GitHub Actions (recomendado)
 
-1. **Solo la primera vez:** crear `.github/workflows/compilar-mm2.yml` con el contenido de [`github-workflows/compilar-mm2.yml`](github-workflows/compilar-mm2.yml).
+1. **Solo la primera vez:** crear en el repo `.github/workflows/compilar-mm2.yml` y `.github/workflows/publicar-release.yml` con el contenido de los archivos de [`github-workflows/`](github-workflows/).
 2. Subir **`mm2.zip`** a la raíz del repo (Add file → Upload files).
 3. El workflow hace todo solo:
    1. descomprime el zip en el repo y guarda los archivos;
@@ -157,6 +157,21 @@ Magna2-230-firmware/
 ├── opcional-wifi/        ← firmware del WiFi (solo si se quiere actualizar)
 └── COMO-FLASHEAR.md
 ```
+
+### Publicar una versión (Releases)
+
+El workflow [`publicar-release.yml`](github-workflows/publicar-release.yml) compila y publica una versión descargable en la pestaña **Releases**:
+
+- **A mano:** **Actions → Publicar versión Magna 2 230 → Run workflow**, con un nombre (por ejemplo `v1.0`) o vacío para usar la fecha. Opcionalmente, como borrador.
+- **Con un tag:** `git tag v1.0 && git push --tags`.
+
+Cada versión publica:
+
+| Archivo | Contenido |
+|---|---|
+| `Magna2-230-firmware-<versión>.zip` | `Robin_nano35.bin`, `assets`, `opcional-wifi/` e instrucciones |
+| `Magna2-230-perfiles-slicer-<versión>.zip` | Perfiles de Cura, PrusaSlicer y OrcaSlicer |
+| `Robin_nano35.bin` | Solo el firmware |
 
 ### En una PC
 
@@ -201,6 +216,8 @@ GitHub Actions las corre antes de cada compilación:
 | `pruebas/preflight.py` | Los chequeos previos de PlatformIO: placa/entorno, script del sensor de filamento, ubicación de la configuración |
 | `pruebas/sanity-check.sh` | Los *SanityCheck* de Marlin sobre la configuración |
 | `pruebas/verificar-valores.sh` | 31 valores clave de la Magna (pasos, direcciones, funciones activadas…) |
+| `pruebas/verificar-assets.py` | Formato de los íconos del tema (código de formato, tamaño, transparencia, que entren comprimidos) |
+| `pruebas/render-lvgl/` | Dibuja la pantalla principal con la librería LVGL real de la pantalla y verifica que los íconos se vean bien |
 | `pruebas/verificar-perfiles.py` | Que los perfiles de slicer estén bien formados y coincidan con el firmware |
 | `pruebas/compilacion-manual/` | Compilación y enlazado completos sin PlatformIO, para diagnosticar errores |
 
@@ -217,7 +234,7 @@ GitHub Actions las corre antes de cada compilación:
 ├── wifi/                       firmware oficial del módulo WiFi
 ├── docs-magna/                 configuración, calibración, flasheo, pruebas y capturas
 ├── pruebas/                    pruebas automáticas y compilación manual
-└── github-workflows/           copia del workflow de GitHub Actions
+└── github-workflows/           copia de los workflows (compilar y publicar versión)
 ```
 
 ## Créditos y licencia

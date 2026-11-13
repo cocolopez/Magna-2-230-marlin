@@ -28,7 +28,7 @@ La compilación de GitHub ya pone estos archivos en la carpeta `assets` del arte
 - **Volver a los íconos de Makerbase:** hacé lo mismo con los `assets` originales. Para recuperar también los colores originales, borrá la carpeta `assets-tema` del repo y recompilá.
 
 ## Íconos transparentes y fondo
-- Los íconos (117×140, 45×45, 117×92, 150×80 y la flechita) se guardan con `cf=5` (TRUE_COLOR_CHROMA_KEYED): los píxeles del fondo pasan a verde puro `0x07E0` (`LV_COLOR_TRANSP` de LVGL) y no se dibujan. Así se ve el fondo de la pantalla. Los campos, los interruptores y el botón chico siguen opacos.
+- Los íconos (117×140, 45×45, 117×92, 150×80 y la flechita) se guardan con `cf=6` (`LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED` en LVGL 6; ojo: `5` es TRUE_COLOR_ALPHA, con 3 bytes por píxel, y se ve verde y repetido): los píxeles del fondo pasan a verde puro `0x07E0` (`LV_COLOR_TRANSP` de LVGL) y no se dibujan. Así se ve el fondo de la pantalla. Los campos, los interruptores y el botón chico siguen opacos.
 - Una foto de fondo no entra: cada imagen tiene 9 KB comprimidos en la memoria de la pantalla (`PER_PIC_MAX_SPACE_TFT35`), y una de 480×320 no cabe. Por eso el fondo se dibuja por código (lo hace `aplicar_colores.py`):
   - un degradé en todas las pantallas, de `#141414` arriba a `#2E0A0D` abajo;
   - en la pantalla principal, "MAGNA" en blanco y "2" en rojo, una raya roja y 5 líneas de capas que van de rojo oscuro a rojo, entre los botones y las temperaturas.

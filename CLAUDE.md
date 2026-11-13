@@ -75,6 +75,17 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - Capturas en `docs-magna/capturas/` (arranque, principal, ajustes, configuración, imprimiendo, íconos), generadas por `assets-tema/generar_capturas.py` a partir de los `.bin` reales, con el degradé y la decoración del firmware (x2 y con marco).
 - El README anterior (específico de la Magna) se reemplazó por este.
 
+### Etapa 13 (2026-11-13) — workflow para publicar versiones
+- `github-workflows/publicar-release.yml`: se dispara a mano (con nombre de versión opcional o la fecha, y opción de borrador) o con un tag `v*`. Usa lo que ya está en el repo (requiere haber extraído antes mm2.zip): baja Marlin, aplica la configuración y el tema, corre las 4 pruebas, compila y publica con `softprops/action-gh-release@v2` tres archivos: el zip del firmware (bin + assets + opcional-wifi + instrucciones), el zip de perfiles y el `Robin_nano35.bin` suelto, con notas de la versión en español. Permisos: `contents: write`.
+- Simulado localmente el armado de los paquetes y las notas: OK.
+
+### Etapa 14 (2026-11-13) — ERROR en los íconos transparentes y su corrección
+- Lo que pasó: en la etapa 11 los íconos se guardaron con cf=5 creyendo que era CHROMA_KEYED. En LVGL 6 el enum es 4=TRUE_COLOR, **5=TRUE_COLOR_ALPHA (3 bytes/px)**, **6=TRUE_COLOR_CHROMA_KEYED**. En la pantalla del usuario se vieron íconos verdes, repetidos y comprimidos.
+- Solución: cf=6 en `lvgl_bin()`. 132 íconos con cf 6 y 5 opacos con cf 4.
+- Comprobación con la LVGL 6.1.2 de MKS compilada en el host (mismo lv_conf.h; stubs de las funciones de vista previa de gcode que MKS agregó a `lv_draw_map`): reproduce exacto el error con cf=5 y con cf=6 renderiza bien. La emulación de lectura secuencial (seek ignorado) rompe hasta los originales, así que no refleja el equipo; se usa lectura con seek real.
+- Pruebas nuevas: `pruebas/verificar-assets.py` (formato) y `pruebas/render-lvgl/` (render real; falla si hay verde o íconos sin trazo/fondo). Ambos workflows corren el render después de compilar, con la LVGL de `.pio/libdeps`, y el artefacto incluye `vista-previa-pantalla.png`.
+- Arreglo inmediato para el usuario: `assets_corregidos.zip` (138 del tema + FontUNIGBK.bin y bmp_preview.bin de Makerbase). Se carga solo la carpeta `assets`, sin reflashear.
+
 ## Estado / pendiente
 - PlatformIO no está disponible en el entorno de Claude. Igual se compila y enlaza todo con `pruebas/compilacion-manual/` (ver etapa 6). El firmware oficial lo compila GitHub Actions.
 - Los perfiles no se abrieron en los slicers reales; solo se validaron el formato y la coherencia con el firmware.
