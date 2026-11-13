@@ -1,0 +1,132 @@
+# Compila el firmware Marlin de la Hellbot Magna 2 230 a partir de mm2.zip
+#
+# mm2.zip trae SOLO los archivos propios de la Magna (Configuration.h, Configuration_adv.h,
+# platformio.ini, docs, perfiles, pruebas). El código de Marlin se baja de GitHub en la
+# versión indicada en MARLIN_VERSION (2.1.3-b3, idéntica al zip original).
+#
+# Uso:
+#   1. Subí mm2.zip a la raíz del repo (Add file > Upload files).
+#   2. Este workflow lo descomprime en el repo, guarda los archivos (commit) y borra mm2.zip.
+#   3. Baja Marlin, le copia encima los archivos de la Magna y compila (mks_robin_nano_v1_3_f4).
+#   4. Descargá el artefacto "Magna2-230-firmware" (Robin_nano35.bin + assets) en la pestaña Actions.
+#
+# También se puede correr a mano: Actions > Compilar Magna 2 230 (mm2.zip) > Run workflow.
+
+name: Compilar Magna 2 230 (mm2.zip)
+
+on:
+  push:
+    branches: ['**']
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: compilar-mm2-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compilar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repo
+        uses: actions/checkout@v4
+
+      - name: Extraer mm2.zip en el repo
+        id: extraer
+        run: |
+          if [ ! -f mm2.zip ]; then
+            echo "No hay mm2.zip: se compila lo que ya está en el repo."
+            echo "extraido=no" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          TMP=$(mktemp -d)
+          unzip -q mm2.zip -d "$TMP"
+          # Si el zip trae una sola carpeta arriba de todo, usar su contenido
+          SRC="$TMP"
+          if [ "$(find "$TMP" -mindepth 1 -maxdepth 1 | wc -l)" = "1" ] && [ -d "$(find "$TMP" -mindepth 1 -maxdepth 1)" ]; then
+            SRC="$(find "$TMP" -mindepth 1 -maxdepth 1)"
+          fi
+          if [ ! -f "$SRC/Marlin/Configuration.h" ] || [ ! -f "$SRC/platformio.ini" ]; then
+            echo "::error::mm2.zip debe tener Marlin/Configuration.h y platformio.ini en la raíz."
+            exit 1
+          fi
+          command -v rsync >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q rsync; }
+          # Copiar al repo (borra lo que ya no esté en el zip; nunca toca .git ni .github)
+          rsync -a --delete \
+            --exclude '.git/' --exclude '.github/' --exclude 'mm2.zip' \
+            "$SRC"/ ./
+          rm -f mm2.zip
+          echo "extraido=si" >> "$GITHUB_OUTPUT"
+
+      - name: Guardar los archivos extraídos en el repo
+        if: steps.extraer.outputs.extraido == 'si'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Sin cambios para guardar."
+          else
+            git commit -q -m "Extraer mm2.zip [skip ci]"
+            git push
+          fi
+
+      - name: Bajar Marlin y aplicar los archivos de la Magna
+        run: |
+          VER=$(tr -d ' \r\n' < MARLIN_VERSION 2>/dev/null || echo "2.1.3-b3")
+          [ -n "$VER" ] || VER="2.1.3-b3"
+          echo "Marlin $VER"
+          git clone -q --depth 1 -b "$VER" https://github.com/MarlinFirmware/Marlin build
+          rm -rf build/.github
+          # Copiar encima todo lo del repo (Configuration.h, _adv.h, platformio.ini, docs, perfiles, pruebas)
+          tar cf - --exclude=./.git --exclude=./.github --exclude=./build . | tar xf - -C build
+          echo "### Marlin $VER + configuración Magna 2 230" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache de PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio
+            build/.pio/libdeps
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini', 'MARLIN_VERSION') }}
+
+      - name: Instalar PlatformIO
+        run: pip install --upgrade platformio
+
+      - name: Pruebas de configuración y perfiles
+        working-directory: build
+        run: |
+          bash pruebas/sanity-check.sh
+          bash pruebas/verificar-valores.sh
+          python3 pruebas/verificar-perfiles.py
+
+      - name: Compilar (mks_robin_nano_v1_3_f4)
+        working-directory: build
+        run: pio run -e mks_robin_nano_v1_3_f4
+
+      - name: Preparar archivos para la SD
+        working-directory: build
+        run: |
+          OUT=dist/Magna2-230
+          mkdir -p "$OUT"
+          cp .pio/build/mks_robin_nano_v1_3_f4/Robin_nano35.bin "$OUT/"
+          if [ -d .pio/build/mks_robin_nano_v1_3_f4/assets ]; then
+            cp -r .pio/build/mks_robin_nano_v1_3_f4/assets "$OUT/"
+          fi
+          cp docs-magna/COMO-FLASHEAR.md "$OUT/"
+          ls -la "$OUT"
+          echo "Robin_nano35.bin: $(stat -c%s "$OUT/Robin_nano35.bin") bytes" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Subir artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: Magna2-230-firmware
+          path: build/dist/Magna2-230

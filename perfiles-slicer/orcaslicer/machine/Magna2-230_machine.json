@@ -1,0 +1,108 @@
+{
+  "type": "machine",
+  "name": "Magna 2 230 Marlin 2.1 0.4",
+  "from": "User",
+  "inherits": "",
+  "printer_settings_id": "Magna 2 230 Marlin 2.1 0.4",
+  "printer_technology": "FFF",
+  "version": "2.1.0.0",
+  "printable_area": [
+    "0x0",
+    "230x0",
+    "230x230",
+    "0x230"
+  ],
+  "printable_height": "250",
+  "gcode_flavor": "marlin2",
+  "nozzle_diameter": [
+    "0.4",
+    "0.4"
+  ],
+  "extruder_offset": [
+    "0x0",
+    "0x0"
+  ],
+  "extruder_colour": [
+    "#FF8000",
+    "#2080FF"
+  ],
+  "single_extruder_multi_material": "1",
+  "cooling_tube_length": "0",
+  "cooling_tube_retraction": "0",
+  "parking_pos_retraction": "0",
+  "extra_loading_move": "0",
+  "high_current_on_filament_swap": "0",
+  "retraction_length": [
+    "5.0",
+    "5.0"
+  ],
+  "retraction_speed": [
+    "40",
+    "40"
+  ],
+  "deretraction_speed": [
+    "0",
+    "0"
+  ],
+  "z_hop": [
+    "0.2",
+    "0.2"
+  ],
+  "retract_length_toolchange": [
+    "0",
+    "0"
+  ],
+  "retract_restart_extra_toolchange": [
+    "0",
+    "0"
+  ],
+  "emit_machine_limits_to_gcode": "1",
+  "machine_max_speed_x": [
+    "300"
+  ],
+  "machine_max_speed_y": [
+    "300"
+  ],
+  "machine_max_speed_z": [
+    "5"
+  ],
+  "machine_max_speed_e": [
+    "25"
+  ],
+  "machine_max_acceleration_x": [
+    "2000"
+  ],
+  "machine_max_acceleration_y": [
+    "2000"
+  ],
+  "machine_max_acceleration_z": [
+    "100"
+  ],
+  "machine_max_acceleration_e": [
+    "8000"
+  ],
+  "machine_max_acceleration_extruding": [
+    "2000"
+  ],
+  "machine_max_acceleration_retracting": [
+    "2000"
+  ],
+  "machine_max_acceleration_travel": [
+    "2000"
+  ],
+  "machine_max_jerk_x": [
+    "10"
+  ],
+  "machine_max_jerk_y": [
+    "10"
+  ],
+  "machine_max_jerk_z": [
+    "0.3"
+  ],
+  "machine_max_jerk_e": [
+    "5"
+  ],
+  "machine_start_gcode": "; --- Magna 2 230 inicio ---\nG90 ; absoluto\nM82 ; extrusor absoluto\nM140 S[bed_temperature_initial_layer_single] ; cama\nM104 S[nozzle_temperature_initial_layer] ; hotend (sin esperar)\nG28 ; home\nM190 S[bed_temperature_initial_layer_single]\nM109 S[nozzle_temperature_initial_layer]\nG92 E0\nG1 Z2.0 F600\nG1 X5 Y20 Z0.3 F5000\nG1 X5 Y200 Z0.3 F1500 E15 ; linea de purga\nG1 X5.4 Y200 Z0.3 F5000\nG1 X5.4 Y20 Z0.3 F1500 E30 ; segunda linea\nG92 E0\nG1 Z2.0 F600\n; --- fin inicio ---",
+  "machine_end_gcode": "; --- Magna 2 230 fin ---\nG91 ; relativo\nG1 E-2 F2400 ; retraer\nG1 Z10 F600 ; subir\nG90\nG1 X0 Y220 F3000 ; presentar la pieza\nM106 S0 ; ventilador off\nM104 S0 ; hotend off\nM140 S0 ; cama off\nM84 X Y E ; motores off (Z queda trabado)\n; --- fin ---",
+  "use_relative_e_distances": "0"
+}
