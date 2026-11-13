@@ -35,6 +35,7 @@ Ver `docs-magna/COMO-FLASHEAR.md`.
 
 Las pruebas se corren sobre el proyecto completo (dentro de `build/`, después de `armar-local.sh`). GitHub Actions las corre solo antes de compilar.
 
+- `pruebas/compilacion-manual/`: compila y enlaza el firmware entero sin PlatformIO, para diagnosticar errores (ver su README).
 - `python3 pruebas/preflight.py` → repite los chequeos que PlatformIO hace antes de compilar (placa/entorno, script del sensor de filamento).
 - `bash pruebas/sanity-check.sh` → corre los SanityCheck de Marlin sobre la configuración (sin PlatformIO).
 - `bash pruebas/verificar-valores.sh` → confirma que los valores de la Magna siguen en su lugar.

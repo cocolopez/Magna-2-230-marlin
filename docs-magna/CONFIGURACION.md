@@ -39,6 +39,15 @@ El zip "Magna 2 230_2.1.2.1" no traía `Configuration.h`, solo el binario compil
 
 **Nivelación.** El bin original tenía UBL activado sin sensor (no se usa en la práctica). Acá se deja la nivelación manual de la pantalla MKS (5 puntos), como dice el manual. Si después ponés un BLTouch, hay que activar `BLTOUCH` y un sistema de nivelación.
 
+## Opciones necesarias para compilar con la UI MKS (Marlin 2.1.3-b3)
+
+| Opción | Por qué |
+|---|---|
+| `EMERGENCY_PARSER` | La pausa (`ADVANCED_PAUSE_FEATURE`) lo exige con la UI MKS |
+| `HOST_ACTION_COMMANDS` + `HOST_PROMPT_SUPPORT` | Habilitan "Purgar más / Continuar" (`M600_PURGE_MORE_RESUMABLE`), que usa la pantalla MKS |
+| `PARK_HEAD_ON_PAUSE` | En pausa o cambio de filamento aparta el cabezal de la pieza (y la pantalla MKS lo necesita para compilar) |
+| `FILAMENT_RUNOUT_SCRIPT "M600 T%c"` | Con 2 sensores, Marlin pide saber qué extrusor se quedó sin filamento |
+
 ## Mejoras agregadas en la versión 2
 
 | Mejora | Opción | Ajuste en la máquina |
