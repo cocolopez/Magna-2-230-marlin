@@ -25,7 +25,7 @@ El zip "Magna 2 230_2.1.2.1" no traía `Configuration.h`, solo el binario compil
 | INVERT_Z_DIR | true | Bin | |
 | INVERT_E0_DIR / E1 | true / true | Bin | |
 | Finales X/Y/Z MIN | se activan en LOW | Bin | Leído del reporte M119; homing a mínimo |
-| Sensor de filamento | 2 sensores, LOW = sin filamento | Bin + Manual | MT_DET1 (PA4) y MT_DET2 (PE6) |
+| Sensor de filamento | 2 sensores, LOW = sin filamento, script `M600 T%c` | Bin + Manual | MT_DET1 (PA4) y MT_DET2 (PE6); `%c` = extrusor que se quedó sin filamento |
 | Drivers | X/Y TMC2209 standalone; Z/E A4988 | Criterio | Ver nota abajo |
 | Cama / altura | 230 × 230 × 250 | Manual | Ver nota abajo |
 | ADVANCE_K | { 0.0, 0.0 } | Criterio | Calibrar por extrusor (M900) |

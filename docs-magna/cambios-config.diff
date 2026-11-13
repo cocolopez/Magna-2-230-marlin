@@ -1,5 +1,5 @@
---- src/Marlin-release-2.1.3-beta3/Marlin/Configuration.h	2026-01-22 17:21:47.000000000 +0000
-+++ out/Marlin-Magna2-230/Marlin/Configuration.h	2026-11-13 20:56:11.958477424 +0000
+--- mref/Marlin/Configuration.h	2026-11-13 21:08:54.077017301 +0000
++++ out/mm2/Marlin/Configuration.h	2026-11-13 21:17:13.342680127 +0000
 @@ -61,14 +61,14 @@
  // @section info
  
@@ -325,7 +325,13 @@
    #define FIL_RUNOUT_PULLUP               // Use internal pullup for filament runout pins.
    //#define FIL_RUNOUT_PULLDOWN           // Use internal pulldown for filament runout pins.
    //#define WATCH_ALL_RUNOUT_SENSORS      // Execute runout script on any triggering sensor, not only for the active extruder.
-@@ -2034,7 +2034,7 @@
+@@ -2029,12 +2029,12 @@
+   // Commands to execute on filament runout.
+   // With multiple runout sensors use the %c placeholder for the current tool in commands (e.g., "M600 T%c")
+   // NOTE: After 'M412 H1' the host handles filament runout and this script does not apply.
+-  #define FILAMENT_RUNOUT_SCRIPT "M600"
++  #define FILAMENT_RUNOUT_SCRIPT "M600 T%c"  // Magna2-230: con 2 sensores Marlin exige %c (extrusor que se quedo sin filamento)
+ 
    // After a runout is detected, continue printing this length of filament
    // before executing the runout script. Useful for a sensor at the end of
    // a feed tube. Requires 4 bytes SRAM per sensor, plus 4 bytes overhead.
@@ -433,8 +439,8 @@
  #if ENABLED(TOUCH_SCREEN)
    #define BUTTON_DELAY_EDIT      50 // (ms) Button repeat delay for edit screens
    #define BUTTON_DELAY_MENU     250 // (ms) Button repeat delay for menus
---- src/Marlin-release-2.1.3-beta3/Marlin/Configuration_adv.h	2026-01-22 17:21:47.000000000 +0000
-+++ out/Marlin-Magna2-230/Marlin/Configuration_adv.h	2026-11-13 20:56:12.013577907 +0000
+--- mref/Marlin/Configuration_adv.h	2026-11-13 21:08:54.078127313 +0000
++++ out/mm2/Marlin/Configuration_adv.h	2026-11-13 21:09:13.163582708 +0000
 @@ -551,9 +551,9 @@
   * Hotend Idle Timeout
   * Prevent filament in the nozzle from charring and causing a critical jam.
@@ -562,8 +568,8 @@
  #if ENABLED(CANCEL_OBJECTS)
    #define CANCEL_OBJECTS_REPORTING // Emit the current object as a status message
  #endif
---- src/Marlin-release-2.1.3-beta3/platformio.ini	2026-01-22 17:21:47.000000000 +0000
-+++ out/Marlin-Magna2-230/platformio.ini	2026-11-13 20:34:34.162033400 +0000
+--- mref/platformio.ini	2026-11-13 21:08:54.430368913 +0000
++++ out/mm2/platformio.ini	2026-11-13 21:09:13.165600429 +0000
 @@ -13,7 +13,7 @@
  [platformio]
  src_dir      = Marlin

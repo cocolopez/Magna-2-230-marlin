@@ -104,6 +104,7 @@ jobs:
       - name: Pruebas de configuración y perfiles
         working-directory: build
         run: |
+          python3 pruebas/preflight.py
           bash pruebas/sanity-check.sh
           bash pruebas/verificar-valores.sh
           python3 pruebas/verificar-perfiles.py

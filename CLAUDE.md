@@ -33,6 +33,10 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - `pruebas/armar-local.sh` reproduce lo mismo en una PC.
 - Simulado localmente: extracción, aplicación sobre Marlin oficial y las 3 pruebas dan OK.
 
+### Etapa 5 (2026-11-13) — fix del primer build en GitHub
+- El build falló en `preflight-checks.py` de Marlin: con `NUM_RUNOUT_SENSORS 2`, `FILAMENT_RUNOUT_SCRIPT` debe llevar `%c`. Se cambió a `"M600 T%c"`.
+- Ese chequeo no estaba en `sanity-check.sh` (vive en un script de PlatformIO, no en SanityCheck.h). Se agregó `pruebas/preflight.py`, que replica los chequeos de preflight sin PlatformIO (probado: detecta el error viejo). El workflow lo corre antes de compilar.
+
 ## Estado / pendiente
 - No se compiló localmente (no hay PlatformIO ni red). Se validó con los SanityCheck de Marlin. La compilación real la hace GitHub Actions.
 - Los perfiles no se abrieron en los slicers reales; solo se validaron el formato y la coherencia con el firmware.
@@ -47,6 +51,7 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - Sin control UART de los TMC2209 (la Robin Nano 1.3 no lo cablea).
 
 ## Pruebas
+- `python3 pruebas/preflight.py`: chequeos de preflight de PlatformIO.
 - `bash pruebas/sanity-check.sh`: SanityCheck de Marlin con g++.
 - `bash pruebas/verificar-valores.sh`: 31 valores clave.
 - `python3 pruebas/verificar-perfiles.py`: perfiles vs firmware.
