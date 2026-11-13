@@ -1,0 +1,177 @@
+# Publica una versión (Release) del firmware de la Hellbot Magna 2 230 en GitHub.
+#
+# Cómo se usa:
+#   A) Manual: Actions > "Publicar versión Magna 2 230" > Run workflow.
+#      - "version": nombre de la versión (por ejemplo v1.0). Si queda vacío, se usa la fecha (v2026.11.13-2040).
+#      - "borrador": si se marca, la versión queda como borrador para revisarla antes de publicarla.
+#   B) Automático: al subir un tag que empiece con "v" (por ejemplo: git tag v1.0 && git push --tags).
+#
+# Qué publica (en la pestaña Releases del repo):
+#   - Magna2-230-firmware-<versión>.zip  -> Robin_nano35.bin + assets + opcional-wifi + COMO-FLASHEAR.md
+#   - Magna2-230-perfiles-slicer-<versión>.zip -> perfiles de Cura, PrusaSlicer y OrcaSlicer
+#   - Robin_nano35.bin suelto
+#
+# Este archivo va en .github/workflows/publicar-release.yml (junto a compilar-mm2.yml).
+
+name: Publicar versión Magna 2 230
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Nombre de la versión (ej: v1.0). Vacío = fecha y hora'
+        required: false
+        default: ''
+      borrador:
+        description: 'Crear como borrador (para revisar antes de publicar)'
+        type: boolean
+        default: false
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publicar-release
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repo
+        uses: actions/checkout@v4
+
+      - name: Definir versión
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            V="${GITHUB_REF_NAME}"
+          else
+            V="${{ github.event.inputs.version }}"
+          fi
+          if [ -z "$V" ]; then
+            V="v$(TZ=America/Argentina/Buenos_Aires date +%Y.%m.%d-%H%M)"
+          fi
+          MV=$(tr -d ' \r\n' < MARLIN_VERSION 2>/dev/null || echo "2.1.3-b3")
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "marlin=$MV" >> "$GITHUB_OUTPUT"
+          echo "Versión: $V  |  Marlin: $MV"
+
+      - name: Verificar que el repo tenga la configuración
+        run: |
+          if [ ! -f Marlin/Configuration.h ] || [ ! -f platformio.ini ]; then
+            echo "::error::Falta Marlin/Configuration.h o platformio.ini. Subí primero mm2.zip y esperá que termine 'Compilar Magna 2 230 (mm2.zip)'."
+            exit 1
+          fi
+
+      - name: Bajar Marlin y aplicar la configuración y el tema
+        run: |
+          git clone -q --depth 1 -b "${{ steps.ver.outputs.marlin }}" https://github.com/MarlinFirmware/Marlin build
+          rm -rf build/.github
+          tar cf - --exclude=./.git --exclude=./.github --exclude=./build . | tar xf - -C build
+          if [ -f build/assets-tema/aplicar_colores.py ]; then
+            python3 build/assets-tema/aplicar_colores.py build
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache de PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio
+            build/.pio/libdeps
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini', 'MARLIN_VERSION') }}
+
+      - name: Instalar PlatformIO
+        run: pip install --upgrade platformio pillow
+
+      - name: Pruebas
+        working-directory: build
+        run: |
+          python3 pruebas/preflight.py
+          bash pruebas/sanity-check.sh
+          bash pruebas/verificar-valores.sh
+          python3 pruebas/verificar-perfiles.py
+
+      - name: Compilar (mks_robin_nano_v1_3_f4)
+        working-directory: build
+        run: pio run -e mks_robin_nano_v1_3_f4
+
+      - name: Prueba de render de íconos (LVGL de la pantalla)
+        working-directory: build
+        run: |
+          LV=$(find .pio/libdeps -maxdepth 2 -type d -name lvgl | head -1)
+          if [ -n "$LV" ] && [ -d assets-tema/assets ]; then
+            python3 pruebas/render-lvgl/verificar_render.py "$LV" assets-tema/assets render-pantalla-principal.png
+          else
+            echo "Sin LVGL o sin tema: se saltea"
+          fi
+
+      - name: Armar paquetes
+        id: paq
+        working-directory: build
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          PB=.pio/build/mks_robin_nano_v1_3_f4
+          OUT=publicar/Magna2-230-firmware-$V
+          mkdir -p "$OUT/assets"
+          cp $PB/Robin_nano35.bin "$OUT/"
+          [ -d $PB/assets ] && cp -r $PB/assets/. "$OUT/assets/"
+          [ -d assets-tema/assets ] && cp assets-tema/assets/*.bin "$OUT/assets/"
+          if [ -f wifi/MksWifi.bin ]; then mkdir -p "$OUT/opcional-wifi"; cp wifi/MksWifi.bin wifi/README.md "$OUT/opcional-wifi/"; fi
+          cp docs-magna/COMO-FLASHEAR.md "$OUT/"
+          (cd publicar && zip -qr "Magna2-230-firmware-$V.zip" "Magna2-230-firmware-$V")
+          (zip -qr "publicar/Magna2-230-perfiles-slicer-$V.zip" perfiles-slicer -x "*/__pycache__/*")
+          cp $PB/Robin_nano35.bin publicar/Robin_nano35.bin
+          TAM=$(stat -c%s $PB/Robin_nano35.bin)
+          echo "tam=$TAM" >> "$GITHUB_OUTPUT"
+          ls -la publicar
+
+      - name: Notas de la versión
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          cat > build/publicar/NOTAS.md <<EOF
+          ## Hellbot Magna 2 230 · Marlin ${{ steps.ver.outputs.marlin }}
+
+          Firmware para **MKS Robin Nano V1.3** (STM32F407) con pantalla **MKS TFT35**, tema propio negro y rojo.
+
+          ### Descargas
+          | Archivo | Contenido |
+          |---|---|
+          | \`Magna2-230-firmware-$V.zip\` | \`Robin_nano35.bin\` + carpeta \`assets\` + \`opcional-wifi/\` + instrucciones |
+          | \`Magna2-230-perfiles-slicer-$V.zip\` | Perfiles de Cura, PrusaSlicer y OrcaSlicer |
+          | \`Robin_nano35.bin\` | Solo el firmware (sin íconos) |
+
+          ### Instalación
+          1. Guardá tu configuración actual con \`M503\`.
+          2. Copiá \`Robin_nano35.bin\` y la carpeta \`assets\` a la raíz de una microSD en FAT32 (y \`opcional-wifi/MksWifi.bin\` si querés actualizar el WiFi).
+          3. Encendé la impresora con la SD puesta y **no la apagues** mientras actualiza.
+          4. Cargá la configuración nueva: \`M502\` y luego \`M500\`.
+          5. Calibrá: \`M306 T\` (hotend), \`M303 E-1 S60 C8 U1\` (cama), \`M217 S..\`, \`M900\` y \`M593\`.
+
+          ### Incluye
+          Doble extrusor con hotend 2 en 1 y cambio de filamento automático · Input Shaping · MPC · Linear Advance · S-Curve · 2 sensores de filamento · pausa/M600 · recuperación ante cortes de luz · apagado por inactividad · cancelar objetos (M486) · tiempo restante (M73) · WiFi MKS.
+
+          Firmware: $(( ${{ steps.paq.outputs.tam }} / 1024 )) KB · Compilado desde \`${GITHUB_SHA::7}\`.
+          Más información en el [README](${{ github.server_url }}/${{ github.repository }}#readme).
+          EOF
+          sed -i 's/^          //' build/publicar/NOTAS.md
+          cat build/publicar/NOTAS.md
+
+      - name: Publicar en Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.version }}
+          name: Magna 2 230 · ${{ steps.ver.outputs.version }}
+          body_path: build/publicar/NOTAS.md
+          draft: ${{ github.event.inputs.borrador == 'true' }}
+          files: |
+            build/publicar/Magna2-230-firmware-${{ steps.ver.outputs.version }}.zip
+            build/publicar/Magna2-230-perfiles-slicer-${{ steps.ver.outputs.version }}.zip
+            build/publicar/Robin_nano35.bin
