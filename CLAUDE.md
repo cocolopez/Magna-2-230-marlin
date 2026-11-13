@@ -70,6 +70,11 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - Líneas de abajo: NO salen de los assets (filas 83-139 vacías; tamaño comprimido OK). Queda pendiente ver si ya estaban con el firmware anterior (podría ser luz que se filtra por el borde del panel).
 - WiFi: `wifi/MksWifi.bin` = oficial de Makerbase CS1.0.4_200227 (ESP8266), lo subió el usuario. El workflow lo copia a `opcional-wifi/` del artefacto.
 
+### Etapa 12 (2026-11-13) — README para GitHub
+- `README.md` reescrito para la portada del repo: qué trae, hardware, firmware y configuración, funciones, tema con capturas, slicers, WiFi, compilación, instalación, calibración, pruebas, estructura y créditos. A pedido del usuario no menciona a Claude.
+- Capturas en `docs-magna/capturas/` (arranque, principal, ajustes, configuración, imprimiendo, íconos), generadas por `assets-tema/generar_capturas.py` a partir de los `.bin` reales, con el degradé y la decoración del firmware (x2 y con marco).
+- El README anterior (específico de la Magna) se reemplazó por este.
+
 ## Estado / pendiente
 - PlatformIO no está disponible en el entorno de Claude. Igual se compila y enlaza todo con `pruebas/compilacion-manual/` (ver etapa 6). El firmware oficial lo compila GitHub Actions.
 - Los perfiles no se abrieron en los slicers reales; solo se validaron el formato y la coherencia con el firmware.
