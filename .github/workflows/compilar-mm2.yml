@@ -85,6 +85,10 @@ jobs:
           # Copiar encima todo lo del repo (Configuration.h, _adv.h, platformio.ini, docs, perfiles, pruebas)
           tar cf - --exclude=./.git --exclude=./.github --exclude=./build . | tar xf - -C build
           echo "### Marlin $VER + configuración Magna 2 230" >> "$GITHUB_STEP_SUMMARY"
+          # Tema negro/rojo de la pantalla MKS (si existe la carpeta assets-tema)
+          if [ -f build/assets-tema/aplicar_colores.py ]; then
+            python3 build/assets-tema/aplicar_colores.py build | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
 
       - uses: actions/setup-python@v5
         with:
@@ -121,6 +125,12 @@ jobs:
           cp .pio/build/mks_robin_nano_v1_3_f4/Robin_nano35.bin "$OUT/"
           if [ -d .pio/build/mks_robin_nano_v1_3_f4/assets ]; then
             cp -r .pio/build/mks_robin_nano_v1_3_f4/assets "$OUT/"
+          fi
+          # Íconos y logo del tema propio encima de los de Makerbase (se conservan la fuente y bmp_preview)
+          if [ -d assets-tema/assets ]; then
+            mkdir -p "$OUT/assets"
+            cp assets-tema/assets/*.bin "$OUT/assets/"
+            echo "Tema: $(ls assets-tema/assets/*.bin | wc -l) archivos de assets propios" >> "$GITHUB_STEP_SUMMARY"
           fi
           cp docs-magna/COMO-FLASHEAR.md "$OUT/"
           ls -la "$OUT"
