@@ -9,6 +9,6 @@
 5. Apagá y sacá la SD. La carpeta `assets` se habrá renombrado a `_assets`, lo que confirma que se cargaron los íconos del tema. Además, el archivo debería haberse renombrado a `ROBIN_NANO35.CUR` (eso confirma que se grabó).
 6. Encendé y reiniciá la EEPROM a los valores nuevos: `M502` y después `M500` (o desde la pantalla: Configuración → EEPROM → Restablecer).
 
-El WiFi (`MksWifi.bin`) no hace falta volver a cargarlo si ya funcionaba.
+El WiFi no hace falta volver a cargarlo si ya funciona. Si querés actualizarlo, copiá también `opcional-wifi/MksWifi.bin` a la raíz de la SD: se graba después de los íconos, se renombra a `MKSWIFI.CUR`, y **no hay que apagar mientras aparece el diálogo del WiFi**.
 
 **Volver atrás:** si algo no te convence, repetí el proceso con el `Robin_nano35.bin` de charlieburgos que ya tenías.

@@ -133,6 +133,11 @@ jobs:
             echo "Tema: $(ls assets-tema/assets/*.bin | wc -l) archivos de assets propios" >> "$GITHUB_STEP_SUMMARY"
           fi
           cp docs-magna/COMO-FLASHEAR.md "$OUT/"
+          # Firmware del WiFi (opcional): va aparte para que solo se cargue si se quiere
+          if [ -f wifi/MksWifi.bin ]; then
+            mkdir -p "$OUT/opcional-wifi"
+            cp wifi/MksWifi.bin wifi/README.md "$OUT/opcional-wifi/"
+          fi
           ls -la "$OUT"
           echo "Robin_nano35.bin: $(stat -c%s "$OUT/Robin_nano35.bin") bytes" >> "$GITHUB_STEP_SUMMARY"
 

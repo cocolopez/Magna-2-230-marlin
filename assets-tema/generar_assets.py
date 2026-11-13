@@ -91,9 +91,17 @@ def g_engranaje(c, cx=CX, cy=CY, r=22, col=WH):
     c.circulo(cx, cy, 7, RD, SW)
 
 def g_llave(c):
-    c.linea([(40, 72), (66, 46)], WH, 7)
-    c.arco(72, 38, 12, 100, 350, WH, 6)
-    c.circulo(40, 72, 3, RD, 0, relleno=RD)
+    """Ajustes: llave fija y destornillador cruzados."""
+    # destornillador (de abajo a la derecha hacia arriba a la izquierda)
+    c.linea([(80, 76), (68, 64)], RD, 10)                 # mango rojo
+    c.linea([(66, 62), (42, 38)], WH, 4)                  # vástago
+    c.poli([(42, 34), (38, 38), (34, 30), (38, 26)], relleno=WH)   # punta
+    # llave fija (de abajo a la izquierda hacia arriba a la derecha)
+    c.linea([(36, 78), (64, 50)], WH, 8)                  # mango
+    c.circulo(70, 44, 13, None, 0, relleno=WH)            # cabeza
+    c.poli([(70, 44), (88, 36), (78, 26)], relleno=BG)    # boca de la llave (hueco)
+    c.circulo(70, 44, 4.5, None, 0, relleno=BG)
+    c.circulo(36, 78, 4.2, None, 0, relleno=BG)           # agujero del mango
 
 def g_mas_opciones(c):
     for i, x in enumerate((38, 58.5, 79)):
@@ -241,10 +249,12 @@ def g_custom(c, n):
     c.texto(52, 51, "C", 22, WH); c.texto(68, 53, str(n), 18, RD)
 
 def g_volver(c):
-    c.arco(62, 52, 20, 270, 450, WH, 4.5)
-    c.linea([(62, 32), (40, 32)], WH, 4.5)
-    flecha(c, 50, 32, 32, 32, WH, 11, 4.5)
-    c.linea([(62, 72), (50, 72)], RD, 4.5)
+    """Volver: flecha en U, entera dentro del cuadro (punta grande a la izquierda)."""
+    cx, cy, r = 64, 51, 19
+    pts = [(cx + r * math.cos(math.radians(a)), cy + r * math.sin(math.radians(a))) for a in range(-90, 91, 6)]
+    c.linea([(44, cy - r)] + pts, WH, 5)                  # recta superior + curva
+    c.poli([(30, cy - r), (46, cy - r - 10), (46, cy - r + 10)], relleno=WH)   # punta
+    c.linea([(cx, cy + r), (52, cy + r)], RD, 5)          # cola roja
 
 def g_masmenos(c, signo):
     c.circulo(CX, CY, 25)
@@ -705,10 +715,22 @@ def rgb565(im):
     px = list(im.convert("RGB").getdata()) if not hasattr(im, "get_flattened_data") else list(im.convert("RGB").get_flattened_data())
     return struct.pack("<%dH" % len(px), *[((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3) for r, g, b in px])
 
-def lvgl_bin(im):
+BG565 = ((BG[0] >> 3) << 11) | ((BG[1] >> 2) << 5) | (BG[2] >> 3)
+TRANSP565 = 0x07E0                    # LV_COLOR_TRANSP = LV_COLOR_LIME (verde puro) en lv_conf.h de LVGL MKS
+
+def lvgl_bin(im, transparente=False):
+    """transparente=True: cf=5 (TRUE_COLOR_CHROMA_KEYED). El fondo exacto del ícono pasa a verde puro y
+    LVGL no lo dibuja, así se ve el fondo de la pantalla. Los bordes suavizados quedan mezclados con
+    gris oscuro, que no se nota sobre el fondo oscuro de la pantalla."""
     w, h = im.size
-    hdr = 4 | (w << 10) | (h << 21)   # cf=4 (LV_IMG_CF_TRUE_COLOR), always_zero=0, reserved=0
-    return struct.pack("<I", hdr) + rgb565(im) + b"\x0a"
+    datos = rgb565(im)
+    cf = 4
+    if transparente:
+        px = struct.unpack("<%dH" % (w * h), datos)
+        datos = struct.pack("<%dH" % (w * h), *[TRANSP565 if p == BG565 else (0x07E1 if p == TRANSP565 else p) for p in px])
+        cf = 5
+    hdr = cf | (w << 10) | (h << 21)
+    return struct.pack("<I", hdr) + datos + b"\x0a"
 
 TAM_150 = ["operate", "pause", "resume", "stop"]
 TAM_45 = ["bed_state", "ext1_state", "ext2_state", "fan_state", "init_state", "power_state", "speed_state", "time_state", "times_state", "zpos_state"]
@@ -728,8 +750,9 @@ def main():
     dest = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
     os.makedirs(dest, exist_ok=True)
     ims = todos()
+    opacos = set(CHICOS) - {"arrow"}     # campos, interruptores y botón chico: con fondo propio
     for n, im in ims.items():
-        open(os.path.join(dest, f"bmp_{n}.bin"), "wb").write(lvgl_bin(im))
+        open(os.path.join(dest, f"bmp_{n}.bin"), "wb").write(lvgl_bin(im, transparente=n not in opacos))
     lg = logo()
     open(os.path.join(dest, "bmp_logo.bin"), "wb").write(rgb565(lg))
     print(f"{len(ims) + 1} archivos en {dest}")

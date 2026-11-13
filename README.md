@@ -2,7 +2,18 @@
 
 Firmware Marlin configurado para la **Hellbot Magna 2 230** con placa **MKS Robin Nano V1.3 (STM32F407)** y pantalla táctil **MKS TFT35 v1** (interfaz MKS/LVGL, la misma que ya usás).
 
-Base: Marlin oficial **2.1.3-b3**, 
+Base: Marlin oficial **2.1.3-b3**, idéntico al `Marlin-release-2.1.3-beta3` que subiste (verificado archivo por archivo). Este proyecto guarda **solo los archivos propios de la Magna**. El código de Marlin lo baja GitHub Actions de la versión que figura en `MARLIN_VERSION`, así `mm2.zip` pesa menos de 1 MB.
+Referencia: el firmware "Marlin Charlieburgos V2.1.2.1" (`Robin_nano35.bin` del otro zip). Como ese zip traía solo el binario y no el código fuente, los valores se **extrajeron del binario** (ver `docs-magna/CONFIGURACION.md`).
+
+## Cómo compilar (GitHub Actions con mm2.zip)
+
+1. **Solo la primera vez:** en el repo, creá el archivo `.github/workflows/compilar-mm2.yml` con el contenido de `github-workflows/compilar-mm2.yml` (Add file → Create new file, pegás y guardás).
+2. Subí `mm2.zip` a la raíz del repo (Add file → Upload files).
+3. El workflow:
+   - descomprime el zip en el repo, guarda los archivos y borra `mm2.zip`;
+   - baja Marlin y le copia encima la configuración de la Magna;
+   - corre las pruebas y compila.
+4. En **Actions → Compilar Magna 2 230 (mm2.zip)** descargá el artefacto **Magna2-230-firmware**, que trae `Robin_nano35.bin` y la carpeta `assets`.
 
 ### Qué hay en el repo
 | Archivo | Para qué |
@@ -40,6 +51,10 @@ Calibración de las mejoras: `docs-magna/CALIBRACION.md`.
 ## Tema visual
 
 Íconos y pantalla de arranque propios, en negro, rojo y blanco. Están en `assets-tema/`; ahí también hay imágenes de muestra en `preview/`. La compilación los pone en la carpeta `assets` del paquete para la SD y cambia los colores de los menús de la pantalla.
+
+## Firmware del WiFi
+
+En `wifi/` está el firmware oficial del módulo WiFi (`MksWifi.bin`, Makerbase CS1.0.4). La compilación lo deja en la carpeta `opcional-wifi/` del artefacto: copialo a la SD solo si querés actualizar el WiFi (ver `wifi/README.md`).
 
 ## Perfiles de slicer
 

@@ -1,33 +1,52 @@
-import struct,sys,os
+#!/usr/bin/env python3
+"""Simula la pantalla principal y otras pantallas de la UI MKS con el tema: degradé de fondo, íconos
+transparentes (verde puro = transparente) y la decoración que agrega aplicar_colores.py.
+Uso: python3 simular_pantallas.py <carpeta_assets> <salida.png>"""
+import struct, sys, os
 from PIL import Image, ImageDraw, ImageFont
-A=sys.argv[1]; out=sys.argv[2]
+A, out = sys.argv[1], sys.argv[2]
+FT = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'; FB = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
 def load(n):
-    b=open(os.path.join(A,f'bmp_{n}.bin'),'rb').read()
-    if n=='logo': w,h,o=480,320,0
-    else: hd=struct.unpack('<I',b[:4])[0]; w,h,o=(hd>>10)&0x7ff,(hd>>21)&0x7ff,4
-    px=struct.unpack('<%dH'%(w*h),b[o:o+w*h*2]); im=Image.new('RGB',(w,h))
-    im.putdata([(((p>>11)&31)*255//31,((p>>5)&63)*255//63,(p&31)*255//31) for p in px]); return im
-F=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',14)
-def pantalla(items, titulo):
-    sc=Image.new('RGB',(480,320),(24,24,24)); d=ImageDraw.Draw(sc)
-    d.text((10,6),titulo,font=F,fill=(238,238,238))
-    for i,(n,lab) in enumerate(items):
-        x=i%4*120+1; y=26+(i//4)*146
-        sc.paste(load(n),(x,y)); d.text((x+58,y+120),lab,font=F,fill=(238,238,238),anchor='mm')
+    b = open(os.path.join(A, f'bmp_{n}.bin'), 'rb').read()
+    if n == 'logo':
+        w, h, o = 480, 320, 0
+    else:
+        hd = struct.unpack('<I', b[:4])[0]; w, h, o = (hd >> 10) & 0x7ff, (hd >> 21) & 0x7ff, 4
+    px = struct.unpack('<%dH' % (w * h), b[o:o + w * h * 2])
+    im = Image.new('RGBA', (w, h))
+    im.putdata([(0, 0, 0, 0) if p == 0x07E0 else (((p >> 11) & 31) * 255 // 31, ((p >> 5) & 63) * 255 // 63, (p & 31) * 255 // 31, 255) for p in px])
+    return im
+def fondo():
+    sc = Image.new('RGB', (480, 320)); d = ImageDraw.Draw(sc)
+    a, b = (0x14, 0x14, 0x14), (0x2E, 0x0A, 0x0D)
+    for y in range(320):
+        t = y / 319; d.line([(0, y), (480, y)], fill=tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3)))
     return sc
-m1=pantalla([('preHeat','Precalentar'),('mov','Mover'),('zero','Home'),('leveling','Nivelar'),('filamentchange','Filamento'),('extruct','Extrusor'),('more','Más'),('return','Volver')],'Herramientas')
-m2=pantalla([('fan','Ventilador'),('speed','Velocidad'),('extru1','Extrusor 1'),('extru2','Extrusor 2'),('wifi','WiFi'),('language','Idioma'),('machine_para','Máquina'),('eeprom_settings','EEPROM')],'Configuración')
-# pantalla de impresión simplificada
-m3=Image.new('RGB',(480,320),(24,24,24)); d=ImageDraw.Draw(m3)
-d.text((10,6),'Imprimiendo: pieza.gcode',font=F,fill=(238,238,238))
-for i,(n,t) in enumerate([('ext1_state','210/210°'),('bed_state','60/60°'),('fan_state','100%'),('time_state','01:24'),('zpos_state','12.40'),('speed_state','100%')]):
-    x=200+(i%2)*140; y=40+(i//2)*55; m3.paste(load(n),(x,y)); d.text((x+52,y+22),t,font=F,fill=(238,238,238),anchor='lm')
-d.rectangle([20,40,180,200],outline=(80,80,80)); d.text((100,120),'vista previa',font=F,fill=(90,90,90),anchor='mm')
-d.rectangle([20,215,460,225],fill=(50,50,50)); d.rectangle([20,215,300,225],fill=(214,32,39)); d.text((470,220),'',font=F)
-for i,n in enumerate(['operate','pause','stop']):
-    m3.paste(load(n),(10+i*155,236))
-d.text((10+62,276),'Opciones',font=F,fill=(238,238,238),anchor='lm'); d.text((165+62,276),'Pausa',font=F,fill=(238,238,238),anchor='lm'); d.text((320+62,276),'Detener',font=F,fill=(238,238,238),anchor='lm')
-lg=load('logo')
-hoja=Image.new('RGB',(980,670),(70,70,70))
-for im,(x,y) in zip([lg,m1,m2,m3],[(5,5),(495,5),(5,335),(495,335)]): hoja.paste(im,(x,y))
+F = ImageFont.truetype(FT, 14)
+def principal():
+    sc = fondo(); d = ImageDraw.Draw(sc)
+    f = ImageFont.truetype(FB, 26)
+    d.text((24, 24), 'M A G N A', font=f, fill=(238, 238, 238)); w = d.textlength('M A G N A', font=f)
+    d.text((24 + w + 10, 24), '2', font=f, fill=(214, 32, 39))
+    d.line([(20, 72), (460, 72)], fill=(214, 32, 39), width=2)
+    for i in range(5):
+        d.line([(0, 236 + i * 4), (480, 236 + i * 4)], fill=(0x50 + i * 0x18, 0x0C + i * 3, 0x10 + i * 3), width=2)
+    for x, n, t in ((20, 'tool', 'Ajustes'), (180, 'set', 'Config'), (340, 'printing', 'Imprimir')):
+        im = load(n); sc.paste(im, (x, 90), im); d.text((x + 58, 210), t, font=F, fill=(238, 238, 238), anchor='mm')
+    for x, n, t in ((20, 'ext1_state', '28 -> 0'), (210, 'bed_state', '26 -> 0')):
+        im = load(n); sc.paste(im, (x, 260), im); d.text((x + 52, 282), t, font=F, fill=(238, 238, 238), anchor='lm')
+    return sc
+def menu(items, titulo):
+    sc = fondo(); d = ImageDraw.Draw(sc)
+    d.text((3, 5), titulo, font=F, fill=(238, 238, 238))
+    for i, (n, lab) in enumerate(items):
+        x = 2 + (i % 4) * 119; y = 36 + (i // 4) * 142
+        im = load(n); sc.paste(im, (x, y), im); d.text((x + 58, y + 120), lab, font=F, fill=(238, 238, 238), anchor='mm')
+    return sc
+m1 = principal()
+m2 = menu([('preHeat', 'Precalentar'), ('extruct', 'Extrusor'), ('mov', 'Mover'), ('zero', 'Home'),
+           ('leveling', 'Nivelar'), ('filamentchange', 'Filamento'), ('more', 'Más'), ('return', 'Atrás')], 'Ajustes')
+lg = load('logo').convert('RGB')
+hoja = Image.new('RGB', (1455, 330), (70, 70, 70))
+for im, x in zip([lg, m1, m2], (5, 490, 975)): hoja.paste(im, (x, 5))
 hoja.save(out)

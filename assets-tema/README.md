@@ -27,6 +27,13 @@ La compilación de GitHub ya pone estos archivos en la carpeta `assets` del arte
 - **Cambiar solo los íconos, sin reflashear:** poné una carpeta `assets` nueva en la SD y prendé la impresora.
 - **Volver a los íconos de Makerbase:** hacé lo mismo con los `assets` originales. Para recuperar también los colores originales, borrá la carpeta `assets-tema` del repo y recompilá.
 
+## Íconos transparentes y fondo
+- Los íconos (117×140, 45×45, 117×92, 150×80 y la flechita) se guardan con `cf=5` (TRUE_COLOR_CHROMA_KEYED): los píxeles del fondo pasan a verde puro `0x07E0` (`LV_COLOR_TRANSP` de LVGL) y no se dibujan. Así se ve el fondo de la pantalla. Los campos, los interruptores y el botón chico siguen opacos.
+- Una foto de fondo no entra: cada imagen tiene 9 KB comprimidos en la memoria de la pantalla (`PER_PIC_MAX_SPACE_TFT35`), y una de 480×320 no cabe. Por eso el fondo se dibuja por código (lo hace `aplicar_colores.py`):
+  - un degradé en todas las pantallas, de `#141414` arriba a `#2E0A0D` abajo;
+  - en la pantalla principal, "MAGNA" en blanco y "2" en rojo, una raya roja y 5 líneas de capas que van de rojo oscuro a rojo, entre los botones y las temperaturas.
+- Comprobado: los íconos comprimidos (RLE de `SPIFlashStorage`) ocupan como máximo 4,5 KB, menos que los originales.
+
 ## Colores (`aplicar_colores.py`)
 | Elemento | Antes | Ahora |
 |---|---|---|
@@ -34,6 +41,7 @@ La compilación de GitHub ya pone estos archivos en la carpeta `assets` del arte
 | Texto seleccionado | azul / amarillo | rojo `#E0262C` / `#FF4D4D` |
 | Líneas separadoras | azul `#4954FF` | gris `#5A5A5A` |
 | Teclado (WiFi) | marrón | gris, y rojo al apretar |
+| Fondo de las pantallas | gris plano `#1A1A1A` | degradé `#141414` → `#2E0A0D` |
 
 El script usa reemplazos exactos. Si una versión futura de Marlin cambia esas líneas, avisa "NO ENCONTRADO" y deja el color original, sin romper la compilación.
 

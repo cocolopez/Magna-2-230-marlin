@@ -63,6 +63,13 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - La boquilla se ubica sobre el tramo con material de la capa actual más cercano al centro, así no queda sobre un hueco.
 - Todas las formas son diseño propio por código. No se usa ningún logo ni imagen de terceros.
 
+### Etapa 11 (2026-11-13) — primera prueba en la impresora y ajustes
+- El usuario flasheó y el tema funciona. Pidió: fondo en la pantalla principal, arreglar la flecha de Atrás (se veía cortada), un ícono de Ajustes entendible, y revisar unas líneas que se ven abajo de la pantalla.
+- Fondo: los íconos pasaron a cf=5 con chroma key (verde 0x07E0 = `LV_COLOR_TRANSP`). Una imagen de fondo no entra en el slot de 9 KB (`PER_PIC_MAX_SPACE_TFT35`, con `HAS_SPI_FLASH_COMPRESSION`), así que se dibuja por código: degradé en `tft_style_scr` y decoración en `draw_ready_print.cpp` (insertada por `aplicar_colores.py`, 12 cambios, idempotente). Compila: 351.664 bytes.
+- `g_llave` = llave fija y destornillador cruzados; `g_volver` = flecha en U hecha con un solo trazo y punta grande, entera dentro del cuadro.
+- Líneas de abajo: NO salen de los assets (filas 83-139 vacías; tamaño comprimido OK). Queda pendiente ver si ya estaban con el firmware anterior (podría ser luz que se filtra por el borde del panel).
+- WiFi: `wifi/MksWifi.bin` = oficial de Makerbase CS1.0.4_200227 (ESP8266), lo subió el usuario. El workflow lo copia a `opcional-wifi/` del artefacto.
+
 ## Estado / pendiente
 - PlatformIO no está disponible en el entorno de Claude. Igual se compila y enlaza todo con `pruebas/compilacion-manual/` (ver etapa 6). El firmware oficial lo compila GitHub Actions.
 - Los perfiles no se abrieron en los slicers reales; solo se validaron el formato y la coherencia con el firmware.
