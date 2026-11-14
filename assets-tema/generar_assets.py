@@ -742,6 +742,26 @@ def logo():
     d.line([(x0 * S, 282 * S), (300 * S, 282 * S)], fill=(60, 60, 60), width=S)
     return im.resize((w, h), Image.LANCZOS)
 
+def vista_previa():
+    """bmp_preview.bin: lo que muestra la pantalla de impresión cuando el gcode no trae miniatura
+    (antes era la "G" azul de Makerbase). Es el recorte de la pieza del arranque (el tornillo a medio
+    imprimir) en un cuadro de 200x200. Va directo a la pantalla, sin transparencia."""
+    w, h = 480, 320
+    fondo = fondo_capas(w, h).resize((w, h), Image.LANCZOS)
+    # centrado en la pieza (x=385): a la derecha falta pantalla, así que se completa con el borde espejado
+    base = fondo.crop((385 - 135, 8, w, 278))
+    falta = 270 - base.width
+    cuadro = Image.new("RGB", (270, 270))
+    cuadro.paste(base, (0, 0))
+    cuadro.paste(base.crop((base.width - falta, 0, base.width, 270)).transpose(Image.FLIP_LEFT_RIGHT), (base.width, 0))
+    im = cuadro.resize((200, 200), Image.LANCZOS)
+    d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 199, 199], outline=(58, 58, 58))
+    d.rectangle([0, 0, 3, 199], fill=RD)
+    f = ImageFont.truetype(FONT_R, 11)
+    d.text((193, 190), "SIN VISTA PREVIA", font=f, fill=(150, 150, 150), anchor="rs")
+    return im
+
 # ------------------------------------------------------------------ codificación
 def rgb565(im):
     px = list(im.convert("RGB").getdata()) if not hasattr(im, "get_flattened_data") else list(im.convert("RGB").get_flattened_data())
@@ -788,10 +808,13 @@ def main():
         open(os.path.join(dest, f"bmp_{n}.bin"), "wb").write(lvgl_bin(im, transparente=n not in opacos))
     lg = logo()
     open(os.path.join(dest, "bmp_logo.bin"), "wb").write(rgb565(lg))
-    print(f"{len(ims) + 1} archivos en {dest}")
+    vp = vista_previa()
+    open(os.path.join(dest, "bmp_preview.bin"), "wb").write(rgb565(vp))   # 200x200 RGB565 sin encabezado
+    print(f"{len(ims) + 2} archivos en {dest}")
     if "--preview" in sys.argv:
         pv = os.path.join(os.path.dirname(os.path.abspath(__file__)), "preview"); os.makedirs(pv, exist_ok=True)
         lg.save(os.path.join(pv, "logo.png"))
+        vp.save(os.path.join(pv, "vista_previa.png"))
         orden = [n for n in ICONOS]
         cols = 10; rows = (len(orden) + cols - 1) // cols
         sh = Image.new("RGB", (cols * 119, rows * 142), (60, 60, 60))

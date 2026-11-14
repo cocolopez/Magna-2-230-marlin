@@ -170,6 +170,12 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
   - Firmware 381.136 bytes (77 %; la letra suma ~28 KB). Preflight y SanityCheck OK.
   - Sin avisos nuevos con -Wall. Los avisos `-Wexpansion-to-defined` de `draw_more.cpp` son de la macro `HAS_USER_ITEM` de Marlin, que ahora se compila.
 
+### Etapa 19 (2026-11-13) — imagen en lugar de la "G" de la pantalla de impresión
+- La "G" azul es `bmp_preview.bin` de Makerbase. Es la vista previa por defecto cuando el gcode no trae miniatura MKS: 200×200 RGB565 LE sin encabezado (80.000 bytes), que `draw_default_preview` copia directo a la pantalla en (2,36), sin LVGL ni transparencia.
+- `generar_assets.py` → `vista_previa()`: recorte de la pieza del arranque (el tornillo a medio imprimir, centrado en x=385, con el borde derecho espejado porque la pantalla termina), borde gris, franja roja y "SIN VISTA PREVIA". Ahora son 139 assets.
+- `verificar-assets.py` acepta `bmp_preview.bin` como imagen sin encabezado de 80.000 bytes.
+- La vista previa real de la pieza depende del slicer (miniatura MKS dentro del gcode). El usuario no la quiere: no se hace.
+
 ## Estado / pendiente
 - PlatformIO no está disponible en el entorno de Claude. Igual se compila y enlaza todo con `pruebas/compilacion-manual/` (ver etapa 6). El firmware oficial lo compila GitHub Actions.
 - Los perfiles no se abrieron en los slicers reales (no se puede instalar Cura acá). Se validaron contra la foto de ajustes de Cura 5.10 y contra el firmware.

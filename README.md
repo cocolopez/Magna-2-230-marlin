@@ -114,7 +114,8 @@ Tema propio, minimalista: fondo oscuro con degradé, íconos de trazo blanco con
   <img src="docs-magna/capturas/iconos.png" width="96%" alt="Íconos del tema">
 </p>
 
-- **138 archivos:** mismo formato y tamaño que los originales de Makerbase, así que reemplazan a los de fábrica sin cambiar el firmware.
+- **Vista previa por defecto:** cuando el gcode no trae miniatura, la pantalla de impresión muestra la pieza del arranque con "SIN VISTA PREVIA" en lugar de la "G" azul de Makerbase (`bmp_preview.bin`, 200×200).
+- **139 archivos:** mismo formato y tamaño que los originales de Makerbase, así que reemplazan a los de fábrica sin cambiar el firmware.
 - **Íconos transparentes:** dejan ver el fondo de la pantalla.
 - **Fondo y colores:** el degradé, los colores de los menús y la decoración de la pantalla principal los aplica [`assets-tema/aplicar_colores.py`](assets-tema/aplicar_colores.py) al compilar.
 - **Menús de íconos:** franja oscura del título con acento rojo, "MAGNA 2" a la derecha, línea roja con marcas tipo regla, separador punteado entre filas y tres líneas de capas abajo ([`assets-tema/decoracion_menus.inc`](assets-tema/decoracion_menus.inc)). Se dibuja junto con el fondo de la pantalla, sin agregar objetos. En Mover y Babystep no lleva "MAGNA 2", porque ahí arriba a la derecha va la posición.

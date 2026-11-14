@@ -2,7 +2,7 @@
 """Verifica los assets del tema (assets-tema/assets) contra el formato que espera la UI MKS (LVGL 6):
   * encabezado LVGL: cf 4 (TRUE_COLOR) o 6 (TRUE_COLOR_CHROMA_KEYED). Cualquier otro (por ejemplo 5 = con
     canal alfa, 3 bytes por píxel) se ve roto en la pantalla.
-  * tamaño exacto: 4 + ancho*alto*2 + 1 bytes; logo 480x320x2 sin encabezado.
+  * tamaño exacto: 4 + ancho*alto*2 + 1 bytes; logo 480x320x2 y bmp_preview 200x200x2 sin encabezado.
   * el verde de transparencia (0x07E0) solo en imágenes cf 6.
   * todos los nombres que pide el firmware (pic_manager.cpp) existen, si el código de Marlin está presente.
   * cada imagen comprimida (RLE de SPIFlashStorage) entra en su lugar de 9 KB.
@@ -29,6 +29,9 @@ for f in sorted(os.listdir(A)):
     b = open(os.path.join(A, f), 'rb').read()
     if f == 'bmp_logo.bin':
         if len(b) != 480 * 320 * 2: err.append(f'{f}: tamaño {len(b)} (esperado 307200)')
+        continue
+    if f == 'bmp_preview.bin':   # vista previa por defecto: 200x200 RGB565 sin encabezado, va directo a la pantalla
+        if len(b) != 200 * 200 * 2: err.append(f'{f}: tamaño {len(b)} (esperado 80000)')
         continue
     hd = struct.unpack('<I', b[:4])[0]; cf, w, h = hd & 0x1f, (hd >> 10) & 0x7ff, (hd >> 21) & 0x7ff
     if cf not in CF_OK: err.append(f'{f}: cf={cf} no soportado (usar 4 o 6)')
