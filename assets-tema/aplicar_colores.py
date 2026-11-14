@@ -36,7 +36,8 @@ DECORACION = '''
     lv_obj_set_pos(raya, 20, 72);
     for (uint8_t i = 0; i < 5; i++) {
       lv_style_copy(&st_capa[i], &lv_style_plain);
-      st_capa[i].line.color = LV_COLOR_MAKE(0x50 + i * 0x18, 0x0C + i * 3, 0x10 + i * 3);
+      const uint8_t r = 0x50 + i * 0x18, g = 0x0C + i * 3, b = 0x10 + i * 3;  // de rojo oscuro a rojo
+      st_capa[i].line.color = LV_COLOR_MAKE(r, g, b);
       st_capa[i].line.width = 2;
       lv_obj_t *capa = lv_line_create(scr, nullptr);
       lv_line_set_points(capa, pts_capa, 2);

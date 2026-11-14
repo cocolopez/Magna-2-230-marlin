@@ -86,6 +86,11 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - Pruebas nuevas: `pruebas/verificar-assets.py` (formato) y `pruebas/render-lvgl/` (render real; falla si hay verde o íconos sin trazo/fondo). Ambos workflows corren el render después de compilar, con la LVGL de `.pio/libdeps`, y el artefacto incluye `vista-previa-pantalla.png`.
 - Arreglo inmediato para el usuario: `assets_corregidos.zip` (138 del tema + FontUNIGBK.bin y bmp_preview.bin de Makerbase). Se carga solo la carpeta `assets`, sin reflashear.
 
+### Etapa 15 (2026-11-13) — revisión del log de GitHub
+- Build OK en GitHub: 345.444 bytes de flash (~72 % real del F407VE), RAM 59,6 %.
+- Se corrigió el aviso `-Wparentheses` del código propio en `draw_ready_print.cpp` (LV_COLOR_MAKE con expresiones): los colores de las líneas de capas ahora se calculan en variables. Verificado con -Wall: 0 avisos en ese archivo.
+- Queda solo el aviso de Marlin en `draw_printing.cpp:249` (sin efecto).
+
 ## Estado / pendiente
 - PlatformIO no está disponible en el entorno de Claude. Igual se compila y enlaza todo con `pruebas/compilacion-manual/` (ver etapa 6). El firmware oficial lo compila GitHub Actions.
 - Los perfiles no se abrieron en los slicers reales; solo se validaron el formato y la coherencia con el firmware.
