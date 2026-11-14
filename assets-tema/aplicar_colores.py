@@ -203,6 +203,15 @@ WIFI_INCLUDES_NUEVO = WIFI_INCLUDES_VIEJO + """#include "../../../module/planner
 #if HAS_BED_PROBE
   #include "../../../module/probe.h"
 #endif
+#if ENABLED(PRINTCOUNTER)
+  #include "../../../module/printcounter.h"  // Magna2-230 (MagnAir): estadísticas en M257
+#endif
+#if ENABLED(POWER_LOSS_RECOVERY)
+  #include "../../../feature/powerloss.h"
+#endif
+#if HAS_FILAMENT_SENSOR
+  #include "../../../feature/runout.h"
+#endif
 """
 WIFI_EXEC = 'static void wifi_gcode_exec(uint8_t * const cmd_line) {\n'
 WIFI_M257_FUNC = """// Magna2-230 (MagnAir): M257 = valores de calibración guardados, por WiFi.
@@ -299,6 +308,25 @@ static void magna_m257() {
     const uint8_t d[] = { 0, 0, 0 };
     magna_m257_linea("acel", k, v, d, 3);
   }
+  {
+    // recuperar tras un corte de luz (M413) y sensor de filamento (M412): 1 = activo, -1 = no está en el firmware
+    const char * const k[] = { "PLR", "SF", "SFD" };
+    const float v[] = { TERN(POWER_LOSS_RECOVERY, recovery.enabled ? 1.0f : 0.0f, -1.0f),
+                        TERN(HAS_FILAMENT_SENSOR, runout.enabled ? 1.0f : 0.0f, -1.0f),
+                        TERN(HAS_FILAMENT_RUNOUT_DISTANCE, runout.runout_distance(), 0.0f) };
+    const uint8_t d[] = { 0, 0, 1 };
+    magna_m257_linea("extras", k, v, d, 3);
+  }
+  #if ENABLED(PRINTCOUNTER)
+  {
+    // estadísticas de Marlin: impresiones, terminadas, tiempo total (s), la más larga (s), filamento (mm)
+    const printStatistics e = print_job_timer.getStats();
+    const char * const k[] = { "N", "OK", "T", "L", "F" };
+    const float v[] = { (float)e.totalPrints, (float)e.finishedPrints, (float)e.printTime, (float)e.longestPrint, TERN0(HAS_EXTRUDERS, e.filamentUsed) };
+    const uint8_t d[] = { 0, 0, 0, 0, 0 };
+    magna_m257_linea("estadisticas", k, v, d, 5);
+  }
+  #endif
   print_to_wifi("M257 fin\\r\\n");
 }
 

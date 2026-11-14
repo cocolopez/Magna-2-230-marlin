@@ -83,4 +83,6 @@ Los íconos son `bmp_custom1..6` del tema. En la pantalla MKS se ejecutan sin co
 
 **Desde el WiFi (MagnAir):** `M256 B0` apaga la pantalla, `M256 B255` la prende y `M256` contesta cómo está. Apagada así, el primer toque la prende sin apretar nada.
 
+**Estadísticas y protecciones (MagnAir):** al final de `M257` van `M257 extras PLR=… SF=… SFD=…` (corte de luz, sensor de filamento y su distancia; -1 = no compilado) y `M257 estadisticas N=… OK=… T=… L=… F=…` (impresiones, terminadas, segundos, la más larga, mm de filamento).
+
 **Calibración y carpetas (MagnAir):** `M257` contesta por WiFi los valores de calibración en uso, una línea por grupo (`M257 mpc P=… C=…`, `M257 pasos X=…`, …) y `M257 fin`. La lista de archivos por WiFi entra a las carpetas (`M20 L /CARPETA`) y `M23 /CARPETA/ARCHIVO.GCO` imprime desde ahí.

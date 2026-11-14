@@ -97,6 +97,7 @@ Los valores mecánicos (pasos, direcciones de motores, finales de carrera, termi
 | **Apagado automático de la pantalla** | Apaga la luz de la pantalla después de 5 minutos sin tocarla. El primer toque solo la prende, sin apretar nada; los avisos (falta de filamento, impresión terminada) también la prenden. Se cambia con `MAGNA_PANTALLA_APAGADO_MIN` en `Configuration_adv.h` (0 = nunca) |
 | **Pantalla desde MagnAir** | Por WiFi, `M256 B0` apaga la luz de la pantalla, `M256 B255` la prende y `M256` dice cómo está. Lo usa el botón de pantalla de MagnAir (la app y la página del módulo WiFi) |
 | **Créditos** | En *Configuración → Acerca de* figura "Creado por Andrés Londero" y andreslondero@gmail.com, abajo de los datos de Marlin |
+| **Estadísticas y protecciones para MagnAir** | `M257` también informa si están activos la recuperación tras corte de luz y el sensor de filamento, y las estadísticas de Marlin (impresiones, horas, filamento). MagnAir lo usa para el historial, las estadísticas y los interruptores de Control |
 | **Calibración y carpetas para MagnAir** | Por WiFi, `M257` contesta los valores en uso (MPC/PID, pasos, avance de presión, vibraciones, altura Z, velocidades y aceleraciones) y la lista de la SD entra a las carpetas (`M20 L /CARPETA`); también se puede imprimir desde una carpeta |
 | **Botones propios en Ajustes → Más** | Calibrar hotend, calibrar cama, estacionar y cargar cada filamento del 2 en 1, con un toque y sin escribir comandos |
 

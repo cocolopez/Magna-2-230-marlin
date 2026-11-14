@@ -251,3 +251,12 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - Arreglo (`aplicar_colores.py`): `__attribute__((aligned(4))) uint8_t bmp_public_buf[16 * 1024];`. Ahora queda en 0x2000d628. No cambia nada de la interfaz.
 - Para que no vuelva a pasar: `pruebas/verificar-buffer-pantalla.sh <firmware.elf>` falla si el buffer no queda en un múltiplo de 4. El workflow lo corre después de cada `pio run` (normal y BLTouch).
 - Lección: un buffer `uint8_t` que se manda por DMA de 16 bits tiene que estar alineado; un error así aparece y desaparece solo según el tamaño de las otras variables.
+
+### Etapa 27 (2026-11-14) — M257 informa protecciones y estadísticas (para MagnAir 1.1)
+- `magna_m257()` agrega dos grupos al final (antes de `M257 fin`):
+  - `extras`: `PLR` = recuperación tras corte de luz (`recovery.enabled`, M413), `SF` = sensor de filamento (`runout.enabled`, M412), `SFD` = distancia del sensor en mm. -1 = la función no está compilada.
+  - `estadisticas` (con `PRINTCOUNTER`): `N` impresiones, `OK` terminadas, `T` segundos imprimiendo, `L` la más larga (s), `F` filamento total (mm), de `print_job_timer.getStats()` (los datos en RAM, al día aunque `PRINTCOUNTER_SAVE_INTERVAL` sea 0).
+- Includes nuevos en `wifi_module.cpp`: printcounter.h, powerloss.h y runout.h (cada uno con su condición).
+- MagnAir los usa para: el historial (filamento de cada impresión = diferencia de `F` entre el principio y el final), las estadísticas, y los interruptores de Control → Protecciones.
+- La recuperación tras corte de luz sigue apagada de fábrica (`PLR_ENABLED_DEFAULT false`); se prende desde MagnAir (M413 S1 + M500).
+- Compilación manual completa: 383.128 bytes (77 %); `bmp_public_buf` sigue alineado (0x2000d628).
