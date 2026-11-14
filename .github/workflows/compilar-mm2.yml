@@ -103,7 +103,7 @@ jobs:
           key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini', 'MARLIN_VERSION') }}
 
       - name: Instalar PlatformIO
-        run: pip install --upgrade platformio
+        run: pip install --upgrade platformio pillow
 
       - name: Pruebas de configuración y perfiles
         working-directory: build
@@ -116,6 +116,16 @@ jobs:
       - name: Compilar (mks_robin_nano_v1_3_f4)
         working-directory: build
         run: pio run -e mks_robin_nano_v1_3_f4
+
+      - name: Prueba de render de íconos (LVGL de la pantalla)
+        working-directory: build
+        run: |
+          LV=$(find .pio/libdeps -maxdepth 2 -type d -name lvgl | head -1)
+          if [ -n "$LV" ] && [ -d assets-tema/assets ]; then
+            python3 pruebas/render-lvgl/verificar_render.py "$LV" assets-tema/assets render-pantalla-principal.png
+          else
+            echo "Sin LVGL o sin tema: se saltea"
+          fi
 
       - name: Preparar archivos para la SD
         working-directory: build
@@ -133,6 +143,8 @@ jobs:
             echo "Tema: $(ls assets-tema/assets/*.bin | wc -l) archivos de assets propios" >> "$GITHUB_STEP_SUMMARY"
           fi
           cp docs-magna/COMO-FLASHEAR.md "$OUT/"
+          [ -f render-pantalla-principal.png ] && cp render-pantalla-principal.png "$OUT/vista-previa-pantalla.png"
+          [ -f render-pantalla-principal-menu.png ] && cp render-pantalla-principal-menu.png "$OUT/vista-previa-menu.png"
           # Firmware del WiFi (opcional): va aparte para que solo se cargue si se quiere
           if [ -f wifi/MksWifi.bin ]; then
             mkdir -p "$OUT/opcional-wifi"
