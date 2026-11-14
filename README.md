@@ -78,7 +78,7 @@ Los valores mecánicos (pasos, direcciones de motores, finales de carrera, termi
 
 | Función | Para qué sirve |
 |---|---|
-| **Cambio de filamento automático** (`TOOLCHANGE_FILAMENT_SWAP`) | En el hotend 2 en 1, al pasar de T0 a T1 retira un filamento y carga el otro. Se ajusta con `M217` |
+| **Cambio de filamento 2 en 1** | Los perfiles de slicer retiran el filamento 100 mm (por encima de la unión) y cargan el otro, como el perfil de fábrica. El firmware trae `TOOLCHANGE_FILAMENT_SWAP` para cambios a mano (`M217 S100`) |
 | **Input Shaping** X/Y | Reduce el *ringing* y permite imprimir más rápido. Se ajusta con `M593` |
 | **MPC** (control predictivo de temperatura) | Temperatura del hotend más estable que con PID. Se calibra con `M306 T` |
 | **Linear Advance** | Compensa la presión en la boquilla: esquinas más limpias. `M900` por extrusor |
@@ -112,6 +112,7 @@ Tema propio, minimalista: fondo oscuro con degradé, íconos de trazo blanco con
 - **138 archivos:** mismo formato y tamaño que los originales de Makerbase, así que reemplazan a los de fábrica sin cambiar el firmware.
 - **Íconos transparentes:** dejan ver el fondo de la pantalla.
 - **Fondo y colores:** el degradé, los colores de los menús y la decoración de la pantalla principal los aplica [`assets-tema/aplicar_colores.py`](assets-tema/aplicar_colores.py) al compilar.
+- **Menús de íconos:** franja oscura del título con acento rojo, "MAGNA 2" a la derecha, línea roja con marcas tipo regla, separador punteado entre filas y tres líneas de capas abajo ([`assets-tema/decoracion_menus.inc`](assets-tema/decoracion_menus.inc)). Se dibuja con un solo objeto de LVGL, detrás de los botones.
 - **Para volver a los íconos de fábrica:** copiá a la SD la carpeta `assets` original de Makerbase.
 
 > Las capturas son una simulación generada a partir de los mismos archivos que se cargan en la pantalla ([`generar_capturas.py`](assets-tema/generar_capturas.py)).
@@ -122,7 +123,7 @@ En [`perfiles-slicer/`](perfiles-slicer/), ajustados a esta máquina y a este fi
 
 | Slicer | Archivos | Cómo se importa |
 |---|---|---|
-| **Cura 5.x** | `cura/definitions/` y `cura/extruders/` | Copiarlos a la carpeta de configuración de Cura (Ayuda → Mostrar carpeta de configuración) |
+| **Cura 5.10 o superior** | `cura/` (máquina, extrusores y calidades por material) | Doble clic en `cura/instalar-windows.bat` (o `instalar-mac-linux.sh`): lo copia en la carpeta de la versión más nueva de Cura |
 | **PrusaSlicer 2.6+** | `prusaslicer/Magna2-230_PrusaSlicer_bundle.ini` | Archivo → Importar → Importar paquete de configuración |
 | **OrcaSlicer 2.x** | `orcaslicer/machine`, `process`, `filament` | Archivo → Importar → Importar configuraciones |
 
@@ -201,7 +202,7 @@ En orden ([`docs-magna/CALIBRACION.md`](docs-magna/CALIBRACION.md)):
 |---|---|---|
 | 1 | Temperatura del hotend (MPC) | `M306 T` → `M500` |
 | 2 | PID de la cama | `M303 E-1 S60 C8 U1` → `M500` |
-| 3 | Largo del cambio de filamento 2 en 1 | `M217 S<mm>` → `M500` |
+| 3 | Largo del cambio de filamento 2 en 1 (si hace falta) | `CAMBIO` en `perfiles-slicer/generar_perfiles.py` |
 | 4 | Linear Advance por extrusor | `M900 T0 K..` / `M900 T1 K..` → `M500` |
 | 5 | Input Shaping | `M593 X F..` / `M593 Y F..` → `M500` |
 

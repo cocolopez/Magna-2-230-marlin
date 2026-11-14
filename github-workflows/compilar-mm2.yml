@@ -144,6 +144,7 @@ jobs:
           fi
           cp docs-magna/COMO-FLASHEAR.md "$OUT/"
           [ -f render-pantalla-principal.png ] && cp render-pantalla-principal.png "$OUT/vista-previa-pantalla.png"
+          [ -f render-pantalla-principal-menu.png ] && cp render-pantalla-principal-menu.png "$OUT/vista-previa-menu.png"
           # Firmware del WiFi (opcional): va aparte para que solo se cargue si se quiere
           if [ -f wifi/MksWifi.bin ]; then
             mkdir -p "$OUT/opcional-wifi"

@@ -11,7 +11,7 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 
 ### Etapa 2 (2026-11-13) — mejoras + perfiles
 - Firmware:
-  - `TOOLCHANGE_FILAMENT_SWAP` (40 mm, M217)
+  - `TOOLCHANGE_FILAMENT_SWAP` compilado con largo 0 (desde la etapa 16 el cambio 2 en 1 lo hacen los perfiles; M217 S100 para cambios a mano)
   - `INPUT_SHAPING_X/Y` (40 Hz)
   - `MPCTEMP` en lugar de `PIDTEMP` (40 W)
   - `HOTEND_IDLE_TIMEOUT` (10 min)
@@ -91,9 +91,50 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - Se corrigió el aviso `-Wparentheses` del código propio en `draw_ready_print.cpp` (LV_COLOR_MAKE con expresiones): los colores de las líneas de capas ahora se calculan en variables. Verificado con -Wall: 0 avisos en ese archivo.
 - Queda solo el aviso de Marlin en `draw_printing.cpp:249` (sin efecto).
 
+### Etapa 16 (2026-11-13) — perfiles de Cura nuevos, cambio 2 en 1 en el slicer, menús "marcados" y degradé más fuerte
+- **Cura no mostraba los perfiles.** Hay dos causas:
+  1. Cada versión de Cura tiene su carpeta (`cura/5.x`), así que lo copiado en la versión vieja no se ve en la nueva.
+  2. `retraction_speed` 40 > `machine_max_feedrate_e` 25 era un error rojo de Cura.
+- **Perfiles de Cura nuevos:**
+  - Definición `hellbot_magna2_230_marlin` (mismo id), con `has_machine_quality` y la cama `Hellbot_Magna_2_230.obj` que ya trae Cura.
+  - 16 calidades `quality/hellbot_magna2_230_marlin/`: 4 globales (0.12/0.16/0.20/0.28) y 4 por cada material (generic_pla, generic_petg, generic_abs). Usan `setting_version` 25, que sirve en Cura 5.10/5.11; 5.12+ las actualiza con VersionUpgrade511to512 y 512to513.
+  - Instaladores `instalar-windows.bat` (CRLF) e `instalar-mac-linux.sh`, que copian en la versión más nueva.
+- **Investigación (fuentes):**
+  - Hellbot: velocidad recomendada 50 mm/s, máximo 80 mm/s, bowden dual drive.
+  - Perfil oficial de Cura `hellbot_magna_2_230_dual`: al dejar el extrusor hace `E-5` + `E-100`; al tomarlo, `E+100`.
+  - Blog de Hellbot: retracción de cambio de 6 mm por defecto.
+  - Rango típico de retracción bowden: 3–6 mm.
+- **Error encontrado en el firmware:**
+  - Marlin (`tool_change.cpp`) solo retira el extrusor viejo si `extruder_was_primed[old]`. T0 no queda cebado al prender la máquina, así que el primer T0 → T1 no retiraba T0 y se trababa.
+  - Además, 40 mm era corto frente a los 100 mm de Hellbot.
+  - Cambio: el slicer hace el cambio, `TOOLCHANGE_FS_LENGTH 0` y `M217 S0` en todos los gcode de inicio, por si la EEPROM tiene 40.
+- **Protocolo:**
+  - Reposo: los dos filamentos estacionados a 100 mm.
+  - Cura:
+    - `machine_extruders_shared_nozzle_initial_retraction` = 6 y `switch_extruder_retraction_amount` = 6;
+    - el gcode de inicio del extrusor (CuraEngine lo emite también para el primero) va a X225 Y5 y hace E+94, Z-1;
+    - el gcode de fin del extrusor (también para el último, en `finalize`) hace Z+1, va a la esquina y hace E-94. Los Z se compensan.
+  - Prusa/Orca: SEMM con parking_pos_retraction 100, carga inicial E100 + línea de purga y estacionado E-100 al final.
+  - `gcode-utiles/estacionar_T0/T1` y `cargar_T0/T1`.
+- **`pruebas/verificar-perfiles.py` reescrito:**
+  - usa la foto `pruebas/datos/cura-5.10-ajustes.json` (710 ajustes, con tipo, opciones y mín./máx.);
+  - revisa que cada clave exista, los límites (detectó la retracción de 40), las calidades completas y la suma de carga y retiro = 100;
+  - revisa que M217 S0 esté en los tres slicers y que Z se compense.
+- **Menús, variante B "marcada" más detalles:**
+  - Código en `assets-tema/decoracion_menus.inc`: un solo objeto LVGL con `design_cb` y `lv_draw_rect`, que no captura toques. Dibuja la franja del título, el acento, la línea roja con marcas de regla, el separador punteado, tres capas y la columna de navegación en archivos.
+  - Etiqueta "MAGNA 2" a la derecha del título; se borra si se pisa con el título.
+  - `aplicar_colores.py` lo pega en `draw_ui.cpp` con una lista blanca de 15 pantallas de íconos.
+  - El render en host compila el mismo .inc (`render menu`) y verifica línea, franja, punteado, capas, degradé e íconos.
+  - Build: 352.564 bytes (71 %); -Wall sin avisos nuevos.
+- **Degradé:** el usuario lo veía casi negro en la pantalla real.
+  - Abajo pasó de #2E0A0D a #5C0E14.
+  - Capas más claras: principal 0x80+i·0x14; menús 0x86/0xAE/0xD6.
+  - Capturas regeneradas (`generar_capturas.py` dibuja la misma decoración).
+
 ## Estado / pendiente
 - PlatformIO no está disponible en el entorno de Claude. Igual se compila y enlaza todo con `pruebas/compilacion-manual/` (ver etapa 6). El firmware oficial lo compila GitHub Actions.
-- Los perfiles no se abrieron en los slicers reales; solo se validaron el formato y la coherencia con el firmware.
+- Los perfiles no se abrieron en los slicers reales (no se puede instalar Cura acá). Se validaron contra la foto de ajustes de Cura 5.10 y contra el firmware.
+- Sin confirmar en la máquina: el largo de 100 mm del 2 en 1 (sale del perfil oficial de Hellbot).
 - Pendiente del usuario: compilar, flashear, correr `docs-magna/PRUEBAS-EN-IMPRESORA.md` y `CALIBRACION.md`, e importar los perfiles.
 
 ## Decisiones

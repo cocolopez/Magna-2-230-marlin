@@ -1,0 +1,2906 @@
+{
+"acceleration_enabled": {
+"type": "bool"
+},
+"acceleration_flooring": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_infill": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_ironing": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_layer_0": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_prime_tower": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_print": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_print_layer_0": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_roofing": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_skirt_brim": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_support": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_support_bottom": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_support_infill": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_support_interface": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_support_roof": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_topbottom": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_travel": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_travel_enabled": {
+"type": "bool"
+},
+"acceleration_travel_layer_0": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_wall": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_wall_0": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_wall_0_flooring": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_wall_0_roofing": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_wall_x": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_wall_x_flooring": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"acceleration_wall_x_roofing": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"adaptive_layer_height_enabled": {
+"type": "bool"
+},
+"adaptive_layer_height_threshold": {
+"type": "float"
+},
+"adaptive_layer_height_variation": {
+"minimum_value": "0.0",
+"type": "float"
+},
+"adaptive_layer_height_variation_step": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"adhesion_extruder_nr": {
+"type": "optional_extruder"
+},
+"adhesion_type": {
+"options": {
+"brim": "Brim",
+"none": "None",
+"raft": "Raft",
+"skirt": "Skirt"
+},
+"type": "enum"
+},
+"alternate_carve_order": {
+"type": "bool"
+},
+"alternate_extra_perimeter": {
+"type": "bool"
+},
+"anti_overhang_mesh": {
+"type": "bool"
+},
+"bottom_layers": {
+"maximum_value": "999999",
+"minimum_value": "0",
+"type": "int"
+},
+"bottom_skin_expand_distance": {
+"minimum_value": "-bottom_skin_preshrink",
+"type": "float"
+},
+"bottom_skin_preshrink": {
+"minimum_value": "0",
+"type": "float"
+},
+"bottom_thickness": {
+"maximum_value": "machine_height",
+"minimum_value": "0",
+"type": "float"
+},
+"bridge_enable_more_layers": {
+"type": "bool"
+},
+"bridge_fan_speed": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "float"
+},
+"bridge_fan_speed_2": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "float"
+},
+"bridge_fan_speed_3": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "float"
+},
+"bridge_settings_enabled": {
+"type": "bool"
+},
+"bridge_skin_density": {
+"minimum_value": "5",
+"type": "float"
+},
+"bridge_skin_density_2": {
+"minimum_value": "0",
+"type": "float"
+},
+"bridge_skin_density_3": {
+"minimum_value": "0",
+"type": "float"
+},
+"bridge_skin_material_flow": {
+"minimum_value": "5",
+"type": "float"
+},
+"bridge_skin_material_flow_2": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"bridge_skin_material_flow_3": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"bridge_skin_speed": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0",
+"type": "float"
+},
+"bridge_skin_speed_2": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0",
+"type": "float"
+},
+"bridge_skin_speed_3": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0",
+"type": "float"
+},
+"bridge_skin_support_threshold": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "float"
+},
+"bridge_sparse_infill_max_density": {
+"minimum_value": "0",
+"type": "float"
+},
+"bridge_wall_coast": {
+"maximum_value": "500",
+"minimum_value": "0",
+"type": "float"
+},
+"bridge_wall_material_flow": {
+"minimum_value": "5",
+"type": "float"
+},
+"bridge_wall_min_length": {
+"minimum_value": "0",
+"type": "float"
+},
+"bridge_wall_speed": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0",
+"type": "float"
+},
+"brim_gap": {
+"minimum_value": "-skirt_brim_line_width / 2",
+"type": "float"
+},
+"brim_inside_margin": {
+"minimum_value": "0",
+"type": "float"
+},
+"brim_line_count": {
+"minimum_value": "0",
+"type": "int"
+},
+"brim_location": {
+"options": {
+"everywhere": "Everywhere",
+"inside": "Inside Only",
+"outside": "Outside Only"
+},
+"type": "enum"
+},
+"brim_replaces_support": {
+"type": "bool"
+},
+"brim_smart_ordering": {
+"type": "bool"
+},
+"brim_width": {
+"minimum_value": "0.0",
+"type": "float"
+},
+"build_fan_full_at_height": {
+"minimum_value": "0",
+"type": "float"
+},
+"build_fan_full_layer": {
+"minimum_value": "0",
+"type": "int"
+},
+"build_volume_fan_nr": {
+"maximum_value": "999999",
+"minimum_value": "0",
+"type": "int"
+},
+"build_volume_temperature": {
+"minimum_value": "-273.15",
+"type": "float"
+},
+"bv_temp_anomaly_limit": {
+"type": "float"
+},
+"bv_temp_warn_limit": {
+"type": "float"
+},
+"carve_multiple_volumes": {
+"type": "bool"
+},
+"center_object": {
+"type": "bool"
+},
+"clean_between_layers": {
+"type": "bool"
+},
+"coasting_enable": {
+"type": "bool"
+},
+"coasting_min_volume": {
+"minimum_value": "0",
+"type": "float"
+},
+"coasting_speed": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"coasting_volume": {
+"minimum_value": "0",
+"type": "float"
+},
+"conical_overhang_angle": {
+"maximum_value": "89",
+"minimum_value": "-89",
+"type": "float"
+},
+"conical_overhang_enabled": {
+"type": "bool"
+},
+"conical_overhang_hole_size": {
+"minimum_value": "0",
+"type": "float"
+},
+"connect_infill_polygons": {
+"type": "bool"
+},
+"connect_skin_polygons": {
+"type": "bool"
+},
+"cool_during_extruder_switch": {
+"options": {
+"all_fans": "All fans",
+"only_last_extruder": "Only last extruder",
+"unchanged": "Unchanged"
+},
+"type": "enum"
+},
+"cool_fan_enabled": {
+"type": "bool"
+},
+"cool_fan_full_at_height": {
+"minimum_value": "0",
+"type": "float"
+},
+"cool_fan_full_layer": {
+"minimum_value": "1",
+"type": "int"
+},
+"cool_fan_speed": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "float"
+},
+"cool_fan_speed_0": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "float"
+},
+"cool_fan_speed_max": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "float"
+},
+"cool_fan_speed_min": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "float"
+},
+"cool_lift_head": {
+"type": "bool"
+},
+"cool_min_layer_time": {
+"minimum_value": "0",
+"type": "float"
+},
+"cool_min_layer_time_fan_speed_max": {
+"type": "float"
+},
+"cool_min_layer_time_overhang": {
+"minimum_value": "0",
+"type": "float"
+},
+"cool_min_layer_time_overhang_min_segment_length": {
+"minimum_value": "0",
+"type": "float"
+},
+"cool_min_speed": {
+"minimum_value": "1",
+"type": "float"
+},
+"cool_min_temperature": {
+"maximum_value": "365",
+"minimum_value": "-273.15",
+"type": "float"
+},
+"cross_infill_density_image": {
+"type": "str"
+},
+"cross_infill_pocket_size": {
+"minimum_value": "0",
+"type": "float"
+},
+"cross_support_density_image": {
+"type": "str"
+},
+"cutting_mesh": {
+"type": "bool"
+},
+"default_material_bed_temperature": {
+"maximum_value": "200",
+"minimum_value": "-273.15",
+"type": "float"
+},
+"default_material_print_temperature": {
+"maximum_value": "365",
+"minimum_value": "-273.15",
+"type": "float"
+},
+"draft_shield_dist": {
+"minimum_value": "0",
+"type": "float"
+},
+"draft_shield_enabled": {
+"type": "bool"
+},
+"draft_shield_height": {
+"minimum_value": "0",
+"type": "float"
+},
+"draft_shield_height_limitation": {
+"options": {
+"full": "Full",
+"limited": "Limited"
+},
+"type": "enum"
+},
+"expand_skins_expand_distance": {
+"minimum_value": "-skin_preshrink",
+"type": "float"
+},
+"extra_infill_lines_to_support_skins": {
+"options": {
+"none": "None",
+"walls": "Walls Only",
+"walls_and_lines": "Walls and Lines"
+},
+"type": "enum"
+},
+"extruder_nr": {
+"type": "extruder"
+},
+"extruder_prime_pos_abs": {
+"type": "bool"
+},
+"extruder_prime_pos_x": {
+"maximum_value": "machine_width",
+"type": "float"
+},
+"extruder_prime_pos_y": {
+"type": "float"
+},
+"extruder_prime_pos_z": {
+"maximum_value": "machine_height",
+"type": "float"
+},
+"extruders_enabled_count": {
+"maximum_value": "16",
+"minimum_value": "1",
+"type": "int"
+},
+"fill_outline_gaps": {
+"type": "bool"
+},
+"flooring_angles": {
+"type": "[int]"
+},
+"flooring_extruder_nr": {
+"type": "optional_extruder"
+},
+"flooring_layer_count": {
+"maximum_value": "999999",
+"minimum_value": "0",
+"type": "int"
+},
+"flooring_line_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"flooring_material_flow": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"flooring_monotonic": {
+"type": "bool"
+},
+"flooring_pattern": {
+"options": {
+"concentric": "Concentric",
+"lines": "Lines",
+"zigzag": "Zig Zag"
+},
+"type": "enum"
+},
+"flow_anomaly_limit": {
+"type": "float"
+},
+"flow_rate_extrusion_offset_factor": {
+"minimum_value": "0",
+"type": "float"
+},
+"flow_rate_max_extrusion_offset": {
+"minimum_value": "0",
+"type": "float"
+},
+"flow_warn_limit": {
+"type": "float"
+},
+"gantry_height": {
+"type": "float"
+},
+"gradual_flow_discretisation_step_size": {
+"maximum_value": 5.0,
+"minimum_value": 0.01,
+"type": "float"
+},
+"gradual_flow_enabled": {
+"type": "bool"
+},
+"gradual_infill_step_height": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"gradual_infill_steps": {
+"maximum_value": "999999 if infill_line_distance == 0 else (20 - math.log(infill_line_distance) / math.log(2))",
+"minimum_value": "0",
+"type": "int"
+},
+"gradual_support_infill_step_height": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"gradual_support_infill_steps": {
+"maximum_value": "(999999 if support_line_distance == 0 else (20 - math.log(support_line_distance) / math.log(2))) if support_structure != 'tree' else 0",
+"minimum_value": "0",
+"type": "int"
+},
+"group_outer_walls": {
+"type": "bool"
+},
+"hole_xy_offset": {
+"type": "float"
+},
+"hole_xy_offset_max_diameter": {
+"minimum_value": "0",
+"type": "float"
+},
+"infill_angles": {
+"type": "[int]"
+},
+"infill_before_walls": {
+"type": "bool"
+},
+"infill_enable_travel_optimization": {
+"type": "bool"
+},
+"infill_extruder_nr": {
+"type": "optional_extruder"
+},
+"infill_line_distance": {
+"minimum_value": "0",
+"type": "float"
+},
+"infill_line_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"infill_material_flow": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"infill_mesh": {
+"type": "bool"
+},
+"infill_mesh_order": {
+"type": "int"
+},
+"infill_multiplier": {
+"maximum_value": "999999",
+"minimum_value": "1",
+"type": "int"
+},
+"infill_offset_x": {
+"type": "float"
+},
+"infill_offset_y": {
+"type": "float"
+},
+"infill_overlap": {
+"type": "float"
+},
+"infill_overlap_mm": {
+"type": "float"
+},
+"infill_pattern": {
+"options": {
+"concentric": "Concentric",
+"cross": "Cross",
+"cross_3d": "Cross 3D",
+"cubic": "Cubic",
+"cubicsubdiv": "Cubic Subdivision",
+"grid": "Grid",
+"gyroid": "Gyroid",
+"lightning": "Lightning",
+"lines": "Lines",
+"quarter_cubic": "Quarter Cubic",
+"tetrahedral": "Octet",
+"triangles": "Triangles",
+"trihexagon": "Tri-Hexagon",
+"zigzag": "Zig Zag"
+},
+"type": "enum"
+},
+"infill_randomize_start_location": {
+"type": "bool"
+},
+"infill_sparse_density": {
+"minimum_value": "0",
+"type": "float"
+},
+"infill_sparse_thickness": {
+"maximum_value": "resolveOrValue('layer_height') * 8 if infill_line_distance > 0 else 999999",
+"minimum_value": "resolveOrValue('layer_height') / 2 if infill_line_distance > 0 else -999999",
+"type": "float"
+},
+"infill_support_angle": {
+"maximum_value": "90",
+"minimum_value": "0",
+"type": "float"
+},
+"infill_support_enabled": {
+"type": "bool"
+},
+"infill_wall_line_count": {
+"maximum_value": "999999",
+"minimum_value": "0",
+"type": "int"
+},
+"infill_wipe_dist": {
+"type": "float"
+},
+"initial_bottom_layers": {
+"maximum_value": "999999",
+"minimum_value": "0",
+"type": "int"
+},
+"initial_layer_line_width_factor": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"inset_direction": {
+"options": {
+"inside_out": "Inside To Outside",
+"outside_in": "Outside To Inside"
+},
+"type": "enum"
+},
+"interlocking_beam_layer_count": {
+"minimum_value": "1",
+"type": "int"
+},
+"interlocking_beam_width": {
+"maximum_value": "min(0.5 * machine_width, 0.5 * machine_depth)",
+"minimum_value": "min_odd_wall_line_width",
+"type": "float"
+},
+"interlocking_boundary_avoidance": {
+"maximum_value": "10",
+"minimum_value": "0",
+"type": "int"
+},
+"interlocking_depth": {
+"maximum_value": "10",
+"minimum_value": "1",
+"type": "int"
+},
+"interlocking_enable": {
+"type": "bool"
+},
+"interlocking_orientation": {
+"maximum_value": "360",
+"minimum_value": "0",
+"type": "float"
+},
+"ironing_enabled": {
+"type": "bool"
+},
+"ironing_flow": {
+"minimum_value": "0",
+"type": "float"
+},
+"ironing_inset": {
+"type": "float"
+},
+"ironing_line_spacing": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"ironing_monotonic": {
+"type": "bool"
+},
+"ironing_only_highest_layer": {
+"type": "bool"
+},
+"ironing_pattern": {
+"options": {
+"concentric": "Concentric",
+"zigzag": "Zig Zag"
+},
+"type": "enum"
+},
+"jerk_enabled": {
+"type": "bool"
+},
+"jerk_flooring": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_infill": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_ironing": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_layer_0": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_prime_tower": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_print": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_print_layer_0": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_roofing": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_skirt_brim": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_support": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_support_bottom": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_support_infill": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_support_interface": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_support_roof": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_topbottom": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_travel": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_travel_enabled": {
+"type": "bool"
+},
+"jerk_travel_layer_0": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_wall": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_wall_0": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_wall_0_flooring": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_wall_0_roofing": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_wall_x": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_wall_x_flooring": {
+"minimum_value": "0",
+"type": "float"
+},
+"jerk_wall_x_roofing": {
+"minimum_value": "0",
+"type": "float"
+},
+"layer_0_max_flow_acceleration": {
+"minimum_value": 0.01,
+"type": "float"
+},
+"layer_0_z_overlap": {
+"minimum_value": "0",
+"type": "float"
+},
+"layer_height": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"layer_height_0": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"layer_start_x": {
+"minimum_value": "machine_width / -2 if machine_center_is_zero else 0",
+"type": "float"
+},
+"layer_start_y": {
+"minimum_value": "machine_depth / -2 if machine_center_is_zero else 0",
+"type": "float"
+},
+"lightning_infill_overhang_angle": {
+"maximum_value": "90",
+"minimum_value": "0",
+"type": "float"
+},
+"lightning_infill_prune_angle": {
+"maximum_value": "90",
+"minimum_value": "0",
+"type": "float"
+},
+"lightning_infill_straightening_angle": {
+"maximum_value": "90",
+"minimum_value": "0",
+"type": "float"
+},
+"lightning_infill_support_angle": {
+"maximum_value": "90",
+"minimum_value": "0",
+"type": "float"
+},
+"line_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"machine_acceleration": {
+"type": "float"
+},
+"machine_always_write_active_tool": {
+"type": "bool"
+},
+"machine_buildplate_type": {
+"options": {
+"aluminum": "Aluminum",
+"glass": "Glass"
+},
+"type": "enum"
+},
+"machine_center_is_zero": {
+"type": "bool"
+},
+"machine_depth": {
+"maximum_value": "2000000",
+"minimum_value": "0.001",
+"type": "float"
+},
+"machine_disallowed_areas": {
+"type": "polygons"
+},
+"machine_end_gcode": {
+"type": "str"
+},
+"machine_endstop_positive_direction_x": {
+"type": "bool"
+},
+"machine_endstop_positive_direction_y": {
+"type": "bool"
+},
+"machine_endstop_positive_direction_z": {
+"type": "bool"
+},
+"machine_extruder_change_duration": {
+"minimum_value": "0",
+"type": "float"
+},
+"machine_extruder_cooling_fan_number": {
+"minimum_value": "0",
+"type": "int"
+},
+"machine_extruder_count": {
+"maximum_value": "16",
+"minimum_value": "1",
+"type": "int"
+},
+"machine_extruder_end_code": {
+"type": "str"
+},
+"machine_extruder_end_code_duration": {
+"minimum_value": "0",
+"type": "float"
+},
+"machine_extruder_end_pos_abs": {
+"type": "bool"
+},
+"machine_extruder_end_pos_x": {
+"type": "float"
+},
+"machine_extruder_end_pos_y": {
+"type": "float"
+},
+"machine_extruder_prestart_code": {
+"type": "str"
+},
+"machine_extruder_start_code": {
+"type": "str"
+},
+"machine_extruder_start_code_duration": {
+"minimum_value": "0",
+"type": "float"
+},
+"machine_extruder_start_pos_abs": {
+"type": "bool"
+},
+"machine_extruder_start_pos_x": {
+"type": "float"
+},
+"machine_extruder_start_pos_y": {
+"type": "float"
+},
+"machine_extruders_share_heater": {
+"type": "bool"
+},
+"machine_extruders_share_nozzle": {
+"type": "bool"
+},
+"machine_extruders_shared_nozzle_initial_retraction": {
+"minimum_value": "0",
+"type": "float"
+},
+"machine_feeder_wheel_diameter": {
+"type": "float"
+},
+"machine_firmware_retract": {
+"type": "bool"
+},
+"machine_gcode_flavor": {
+"options": {
+"BFB": "Bits from Bytes",
+"Cheetah": "Griffin+Cheetah",
+"Griffin": "Griffin",
+"MACH3": "Mach3",
+"Makerbot": "Makerbot",
+"RepRap (Marlin/Sprinter)": "Marlin",
+"RepRap (RepRap)": "RepRap",
+"RepRap (Volumetric)": "Marlin (Volumetric)",
+"Repetier": "Repetier",
+"UltiGCode": "Ultimaker 2"
+},
+"type": "enum"
+},
+"machine_head_with_fans_polygon": {
+"type": "polygon"
+},
+"machine_heat_zone_length": {
+"type": "float"
+},
+"machine_heated_bed": {
+"type": "bool"
+},
+"machine_heated_build_volume": {
+"type": "bool"
+},
+"machine_height": {
+"type": "float"
+},
+"machine_max_acceleration_e": {
+"type": "float"
+},
+"machine_max_acceleration_x": {
+"type": "float"
+},
+"machine_max_acceleration_y": {
+"type": "float"
+},
+"machine_max_acceleration_z": {
+"type": "float"
+},
+"machine_max_feedrate_e": {
+"type": "float"
+},
+"machine_max_feedrate_x": {
+"type": "float"
+},
+"machine_max_feedrate_y": {
+"type": "float"
+},
+"machine_max_feedrate_z": {
+"type": "float"
+},
+"machine_max_jerk_e": {
+"minimum_value": "0",
+"type": "float"
+},
+"machine_max_jerk_xy": {
+"minimum_value": "0",
+"type": "float"
+},
+"machine_max_jerk_z": {
+"minimum_value": "0",
+"type": "float"
+},
+"machine_min_cool_heat_time_window": {
+"type": "float"
+},
+"machine_minimum_feedrate": {
+"type": "float"
+},
+"machine_name": {
+"type": "str"
+},
+"machine_nozzle_cool_down_speed": {
+"type": "float"
+},
+"machine_nozzle_expansion_angle": {
+"maximum_value": "89",
+"minimum_value": "1",
+"type": "int"
+},
+"machine_nozzle_head_distance": {
+"type": "float"
+},
+"machine_nozzle_heat_up_speed": {
+"type": "float"
+},
+"machine_nozzle_id": {
+"type": "str"
+},
+"machine_nozzle_offset_x": {
+"type": "float"
+},
+"machine_nozzle_offset_y": {
+"type": "float"
+},
+"machine_nozzle_size": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"machine_nozzle_temp_enabled": {
+"type": "bool"
+},
+"machine_nozzle_tip_outer_diameter": {
+"type": "float"
+},
+"machine_scale_fan_speed_zero_to_one": {
+"type": "bool"
+},
+"machine_shape": {
+"options": {
+"elliptic": "Elliptic",
+"rectangular": "Rectangular"
+},
+"type": "enum"
+},
+"machine_show_variants": {
+"type": "bool"
+},
+"machine_start_gcode": {
+"type": "str"
+},
+"machine_start_gcode_first": {
+"type": "bool"
+},
+"machine_steps_per_mm_e": {
+"minimum_value": "0.0000001",
+"type": "float"
+},
+"machine_steps_per_mm_x": {
+"minimum_value": "0.0000001",
+"type": "float"
+},
+"machine_steps_per_mm_y": {
+"minimum_value": "0.0000001",
+"type": "float"
+},
+"machine_steps_per_mm_z": {
+"minimum_value": "0.0000001",
+"type": "float"
+},
+"machine_use_extruder_offset_to_offset_coords": {
+"type": "bool"
+},
+"machine_width": {
+"maximum_value": "2000000",
+"minimum_value": "0.001",
+"type": "float"
+},
+"magic_fuzzy_skin_enabled": {
+"type": "bool"
+},
+"magic_fuzzy_skin_outside_only": {
+"type": "bool"
+},
+"magic_fuzzy_skin_point_density": {
+"maximum_value": "2 / magic_fuzzy_skin_thickness",
+"minimum_value": "0.008",
+"type": "float"
+},
+"magic_fuzzy_skin_point_dist": {
+"minimum_value": "magic_fuzzy_skin_thickness / 2",
+"type": "float"
+},
+"magic_fuzzy_skin_thickness": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"magic_mesh_surface_mode": {
+"options": {
+"both": "Both",
+"normal": "Normal",
+"surface": "Surface"
+},
+"type": "enum"
+},
+"magic_spiralize": {
+"type": "bool"
+},
+"material_adhesion_tendency": {
+"maximum_value": "10",
+"minimum_value": "0",
+"type": "int"
+},
+"material_alternate_walls": {
+"type": "bool"
+},
+"material_anti_ooze_retracted_position": {
+"maximum_value": "0",
+"type": "float"
+},
+"material_anti_ooze_retraction_speed": {
+"maximum_value": "machine_max_feedrate_e",
+"minimum_value": "0",
+"type": "float"
+},
+"material_bed_temp_prepend": {
+"type": "bool"
+},
+"material_bed_temp_wait": {
+"type": "bool"
+},
+"material_bed_temperature": {
+"maximum_value": "200",
+"minimum_value": "-273.15",
+"type": "float"
+},
+"material_bed_temperature_layer_0": {
+"maximum_value": "200",
+"minimum_value": "-273.15",
+"type": "float"
+},
+"material_brand": {
+"type": "str"
+},
+"material_break_preparation_retracted_position": {
+"maximum_value": "0",
+"type": "float"
+},
+"material_break_preparation_speed": {
+"maximum_value": "machine_max_feedrate_e",
+"minimum_value": "0",
+"type": "float"
+},
+"material_break_preparation_temperature": {
+"maximum_value": "365",
+"minimum_value": "-273.15",
+"type": "float"
+},
+"material_break_retracted_position": {
+"maximum_value": "0",
+"type": "float"
+},
+"material_break_speed": {
+"maximum_value": "machine_max_feedrate_e",
+"minimum_value": "0",
+"type": "float"
+},
+"material_break_temperature": {
+"maximum_value": "365",
+"minimum_value": "-273.15",
+"type": "float"
+},
+"material_crystallinity": {
+"type": "bool"
+},
+"material_diameter": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"material_end_of_filament_purge_length": {
+"type": "float"
+},
+"material_end_of_filament_purge_speed": {
+"type": "float"
+},
+"material_extrusion_cool_down_speed": {
+"maximum_value": "machine_nozzle_heat_up_speed",
+"minimum_value": "0",
+"type": "float"
+},
+"material_final_print_temperature": {
+"maximum_value": "365",
+"minimum_value": "-273.15",
+"type": "float"
+},
+"material_flow": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"material_flow_layer_0": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"material_flow_temp_graph": {
+"type": "str"
+},
+"material_flush_purge_length": {
+"type": "float"
+},
+"material_flush_purge_speed": {
+"type": "float"
+},
+"material_guid": {
+"type": "str"
+},
+"material_initial_print_temperature": {
+"maximum_value": "365",
+"minimum_value": "-273.15",
+"type": "float"
+},
+"material_is_support_material": {
+"type": "bool"
+},
+"material_maximum_park_duration": {
+"type": "float"
+},
+"material_no_load_move_factor": {
+"type": "float"
+},
+"material_pressure_advance_factor": {
+"minimum_value": 0,
+"type": "float"
+},
+"material_print_temp_prepend": {
+"type": "bool"
+},
+"material_print_temp_wait": {
+"type": "bool"
+},
+"material_print_temperature": {
+"maximum_value": "365",
+"minimum_value": "-273.15",
+"type": "float"
+},
+"material_print_temperature_layer_0": {
+"maximum_value": "365",
+"minimum_value": "-273.15",
+"type": "float"
+},
+"material_shrinkage_percentage": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"material_shrinkage_percentage_xy": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"material_shrinkage_percentage_z": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"material_standby_temperature": {
+"maximum_value": "365",
+"minimum_value": "-273.15",
+"type": "float"
+},
+"material_surface_energy": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "int"
+},
+"material_type": {
+"type": "str"
+},
+"max_extrusion_before_wipe": {
+"type": "float"
+},
+"max_flow_acceleration": {
+"minimum_value": 0.01,
+"type": "float"
+},
+"max_skin_angle_for_expansion": {
+"maximum_value": "90",
+"minimum_value": "0",
+"type": "float"
+},
+"mesh_position_x": {
+"type": "float"
+},
+"mesh_position_y": {
+"type": "float"
+},
+"mesh_position_z": {
+"type": "float"
+},
+"mesh_rotation_matrix": {
+"type": "str"
+},
+"meshfix_extensive_stitching": {
+"type": "bool"
+},
+"meshfix_fluid_motion_angle": {
+"maximum_value": "90",
+"minimum_value": "0",
+"type": "float"
+},
+"meshfix_fluid_motion_enabled": {
+"type": "bool"
+},
+"meshfix_fluid_motion_shift_distance": {
+"maximum_value": "1",
+"minimum_value": "0.01",
+"type": "float"
+},
+"meshfix_fluid_motion_small_distance": {
+"maximum_value": "0.1",
+"minimum_value": "0.01",
+"type": "float"
+},
+"meshfix_keep_open_polygons": {
+"type": "bool"
+},
+"meshfix_maximum_deviation": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"meshfix_maximum_extrusion_area_deviation": {
+"minimum_value": "0",
+"type": "float"
+},
+"meshfix_maximum_resolution": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"meshfix_maximum_travel_resolution": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"meshfix_union_all": {
+"type": "bool"
+},
+"meshfix_union_all_remove_holes": {
+"type": "bool"
+},
+"min_bead_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"min_even_wall_line_width": {
+"type": "float"
+},
+"min_feature_size": {
+"maximum_value": "wall_line_width_0",
+"minimum_value": "0",
+"type": "float"
+},
+"min_infill_area": {
+"minimum_value": "0",
+"type": "float"
+},
+"min_odd_wall_line_width": {
+"type": "float"
+},
+"min_skin_width_for_expansion": {
+"minimum_value": "0",
+"type": "float"
+},
+"min_wall_line_width": {
+"type": "float"
+},
+"minimum_bottom_area": {
+"minimum_value": "0",
+"type": "float"
+},
+"minimum_interface_area": {
+"minimum_value": "0",
+"type": "float"
+},
+"minimum_polygon_circumference": {
+"minimum_value": "0",
+"type": "float"
+},
+"minimum_roof_area": {
+"minimum_value": "0",
+"type": "float"
+},
+"minimum_support_area": {
+"minimum_value": "0",
+"type": "float"
+},
+"mold_angle": {
+"maximum_value": "90",
+"minimum_value": "-89",
+"type": "float"
+},
+"mold_enabled": {
+"type": "bool"
+},
+"mold_roof_height": {
+"minimum_value": "0",
+"type": "float"
+},
+"mold_width": {
+"type": "float"
+},
+"multiple_mesh_overlap": {
+"minimum_value": "0",
+"type": "float"
+},
+"nozzle_disallowed_areas": {
+"type": "polygons"
+},
+"ooze_shield_angle": {
+"maximum_value": "90",
+"minimum_value": "0",
+"type": "float"
+},
+"ooze_shield_dist": {
+"minimum_value": "0",
+"type": "float"
+},
+"ooze_shield_enabled": {
+"type": "bool"
+},
+"optimize_wall_printing_order": {
+"type": "bool"
+},
+"ppr_enable": {
+"type": "bool"
+},
+"prime_blob_enable": {
+"type": "bool"
+},
+"prime_tower_base_curve_magnitude": {
+"maximum_value": "10",
+"minimum_value": "0",
+"type": "float"
+},
+"prime_tower_base_height": {
+"maximum_value": "machine_height",
+"minimum_value": "0",
+"type": "float"
+},
+"prime_tower_base_size": {
+"maximum_value": "min(0.5 * machine_width, 0.5 * machine_depth)",
+"minimum_value": "0",
+"type": "float"
+},
+"prime_tower_brim_enable": {
+"type": "bool"
+},
+"prime_tower_enable": {
+"type": "bool"
+},
+"prime_tower_flow": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"prime_tower_line_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"prime_tower_max_bridging_distance": {
+"minimum_value": "line_width",
+"type": "float"
+},
+"prime_tower_min_shell_thickness": {
+"minimum_value": "max(extruderValues('prime_tower_line_width'))",
+"type": "float"
+},
+"prime_tower_min_volume": {
+"minimum_value": "0",
+"type": "float"
+},
+"prime_tower_mode": {
+"options": {
+"interleaved": "Interleaved",
+"normal": "Normal"
+},
+"type": "enum"
+},
+"prime_tower_position_x": {
+"maximum_value": "(machine_width / 2 if machine_center_is_zero else machine_width) - (resolveOrValue('prime_tower_base_size') if (resolveOrValue('adhesion_type') == 'raft' or resolveOrValue('prime_tower_brim_enable')) else 0)",
+"minimum_value": "resolveOrValue('prime_tower_size') + (resolveOrValue('prime_tower_base_size') if (resolveOrValue('adhesion_type') == 'raft' or resolveOrValue('prime_tower_brim_enable')) else 0) - (machine_width / 2 if machine_center_is_zero else 0)",
+"type": "float"
+},
+"prime_tower_position_y": {
+"maximum_value": "(machine_depth / 2 - resolveOrValue('prime_tower_size') if machine_center_is_zero else machine_depth - resolveOrValue('prime_tower_size')) - (resolveOrValue('prime_tower_base_size') if (resolveOrValue('adhesion_type') == 'raft' or resolveOrValue('prime_tower_brim_enable')) else 0)",
+"minimum_value": "(machine_depth / -2 if machine_center_is_zero else 0) + (resolveOrValue('prime_tower_base_size') if (resolveOrValue('adhesion_type') == 'raft' or resolveOrValue('prime_tower_brim_enable')) else 0)",
+"type": "float"
+},
+"prime_tower_raft_base_line_spacing": {
+"minimum_value": "0",
+"type": "float"
+},
+"prime_tower_size": {
+"maximum_value": "min(0.5 * machine_width, 0.5 * machine_depth)",
+"minimum_value": "0",
+"type": "float"
+},
+"prime_tower_wipe_enabled": {
+"type": "bool"
+},
+"print_sequence": {
+"options": {
+"all_at_once": "All at Once",
+"one_at_a_time": "One at a Time"
+},
+"type": "enum"
+},
+"print_temp_anomaly_limit": {
+"type": "float"
+},
+"print_temp_warn_limit": {
+"type": "float"
+},
+"raft_acceleration": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"raft_airgap": {
+"minimum_value": "0",
+"type": "float"
+},
+"raft_base_acceleration": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"raft_base_extruder_nr": {
+"type": "extruder"
+},
+"raft_base_fan_speed": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "float"
+},
+"raft_base_flow": {
+"minimum_value": "10",
+"type": "float"
+},
+"raft_base_infill_overlap": {
+"type": "float"
+},
+"raft_base_infill_overlap_mm": {
+"type": "float"
+},
+"raft_base_jerk": {
+"minimum_value": "0",
+"type": "float"
+},
+"raft_base_line_spacing": {
+"minimum_value": "0",
+"type": "float"
+},
+"raft_base_line_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"raft_base_margin": {
+"type": "float"
+},
+"raft_base_remove_inside_corners": {
+"type": "bool"
+},
+"raft_base_smoothing": {
+"minimum_value": "0",
+"type": "float"
+},
+"raft_base_speed": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"raft_base_thickness": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"raft_base_wall_count": {
+"minimum_value": "0",
+"type": "int"
+},
+"raft_fan_speed": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "float"
+},
+"raft_flow": {
+"minimum_value": "10",
+"type": "float"
+},
+"raft_interface_acceleration": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"raft_interface_extruder_nr": {
+"type": "extruder"
+},
+"raft_interface_fan_speed": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "float"
+},
+"raft_interface_flow": {
+"minimum_value": "10",
+"type": "float"
+},
+"raft_interface_infill_overlap": {
+"type": "float"
+},
+"raft_interface_infill_overlap_mm": {
+"type": "float"
+},
+"raft_interface_jerk": {
+"minimum_value": "0",
+"type": "float"
+},
+"raft_interface_layers": {
+"minimum_value": "0",
+"type": "int"
+},
+"raft_interface_line_spacing": {
+"minimum_value": "0",
+"type": "float"
+},
+"raft_interface_line_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"raft_interface_margin": {
+"type": "float"
+},
+"raft_interface_remove_inside_corners": {
+"type": "bool"
+},
+"raft_interface_smoothing": {
+"minimum_value": "0",
+"type": "float"
+},
+"raft_interface_speed": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"raft_interface_thickness": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"raft_interface_wall_count": {
+"minimum_value": "0",
+"type": "int"
+},
+"raft_interface_z_offset": {
+"maximum_value": "raft_interface_thickness",
+"minimum_value": "-raft_interface_thickness",
+"type": "float"
+},
+"raft_jerk": {
+"minimum_value": "0",
+"type": "float"
+},
+"raft_margin": {
+"type": "float"
+},
+"raft_remove_inside_corners": {
+"type": "bool"
+},
+"raft_smoothing": {
+"minimum_value": "0",
+"type": "float"
+},
+"raft_speed": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"raft_surface_acceleration": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"raft_surface_extruder_nr": {
+"type": "extruder"
+},
+"raft_surface_fan_speed": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "float"
+},
+"raft_surface_flow": {
+"minimum_value": "10",
+"type": "float"
+},
+"raft_surface_infill_overlap": {
+"type": "float"
+},
+"raft_surface_infill_overlap_mm": {
+"type": "float"
+},
+"raft_surface_jerk": {
+"minimum_value": "0",
+"type": "float"
+},
+"raft_surface_layers": {
+"minimum_value": "0",
+"type": "int"
+},
+"raft_surface_line_spacing": {
+"minimum_value": "0",
+"type": "float"
+},
+"raft_surface_line_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"raft_surface_margin": {
+"type": "float"
+},
+"raft_surface_monotonic": {
+"type": "bool"
+},
+"raft_surface_remove_inside_corners": {
+"type": "bool"
+},
+"raft_surface_smoothing": {
+"minimum_value": "0",
+"type": "float"
+},
+"raft_surface_speed": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"raft_surface_thickness": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"raft_surface_wall_count": {
+"minimum_value": "0",
+"type": "int"
+},
+"raft_surface_z_offset": {
+"maximum_value": "raft_surface_thickness",
+"minimum_value": "-raft_surface_thickness",
+"type": "float"
+},
+"raft_wall_count": {
+"minimum_value": "0",
+"type": "int"
+},
+"relative_extrusion": {
+"type": "bool"
+},
+"remove_empty_first_layers": {
+"type": "bool"
+},
+"reset_flow_duration": {
+"type": "float"
+},
+"retract_at_layer_change": {
+"type": "bool"
+},
+"retraction_amount": {
+"type": "float"
+},
+"retraction_combing": {
+"options": {
+"all": "All",
+"infill": "Within Infill",
+"no_outer_surfaces": "Not on Outer Surface",
+"noskin": "Not in Skin",
+"off": "Off"
+},
+"type": "enum"
+},
+"retraction_combing_avoid_distance": {
+"minimum_value": "0",
+"type": "float"
+},
+"retraction_combing_max_distance": {
+"minimum_value": "0",
+"type": "float"
+},
+"retraction_count_max": {
+"maximum_value": 999999999,
+"minimum_value": "0",
+"type": "int"
+},
+"retraction_enable": {
+"type": "bool"
+},
+"retraction_extra_prime_amount": {
+"type": "float"
+},
+"retraction_extrusion_window": {
+"minimum_value": "0",
+"type": "float"
+},
+"retraction_hop": {
+"type": "float"
+},
+"retraction_hop_after_extruder_switch": {
+"type": "bool"
+},
+"retraction_hop_after_extruder_switch_height": {
+"type": "float"
+},
+"retraction_hop_enabled": {
+"type": "bool"
+},
+"retraction_hop_only_when_collides": {
+"type": "bool"
+},
+"retraction_min_travel": {
+"minimum_value": "0",
+"type": "float"
+},
+"retraction_prime_speed": {
+"maximum_value": "machine_max_feedrate_e if retraction_enable else float('inf')",
+"minimum_value": "0.0001",
+"type": "float"
+},
+"retraction_retract_speed": {
+"maximum_value": "machine_max_feedrate_e if retraction_enable else float('inf')",
+"minimum_value": "0.0001",
+"type": "float"
+},
+"retraction_speed": {
+"maximum_value": "machine_max_feedrate_e if retraction_enable else float('inf')",
+"minimum_value": "0.0001",
+"type": "float"
+},
+"roofing_angles": {
+"type": "[int]"
+},
+"roofing_extruder_nr": {
+"type": "optional_extruder"
+},
+"roofing_layer_count": {
+"maximum_value": "999999",
+"minimum_value": "0",
+"type": "int"
+},
+"roofing_line_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"roofing_material_flow": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"roofing_monotonic": {
+"type": "bool"
+},
+"roofing_pattern": {
+"options": {
+"concentric": "Concentric",
+"lines": "Lines",
+"zigzag": "Zig Zag"
+},
+"type": "enum"
+},
+"scarf_joint_seam_length": {
+"minimum_value": "0",
+"type": "float"
+},
+"scarf_joint_seam_start_height_ratio": {
+"maximum_value": 100.0,
+"minimum_value": 0,
+"type": "float"
+},
+"scarf_split_distance": {
+"maximum_value": 100.0,
+"minimum_value": 0.1,
+"type": "float"
+},
+"seam_overhang_angle": {
+"maximum_value": "90",
+"minimum_value": "0",
+"type": "float"
+},
+"skin_angles": {
+"type": "[int]"
+},
+"skin_edge_support_layers": {
+"maximum_value": "999999",
+"minimum_value": "0",
+"type": "int"
+},
+"skin_edge_support_thickness": {
+"maximum_value": "machine_height",
+"minimum_value": "0",
+"type": "float"
+},
+"skin_line_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"skin_material_flow": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"skin_material_flow_layer_0": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"skin_monotonic": {
+"type": "bool"
+},
+"skin_no_small_gaps_heuristic": {
+"type": "bool"
+},
+"skin_outline_count": {
+"maximum_value": "999999",
+"minimum_value": "0",
+"type": "int"
+},
+"skin_overlap": {
+"type": "float"
+},
+"skin_overlap_mm": {
+"type": "float"
+},
+"skin_preshrink": {
+"minimum_value": "0",
+"type": "float"
+},
+"skirt_brim_extruder_nr": {
+"type": "optional_extruder"
+},
+"skirt_brim_line_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"skirt_brim_material_flow": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"skirt_brim_minimal_length": {
+"minimum_value": "0",
+"type": "float"
+},
+"skirt_brim_speed": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"skirt_gap": {
+"minimum_value": "0",
+"type": "float"
+},
+"skirt_height": {
+"maximum_value": "machine_height / layer_height",
+"minimum_value": "1",
+"type": "int"
+},
+"skirt_line_count": {
+"maximum_value": "0.5 * min(machine_width, machine_depth) / skirt_brim_line_width",
+"minimum_value": "0",
+"type": "int"
+},
+"slicing_tolerance": {
+"options": {
+"exclusive": "Exclusive",
+"inclusive": "Inclusive",
+"middle": "Middle"
+},
+"type": "enum"
+},
+"small_feature_max_length": {
+"minimum_value": "0",
+"type": "float"
+},
+"small_feature_speed_factor": {
+"minimum_value": "1",
+"type": "float"
+},
+"small_feature_speed_factor_0": {
+"minimum_value": "1",
+"type": "float"
+},
+"small_hole_max_size": {
+"minimum_value": "0",
+"type": "float"
+},
+"small_skin_on_surface": {
+"type": "bool"
+},
+"small_skin_width": {
+"minimum_value": "0",
+"type": "float"
+},
+"smooth_spiralized_contours": {
+"type": "bool"
+},
+"speed_equalize_flow_width_factor": {
+"minimum_value": "0.0",
+"type": "float"
+},
+"speed_flooring": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_infill": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_ironing": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.001",
+"type": "float"
+},
+"speed_layer_0": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_prime_tower": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_print": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_print_layer_0": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_roofing": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_slowdown_layers": {
+"maximum_value": "999999",
+"minimum_value": "0",
+"type": "int"
+},
+"speed_support": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_support_bottom": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_support_infill": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_support_interface": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_support_roof": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_topbottom": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_travel": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_travel_layer_0": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_wall": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_wall_0": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_wall_0_flooring": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_wall_0_roofing": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_wall_x": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_wall_x_flooring": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_wall_x_roofing": {
+"maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+"minimum_value": "0.1",
+"type": "float"
+},
+"speed_z_hop": {
+"maximum_value": "machine_max_feedrate_z",
+"minimum_value": "0",
+"type": "float"
+},
+"sub_div_rad_add": {
+"type": "float"
+},
+"support_angle": {
+"maximum_value": "90",
+"minimum_value": "0",
+"type": "float"
+},
+"support_bottom_angles": {
+"type": "[int]"
+},
+"support_bottom_density": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "float"
+},
+"support_bottom_distance": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_bottom_enable": {
+"type": "bool"
+},
+"support_bottom_extruder_nr": {
+"type": "extruder"
+},
+"support_bottom_height": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_bottom_line_distance": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_bottom_line_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"support_bottom_material_flow": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"support_bottom_offset": {
+"maximum_value": "extruderValue(support_extruder_nr, 'support_offset') if support_structure == 'normal' else None",
+"type": "float"
+},
+"support_bottom_pattern": {
+"options": {
+"concentric": "Concentric",
+"grid": "Grid",
+"lines": "Lines",
+"triangles": "Triangles",
+"zigzag": "Zig Zag"
+},
+"type": "enum"
+},
+"support_bottom_stair_step_height": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_bottom_stair_step_min_slope": {
+"maximum_value": "89.99",
+"minimum_value": "0.01",
+"type": "float"
+},
+"support_bottom_stair_step_width": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_bottom_wall_count": {
+"maximum_value": "999999",
+"minimum_value": "0",
+"type": "int"
+},
+"support_brim_enable": {
+"type": "bool"
+},
+"support_brim_line_count": {
+"minimum_value": "0",
+"type": "int"
+},
+"support_brim_width": {
+"minimum_value": "0.0",
+"type": "float"
+},
+"support_conical_angle": {
+"maximum_value": "90",
+"minimum_value": "-90",
+"type": "float"
+},
+"support_conical_enabled": {
+"type": "bool"
+},
+"support_conical_min_width": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_connect_zigzags": {
+"type": "bool"
+},
+"support_enable": {
+"type": "bool"
+},
+"support_extruder_nr": {
+"type": "extruder"
+},
+"support_extruder_nr_layer_0": {
+"type": "extruder"
+},
+"support_fan_enable": {
+"type": "bool"
+},
+"support_infill_angles": {
+"type": "[int]"
+},
+"support_infill_density_multiplier_initial_layer": {
+"minimum_value": "1",
+"type": "int"
+},
+"support_infill_extruder_nr": {
+"type": "extruder"
+},
+"support_infill_rate": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_infill_sparse_thickness": {
+"maximum_value": "resolveOrValue('layer_height') * 8",
+"minimum_value": "resolveOrValue('layer_height')",
+"type": "float"
+},
+"support_initial_layer_line_distance": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_interface_angles": {
+"type": "[int]"
+},
+"support_interface_density": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_interface_enable": {
+"type": "bool"
+},
+"support_interface_extruder_nr": {
+"type": "extruder"
+},
+"support_interface_height": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_interface_line_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"support_interface_material_flow": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"support_interface_offset": {
+"maximum_value": "extruderValue(support_extruder_nr, 'support_offset') if support_structure == 'normal' else None",
+"type": "float"
+},
+"support_interface_pattern": {
+"options": {
+"concentric": "Concentric",
+"grid": "Grid",
+"lines": "Lines",
+"triangles": "Triangles",
+"zigzag": "Zig Zag"
+},
+"type": "enum"
+},
+"support_interface_priority": {
+"options": {
+"interface_area_overwrite_support_area": "Interface preferred",
+"interface_lines_overwrite_support_area": "Interface lines preferred",
+"nothing": "Both overlap",
+"support_area_overwrite_interface_area": "Support preferred",
+"support_lines_overwrite_interface_area": "Support lines preferred"
+},
+"type": "enum"
+},
+"support_interface_wall_count": {
+"maximum_value": "999999",
+"minimum_value": "0",
+"type": "int"
+},
+"support_join_distance": {
+"type": "float"
+},
+"support_line_distance": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_line_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"support_material_flow": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"support_mesh": {
+"type": "bool"
+},
+"support_mesh_drop_down": {
+"type": "bool"
+},
+"support_meshes_present": {
+"type": "bool"
+},
+"support_offset": {
+"type": "float"
+},
+"support_pattern": {
+"options": {
+"concentric": "Concentric",
+"cross": "Cross",
+"grid": "Grid",
+"gyroid": "Gyroid",
+"lines": "Lines",
+"triangles": "Triangles",
+"zigzag": "Zig Zag"
+},
+"type": "enum"
+},
+"support_roof_angles": {
+"type": "[int]"
+},
+"support_roof_density": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "float"
+},
+"support_roof_enable": {
+"type": "bool"
+},
+"support_roof_extruder_nr": {
+"type": "extruder"
+},
+"support_roof_height": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_roof_line_distance": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_roof_line_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"support_roof_material_flow": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"support_roof_offset": {
+"maximum_value": "extruderValue(support_extruder_nr, 'support_offset') if support_structure == 'normal' else None",
+"type": "float"
+},
+"support_roof_pattern": {
+"options": {
+"concentric": "Concentric",
+"grid": "Grid",
+"lines": "Lines",
+"triangles": "Triangles",
+"zigzag": "Zig Zag"
+},
+"type": "enum"
+},
+"support_roof_wall_count": {
+"maximum_value": "999999",
+"minimum_value": "0",
+"type": "int"
+},
+"support_skip_some_zags": {
+"type": "bool"
+},
+"support_skip_zag_per_mm": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_structure": {
+"options": {
+"normal": "Normal",
+"tree": "Tree"
+},
+"type": "enum"
+},
+"support_supported_skin_fan_speed": {
+"maximum_value": "100",
+"minimum_value": "0",
+"type": "float"
+},
+"support_top_distance": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_tower_diameter": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_tower_maximum_supported_diameter": {
+"maximum_value": "support_tower_diameter",
+"minimum_value": "0",
+"type": "float"
+},
+"support_tower_roof_angle": {
+"maximum_value": "90",
+"minimum_value": "0",
+"type": "int"
+},
+"support_tree_angle": {
+"maximum_value": "89",
+"minimum_value": "0",
+"type": "float"
+},
+"support_tree_angle_slow": {
+"maximum_value": "support_tree_angle",
+"minimum_value": "0",
+"type": "float"
+},
+"support_tree_bp_diameter": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_tree_branch_diameter": {
+"minimum_value": "support_tree_tip_diameter",
+"type": "float"
+},
+"support_tree_branch_diameter_angle": {
+"maximum_value": "89.9999",
+"minimum_value": "0",
+"type": "float"
+},
+"support_tree_branch_reach_limit": {
+"minimum_value": "1",
+"type": "float"
+},
+"support_tree_limit_branch_reach": {
+"type": "bool"
+},
+"support_tree_max_diameter": {
+"minimum_value": "support_tree_branch_diameter",
+"type": "float"
+},
+"support_tree_max_diameter_increase_by_merges_when_support_to_model": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_tree_min_height_to_model": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_tree_rest_preference": {
+"options": {
+"buildplate": "On buildplate when possible",
+"graceful": "On model if required"
+},
+"type": "enum"
+},
+"support_tree_tip_diameter": {
+"maximum_value": "support_tree_branch_diameter",
+"minimum_value": "min_wall_line_width",
+"type": "float"
+},
+"support_tree_top_rate": {
+"minimum_value": "0.1",
+"type": "float"
+},
+"support_type": {
+"options": {
+"buildplate": "Touching Buildplate",
+"everywhere": "Everywhere"
+},
+"type": "enum"
+},
+"support_use_towers": {
+"type": "bool"
+},
+"support_wall_count": {
+"maximum_value": "999999",
+"minimum_value": "0",
+"type": "int"
+},
+"support_xy_distance": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_xy_distance_overhang": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_xy_overrides_z": {
+"options": {
+"xy_overrides_z": "X/Y overrides Z",
+"z_overrides_xy": "Z overrides X/Y"
+},
+"type": "enum"
+},
+"support_z_distance": {
+"minimum_value": "0",
+"type": "float"
+},
+"support_z_seam_away_from_model": {
+"type": "bool"
+},
+"support_z_seam_min_distance": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"support_zag_skip_count": {
+"minimum_value": "1",
+"type": "int"
+},
+"switch_extruder_extra_prime_amount": {
+"type": "float"
+},
+"switch_extruder_prime_speed": {
+"maximum_value": "machine_max_feedrate_e if retraction_enable else float('inf')",
+"minimum_value": "0.1",
+"type": "float"
+},
+"switch_extruder_retraction_amount": {
+"type": "float"
+},
+"switch_extruder_retraction_speed": {
+"maximum_value": "machine_max_feedrate_e if retraction_enable else float('inf')",
+"minimum_value": "0.1",
+"type": "float"
+},
+"switch_extruder_retraction_speeds": {
+"maximum_value": "machine_max_feedrate_e if retraction_enable else float('inf')",
+"minimum_value": "0.1",
+"type": "float"
+},
+"top_bottom_extruder_nr": {
+"type": "optional_extruder"
+},
+"top_bottom_pattern": {
+"options": {
+"concentric": "Concentric",
+"lines": "Lines",
+"zigzag": "Zig Zag"
+},
+"type": "enum"
+},
+"top_bottom_pattern_0": {
+"options": {
+"concentric": "Concentric",
+"lines": "Lines",
+"zigzag": "Zig Zag"
+},
+"type": "enum"
+},
+"top_bottom_thickness": {
+"maximum_value": "machine_height",
+"minimum_value": "0",
+"type": "float"
+},
+"top_layers": {
+"maximum_value": "999999",
+"minimum_value": "0",
+"type": "int"
+},
+"top_skin_expand_distance": {
+"minimum_value": "-top_skin_preshrink",
+"type": "float"
+},
+"top_skin_preshrink": {
+"minimum_value": "0",
+"type": "float"
+},
+"top_thickness": {
+"maximum_value": "machine_height",
+"minimum_value": "0",
+"type": "float"
+},
+"travel_avoid_distance": {
+"minimum_value": "0",
+"type": "float"
+},
+"travel_avoid_other_parts": {
+"type": "bool"
+},
+"travel_avoid_supports": {
+"type": "bool"
+},
+"travel_retract_before_outer_wall": {
+"type": "bool"
+},
+"user_defined_print_order_enabled": {
+"type": "bool"
+},
+"wall_0_acceleration": {
+"maximum_value": 100000.0,
+"minimum_value": 1.0,
+"type": "float"
+},
+"wall_0_deceleration": {
+"maximum_value": 100000.0,
+"minimum_value": 1.0,
+"type": "float"
+},
+"wall_0_end_speed_ratio": {
+"maximum_value": 100.0,
+"minimum_value": 0.0,
+"type": "float"
+},
+"wall_0_extruder_nr": {
+"type": "optional_extruder"
+},
+"wall_0_inset": {
+"type": "float"
+},
+"wall_0_material_flow": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"wall_0_material_flow_flooring": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"wall_0_material_flow_layer_0": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"wall_0_material_flow_roofing": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"wall_0_speed_split_distance": {
+"maximum_value": 100.0,
+"minimum_value": 0.1,
+"type": "float"
+},
+"wall_0_start_speed_ratio": {
+"maximum_value": 100.0,
+"minimum_value": 0.0,
+"type": "float"
+},
+"wall_0_wipe_dist": {
+"minimum_value": "0",
+"type": "float"
+},
+"wall_distribution_count": {
+"maximum_value": "999999",
+"minimum_value": "1",
+"type": "int"
+},
+"wall_extruder_nr": {
+"type": "optional_extruder"
+},
+"wall_line_count": {
+"maximum_value": "999999",
+"minimum_value": "0",
+"type": "int"
+},
+"wall_line_width": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"wall_line_width_0": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"wall_line_width_x": {
+"minimum_value": "0.001",
+"type": "float"
+},
+"wall_material_flow": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"wall_overhang_angle": {
+"maximum_value": "90",
+"minimum_value": "0",
+"type": "float"
+},
+"wall_overhang_speed_factors": {
+"type": "[int]"
+},
+"wall_thickness": {
+"maximum_value": "999999 * line_width",
+"minimum_value": "0",
+"type": "float"
+},
+"wall_transition_angle": {
+"maximum_value": "59",
+"minimum_value": "1",
+"type": "float"
+},
+"wall_transition_filter_deviation": {
+"minimum_value": "0",
+"type": "float"
+},
+"wall_transition_filter_distance": {
+"maximum_value": "999999",
+"minimum_value": "wall_transition_length",
+"type": "float"
+},
+"wall_transition_length": {
+"maximum_value": "min_bead_width * 3 * math.pi",
+"minimum_value": "0.001",
+"type": "float"
+},
+"wall_x_extruder_nr": {
+"type": "optional_extruder"
+},
+"wall_x_material_flow": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"wall_x_material_flow_flooring": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"wall_x_material_flow_layer_0": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"wall_x_material_flow_roofing": {
+"minimum_value": "0.0001",
+"type": "float"
+},
+"wipe_brush_pos_x": {
+"type": "float"
+},
+"wipe_hop_amount": {
+"type": "float"
+},
+"wipe_hop_enable": {
+"type": "bool"
+},
+"wipe_hop_speed": {
+"minimum_value": "0",
+"type": "float"
+},
+"wipe_move_distance": {
+"type": "float"
+},
+"wipe_pause": {
+"minimum_value": "0",
+"type": "float"
+},
+"wipe_repeat_count": {
+"minimum_value": "0",
+"type": "int"
+},
+"wipe_retraction_amount": {
+"type": "float"
+},
+"wipe_retraction_enable": {
+"type": "bool"
+},
+"wipe_retraction_extra_prime_amount": {
+"type": "float"
+},
+"wipe_retraction_prime_speed": {
+"maximum_value": "machine_max_feedrate_e",
+"minimum_value": "0",
+"type": "float"
+},
+"wipe_retraction_retract_speed": {
+"maximum_value": "machine_max_feedrate_e",
+"minimum_value": "0",
+"type": "float"
+},
+"wipe_retraction_speed": {
+"maximum_value": "machine_max_feedrate_e",
+"minimum_value": "0",
+"type": "float"
+},
+"xy_offset": {
+"type": "float"
+},
+"xy_offset_layer_0": {
+"type": "float"
+},
+"z_seam_corner": {
+"options": {
+"z_seam_corner_any": "Hide or Expose Seam",
+"z_seam_corner_inner": "Hide Seam",
+"z_seam_corner_none": "None",
+"z_seam_corner_outer": "Expose Seam",
+"z_seam_corner_weighted": "Smart Hiding"
+},
+"type": "enum"
+},
+"z_seam_on_vertex": {
+"type": "bool"
+},
+"z_seam_position": {
+"options": {
+"back": "Back",
+"backleft": "Back Left",
+"backright": "Back Right",
+"front": "Front",
+"frontleft": "Front Left",
+"frontright": "Front Right",
+"left": "Left",
+"right": "Right"
+},
+"type": "enum"
+},
+"z_seam_relative": {
+"type": "bool"
+},
+"z_seam_type": {
+"options": {
+"back": "User Specified",
+"random": "Random",
+"sharpest_corner": "Sharpest Corner",
+"shortest": "Shortest"
+},
+"type": "enum"
+},
+"z_seam_x": {
+"type": "float"
+},
+"z_seam_y": {
+"type": "float"
+},
+"zig_zaggify_infill": {
+"type": "bool"
+},
+"zig_zaggify_support": {
+"type": "bool"
+}
+}

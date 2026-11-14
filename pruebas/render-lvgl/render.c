@@ -2,11 +2,13 @@
    la pantalla principal usando los íconos del tema leídos desde archivo ("F:/bmp_xxx.bin"), y guarda el
    framebuffer 480x320 RGB565. Sirve para detectar íconos con formato inválido ANTES de flashear
    (por ejemplo cf=5, que se ve verde y repetido).
-   Uso: render <carpeta_assets> <salida.raw> */
+   Uso: render <carpeta_assets> <salida.raw> [menu]
+   Con "menu" dibuja la pantalla Ajustes con la decoración marcada (decoracion_menus.inc). */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include "lvgl.h"
+#include "decoracion_menus.inc"   /* assets-tema/: el mismo código que se pega en draw_ui.cpp */
 static const char *DIR_ASSETS;
 static uint16_t fb[480*320];
 static void flush(lv_disp_drv_t *d, const lv_area_t *a, lv_color_t *c){
@@ -33,13 +35,25 @@ int main(int argc,char**argv){
   lv_fs_drv_t fd; memset(&fd,0,sizeof fd); lv_fs_drv_init(&fd); fd.file_size=sizeof(mf_t); fd.letter='F';
   fd.open_cb=f_open; fd.close_cb=f_close; fd.read_cb=f_read; fd.seek_cb=f_seek; fd.tell_cb=f_tell; lv_fs_drv_register(&fd);
   static lv_style_t scr; lv_style_copy(&scr,&lv_style_scr);
-  scr.body.main_color=LV_COLOR_MAKE(0x14,0x14,0x14); scr.body.grad_color=LV_COLOR_MAKE(0x2E,0x0A,0x0D);
+  scr.body.main_color=LV_COLOR_MAKE(0x14,0x14,0x14); scr.body.grad_color=LV_COLOR_MAKE(0x5C, 0x0E, 0x14);
   lv_obj_t *s=lv_obj_create(NULL,NULL); lv_obj_set_style(s,&scr); lv_scr_load(s);
+  if(argc>3 && !strcmp(argv[3],"menu")){
+    /* pantalla Ajustes: decoración detrás, título, 8 íconos en 2 filas (misma grilla que MKS) */
+    static lv_style_t lbl; lv_style_copy(&lbl,&lv_style_plain); lbl.text.color=LV_COLOR_WHITE; lbl.text.font=LV_FONT_DEFAULT;
+    magna_decorar_menu(s,true,false);
+    lv_obj_t *tit=lv_label_create(s,(lv_obj_t*)NULL); lv_label_set_text(tit,"Ready>Settings"); lv_obj_set_style(tit,&lbl); lv_obj_set_pos(tit,3,5);
+    magna_marca_titulo(s,tit,&lbl);
+    const char *m[]={"F:/bmp_preHeat.bin","F:/bmp_extruct.bin","F:/bmp_mov.bin","F:/bmp_zero.bin",
+                     "F:/bmp_leveling.bin","F:/bmp_filamentchange.bin","F:/bmp_more.bin","F:/bmp_return.bin"};
+    for(int i=0;i<8;i++){ lv_obj_t *b=lv_imgbtn_create(s,NULL); lv_imgbtn_set_src(b,LV_BTN_STATE_REL,m[i]); lv_imgbtn_set_src(b,LV_BTN_STATE_PR,m[i]);
+      lv_obj_set_pos(b,2+(i%4)*119,36+(i/4)*142); }
+  } else {
   const char *ims[]={"F:/bmp_tool.bin","F:/bmp_set.bin","F:/bmp_printing.bin"}; int xs[]={20,180,340};
   for(int i=0;i<3;i++){ lv_obj_t *b=lv_imgbtn_create(s,NULL); lv_imgbtn_set_src(b,LV_BTN_STATE_REL,ims[i]); lv_imgbtn_set_src(b,LV_BTN_STATE_PR,ims[i]); lv_obj_set_pos(b,xs[i],90); }
   lv_obj_t *e=lv_imgbtn_create(s,NULL); lv_imgbtn_set_src(e,LV_BTN_STATE_REL,"F:/bmp_ext1_state.bin"); lv_obj_set_pos(e,20,260);
   lv_obj_t *p=lv_imgbtn_create(s,NULL); lv_imgbtn_set_src(p,LV_BTN_STATE_REL,"F:/bmp_pause.bin"); lv_obj_set_pos(p,180,240);
   lv_obj_t *t=lv_imgbtn_create(s,NULL); lv_imgbtn_set_src(t,LV_BTN_STATE_REL,"F:/bmp_enable.bin"); lv_obj_set_pos(t,360,270);
+  }
   for(int k=0;k<5;k++){ lv_tick_inc(10); lv_task_handler(); }
   FILE *o=fopen(argv[2],"wb"); fwrite(fb,2,480*320,o); fclose(o); return 0;
 }

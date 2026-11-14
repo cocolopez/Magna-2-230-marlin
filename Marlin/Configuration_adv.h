@@ -2878,9 +2878,9 @@
   #define TOOLCHANGE_FILAMENT_SWAP  // Magna2-230: hotend 2 en 1: retira/carga filamento en cada T0/T1
   #if ENABLED(TOOLCHANGE_FILAMENT_SWAP)
     // Load / Unload
-    #define TOOLCHANGE_FS_LENGTH 40  // Magna2-230: (mm) retirar hasta pasar la union en Y del 2 en 1. Ajustar con M217 S
+    #define TOOLCHANGE_FS_LENGTH 0  // Magna2-230: 0 = el cambio 2 en 1 lo hace el slicer (100 mm, como el perfil de Hellbot). Para cambios a mano: M217 S100
     #define TOOLCHANGE_FS_EXTRA_RESUME_LENGTH 0  // Magna2-230: (mm) ajustar con M217 B
-    #define TOOLCHANGE_FS_RETRACT_SPEED (40*60)  // Magna2-230: (mm/min)
+    #define TOOLCHANGE_FS_RETRACT_SPEED (25*60)  // Magna2-230: (mm/min) = velocidad max del extrusor
     #define TOOLCHANGE_FS_UNRETRACT_SPEED (20*60)  // Magna2-230: (mm/min) carga mas lenta por ser bowden
 
     // Longer prime to clean out a SINGLENOZZLE

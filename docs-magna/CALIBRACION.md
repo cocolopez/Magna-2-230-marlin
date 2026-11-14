@@ -14,17 +14,17 @@ Si tu cartucho calefactor es de 50 W (y no de 40 W), cargalo antes: `M306 P50`.
 `M303 E-1 S60 C8 U1` y después `M500`.
 
 ## 3. Largo del cambio de filamento (hotend 2 en 1)
-Cuando cambia de T0 a T1, el firmware retira el filamento que sale una cierta cantidad de milímetros (40 de fábrica) y después carga el otro.
-1. Medí cuánto hay desde la punta de la boquilla hasta la unión en "Y" del hotend 2 en 1, y sumale unos 10 mm.
-2. Cargalo: `M217 S<mm>`. Por ejemplo, `M217 S45`.
-3. Opcional:
-   - `M217 R<mm/min>`: velocidad de retiro (por ejemplo, R2400).
-   - `M217 U<mm/min>`: velocidad de carga (por ejemplo, U1200).
-   - `M217 B<mm>`: extra al cargar si queda un hueco.
-4. Probalo con la boquilla caliente: `T1`, después `T0`, y mirá que el filamento salga y entre bien.
-5. `M500`.
+El cambio entre T0 y T1 lo hacen **los perfiles de slicer**, como el perfil de fábrica de Hellbot. Retiran el filamento 100 mm, por encima de la unión en "Y". Por eso el firmware trae `TOOLCHANGE_FS_LENGTH 0` y cada gcode de inicio manda `M217 S0`. Detalles en `perfiles-slicer/README.md`.
 
-Para desactivarlo: `M217 S0`.
+Si al cambiar de color el filamento nuevo no entra, o al cargar sale un chorro grande:
+1. Ajustá `largo` en `CAMBIO`, dentro de `perfiles-slicer/generar_perfiles.py`. Probá 105–110 si no entra, o 90–95 si sale mucho.
+2. Regenerá los perfiles con `python3 generar_perfiles.py` y volvé a instalarlos.
+
+Para un cambio a mano desde la terminal, el firmware todavía puede hacerlo:
+1. `M217 S100` (no lo guardes con M500).
+2. `T1` / `T0`.
+
+Hacelo siempre con el hotend caliente y con el otro filamento estacionado.
 
 ## 4. Linear Advance (K)
 Usá la calculadora de patrones de K de Marlin, o el `kfactor.gcode` de charlieburgos, con PLA. Después cargás el valor de cada extrusor:

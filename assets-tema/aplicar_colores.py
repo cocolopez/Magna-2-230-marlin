@@ -3,7 +3,8 @@
 Aplica el tema negro/rojo a la interfaz MKS (TFT_LVGL_UI) de Marlin:
   * colores fijos del código de la pantalla (azul/amarillo/marrón de Makerbase -> rojo/gris),
   * fondo con degradé (gris oscuro arriba -> rojo oscuro abajo) en todas las pantallas,
-  * decoración de la pantalla principal: "MAGNA 2", raya roja y líneas de capas.
+  * decoración de la pantalla principal: "MAGNA 2", raya roja y líneas de capas,
+  * decoración marcada de los menús de íconos (decoracion_menus.inc).
 Todo con reemplazos exactos; si alguno no se encuentra (otra versión de Marlin) avisa y lo saltea.
 Es idempotente: se puede correr varias veces.
 Uso: python3 aplicar_colores.py <raíz del proyecto Marlin completo>
@@ -36,7 +37,7 @@ DECORACION = '''
     lv_obj_set_pos(raya, 20, 72);
     for (uint8_t i = 0; i < 5; i++) {
       lv_style_copy(&st_capa[i], &lv_style_plain);
-      const uint8_t r = 0x50 + i * 0x18, g = 0x0C + i * 3, b = 0x10 + i * 3;  // de rojo oscuro a rojo
+      const uint8_t r = 0x80 + i * 0x14, g = 0x12 + i * 3, b = 0x18 + i * 3;  // de rojo medio a rojo (se ven sobre el degradé)
       st_capa[i].line.color = LV_COLOR_MAKE(r, g, b);
       st_capa[i].line.width = 2;
       lv_obj_t *capa = lv_line_create(scr, nullptr);
@@ -46,6 +47,28 @@ DECORACION = '''
     }
   }
 '''
+
+# Decoración "marcada" de los menús de íconos (variante B): el código está en decoracion_menus.inc
+# (el mismo archivo que compila la prueba de render) y se pega en draw_ui.cpp.
+AQUI = os.path.dirname(os.path.abspath(__file__))
+INC = open(os.path.join(AQUI, 'decoracion_menus.inc'), encoding='utf-8').read()
+MENUS = """
+// Magna2-230 (tema): pantallas de íconos que llevan la decoración (no listas de parámetros ni diálogos)
+static bool magna_menu_de_iconos(const DISP_STATE s) {
+  switch (s) {
+    case TOOL_UI: case SET_UI: case PREHEAT_UI: case PRINT_FILE_UI: case FAN_UI: case ZERO_UI:
+    case LANGUAGE_UI: case LEVELING_UI: case MOVE_MOTOR_UI: case EXTRUSION_UI: case OPERATE_UI:
+    case BABYSTEP_UI: case MORE_UI: case FILAMENTCHANGE_UI: case CHANGE_SPEED_UI:
+      return true;
+    default:
+      return false;
+  }
+}
+
+"""
+CREAR = 'lv_obj_t* lv_screen_create(DISP_STATE newScreenType, const char *title) {\n'
+LIMPIAR = '  lv_obj_clean(scr);\n\n  // breadcrumbs\n'
+ESTILO_TITULO = '  if (titleLabel)\n    lv_obj_set_style(titleLabel, &tft_style_label_rel);\n'
 
 CAMBIOS = [
     # archivo, original, nuevo, para qué
@@ -59,7 +82,10 @@ CAMBIOS = [
     ('draw_keyboard.cpp', 'pr_style.body.main_color   = lv_color_make(0x72, 0x42, 0x15);', 'pr_style.body.main_color   = lv_color_make(0x8A, 0x14, 0x1A);', 'teclado: tecla apretada -> rojo'),
     ('draw_keyboard.cpp', 'pr_style.body.grad_color   = lv_color_make(0x6A, 0x3A, 0x0C);', 'pr_style.body.grad_color   = lv_color_make(0x70, 0x10, 0x14);', 'teclado: tecla apretada -> rojo'),
     ('draw_ui.cpp', 'tft_style_scr.body.main_color   = LV_COLOR_BACKGROUND;', 'tft_style_scr.body.main_color   = LV_COLOR_MAKE(0x14, 0x14, 0x14);', 'fondo: degradé, arriba gris oscuro'),
-    ('draw_ui.cpp', 'tft_style_scr.body.grad_color   = LV_COLOR_BACKGROUND;', 'tft_style_scr.body.grad_color   = LV_COLOR_MAKE(0x2E, 0x0A, 0x0D);', 'fondo: degradé, abajo rojo oscuro'),
+    ('draw_ui.cpp', 'tft_style_scr.body.grad_color   = LV_COLOR_BACKGROUND;', 'tft_style_scr.body.grad_color   = LV_COLOR_MAKE(0x5C, 0x0E, 0x14);', 'fondo: degradé, abajo rojo oscuro'),
+    ('draw_ui.cpp', CREAR, '\n' + INC + MENUS + CREAR, 'menús: código de la decoración marcada'),
+    ('draw_ui.cpp', LIMPIAR, '  lv_obj_clean(scr);\n\n  // Magna2-230 (tema): decoración marcada detrás de todo\n  const bool magna_menu = magna_menu_de_iconos(newScreenType);\n  if (magna_menu) magna_decorar_menu(scr, !title || title[0] != \'\\0\', newScreenType == PRINT_FILE_UI);\n\n  // breadcrumbs\n', 'menús: dibujar la decoración al crear la pantalla'),
+    ('draw_ui.cpp', ESTILO_TITULO, ESTILO_TITULO + '  if (magna_menu && titleLabel) magna_marca_titulo(scr, titleLabel, &tft_style_label_rel);  // Magna2-230\n', 'menús: MAGNA 2 a la derecha del título'),
     ('draw_ready_print.cpp', '  scr = lv_screen_create(PRINT_READY_UI, "");\n', '  scr = lv_screen_create(PRINT_READY_UI, "");\n' + DECORACION, 'pantalla principal: MAGNA 2 + raya roja + líneas de capas'),
 ]
 ok = falta = 0

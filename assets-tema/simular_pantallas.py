@@ -18,7 +18,7 @@ def load(n):
     return im
 def fondo():
     sc = Image.new('RGB', (480, 320)); d = ImageDraw.Draw(sc)
-    a, b = (0x14, 0x14, 0x14), (0x2E, 0x0A, 0x0D)
+    a, b = (0x14, 0x14, 0x14), (0x5C, 0x0E, 0x14)
     for y in range(320):
         t = y / 319; d.line([(0, y), (480, y)], fill=tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3)))
     return sc
@@ -30,7 +30,7 @@ def principal():
     d.text((24 + w + 10, 24), '2', font=f, fill=(214, 32, 39))
     d.line([(20, 72), (460, 72)], fill=(214, 32, 39), width=2)
     for i in range(5):
-        d.line([(0, 236 + i * 4), (480, 236 + i * 4)], fill=(0x50 + i * 0x18, 0x0C + i * 3, 0x10 + i * 3), width=2)
+        d.line([(0, 236 + i * 4), (480, 236 + i * 4)], fill=(0x80 + i * 0x14, 0x12 + i * 3, 0x18 + i * 3), width=2)
     for x, n, t in ((20, 'tool', 'Ajustes'), (180, 'set', 'Config'), (340, 'printing', 'Imprimir')):
         im = load(n); sc.paste(im, (x, 90), im); d.text((x + 58, 210), t, font=F, fill=(238, 238, 238), anchor='mm')
     for x, n, t in ((20, 'ext1_state', '28 -> 0'), (210, 'bed_state', '26 -> 0')):

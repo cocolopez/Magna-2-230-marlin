@@ -61,6 +61,27 @@
   "filament_unload_time": [
     "0"
   ],
+  "filament_unloading_speed": [
+    "25"
+  ],
+  "filament_unloading_speed_start": [
+    "25"
+  ],
+  "filament_loading_speed": [
+    "20"
+  ],
+  "filament_loading_speed_start": [
+    "20"
+  ],
+  "filament_retraction_length": [
+    "5.0"
+  ],
+  "filament_retraction_speed": [
+    "25"
+  ],
+  "filament_max_volumetric_speed": [
+    "8"
+  ],
   "filament_start_gcode": [
     "; Linear Advance: descomentar y poner tu K calibrado\n;M900 K0.0"
   ]

@@ -22,7 +22,7 @@ def load(n):
     return im
 def fondo():
     sc = Image.new('RGB', (480, 320)); d = ImageDraw.Draw(sc)
-    a, b = (0x14, 0x14, 0x14), (0x2E, 0x0A, 0x0D)
+    a, b = (0x14, 0x14, 0x14), (0x5C, 0x0E, 0x14)
     for y in range(320):
         t = y / 319; d.line([(0, y), (480, y)], fill=tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3)))
     return sc
@@ -32,14 +32,26 @@ def principal():
     d.text((24, 24), 'M A G N A', font=f, fill=BL); w = d.textlength('M A G N A', font=f)
     d.text((24 + w + 10, 24), '2', font=f, fill=RJ)
     d.line([(20, 72), (460, 72)], fill=RJ, width=2)
-    for i in range(5): d.line([(0, 236 + i * 4), (480, 236 + i * 4)], fill=(0x50 + i * 0x18, 0x0C + i * 3, 0x10 + i * 3), width=2)
+    for i in range(5): d.line([(0, 236 + i * 4), (480, 236 + i * 4)], fill=(0x80 + i * 0x14, 0x12 + i * 3, 0x18 + i * 3), width=2)
     for x, n, t in ((20, 'tool', 'Ajustes'), (180, 'set', 'Config'), (340, 'printing', 'Imprimir')):
         pegar(sc, n, x, 90); d.text((x + 58, 210), t, font=F, fill=BL, anchor='mm')
     for x, n, t in ((20, 'ext1_state', '24 -> 0'), (210, 'bed_state', '23 -> 0')):
         pegar(sc, n, x, 260); d.text((x + 52, 282), t, font=F, fill=BL, anchor='lm')
     return sc
+def decoracion(d, titulo=True):
+    """Mismo dibujo que decoracion_menus.inc (decoración marcada de los menús)."""
+    if titulo:
+        d.rectangle([0, 0, 479, 31], fill=(10, 10, 10)); d.rectangle([0, 6, 2, 25], fill=RJ)
+    d.rectangle([0, 32, 479, 33], fill=RJ)
+    for x in range(20, 480, 20): d.rectangle([x, 34, x, 35], fill=(0x5A, 0x14, 0x18))
+    for x in range(119, 470, 119): d.rectangle([x, 34, x, 38], fill=(0x8C, 0x18, 0x1E))
+    for x in range(0, 480, 12): d.rectangle([x, 177, min(x + 5, 479), 177], fill=(0x8C, 0x18, 0x1E))
+    for i in range(3): d.rectangle([0, 309 + i * 4, 479, 310 + i * 4], fill=(0x86 + i * 0x28, 0x14 + i * 6, 0x1A + i * 6))
+    if titulo:
+        fm = ImageFont.truetype(FT, 15); d.text((470, 16), '2', font=fm, fill=RJ, anchor='rm')
+        d.text((456, 16), 'M A G N A', font=fm, fill=(0x70, 0x70, 0x70), anchor='rm')
 def menu(titulo, items):
-    sc = fondo(); d = ImageDraw.Draw(sc); d.text((3, 5), titulo, font=F, fill=BL)
+    sc = fondo(); d = ImageDraw.Draw(sc); decoracion(d); d.text((3, 5), titulo, font=F, fill=BL)
     for i, (n, lab) in enumerate(items):
         x = 2 + (i % 4) * 119; y = 36 + (i // 4) * 142
         pegar(sc, n, x, y); d.text((x + 58, y + 120), lab, font=F, fill=BL, anchor='mm')
@@ -64,7 +76,7 @@ def iconos():
                'speed', 'file', 'dir', 'sd', 'usb_disk', 'wifi', 'language', 'machine_para', 'eeprom_settings', 'about',
                'extru1', 'extru2', 'in', 'out', 'xAdd', 'yAdd', 'zAdd', 'zeroZ', 'step_move1', 'return']
     cols = 10; sc = Image.new('RGB', (cols * 117, 3 * 112)); d = ImageDraw.Draw(sc)
-    a, b = (0x14, 0x14, 0x14), (0x2E, 0x0A, 0x0D)
+    a, b = (0x14, 0x14, 0x14), (0x5C, 0x0E, 0x14)
     for y in range(sc.height):
         t = y / (sc.height - 1); d.line([(0, y), (sc.width, y)], fill=tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3)))
     for i, n in enumerate(nombres):

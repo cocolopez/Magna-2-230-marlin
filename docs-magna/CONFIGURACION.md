@@ -53,7 +53,7 @@ El zip "Magna 2 230_2.1.2.1" no traía `Configuration.h`, solo el binario compil
 
 | Mejora | Opción | Ajuste en la máquina |
 |---|---|---|
-| Cambio de filamento automático (2 en 1) | `TOOLCHANGE_FILAMENT_SWAP`, 40 mm | `M217 S..` |
+| Cambio de filamento del 2 en 1 | `TOOLCHANGE_FILAMENT_SWAP` compilado, pero con largo 0: el cambio de 100 mm lo hacen los perfiles de slicer | `M217 S100` solo para cambios a mano |
 | Input Shaping X/Y | `INPUT_SHAPING_X/Y`, 40 Hz | `M593 X F.. / Y F..` |
 | Temperatura predictiva | `MPCTEMP` (`PIDTEMP` desactivado) | `M306 T` |
 | Apagado por inactividad | `HOTEND_IDLE_TIMEOUT`, 10 min, ≥180 °C | — |
