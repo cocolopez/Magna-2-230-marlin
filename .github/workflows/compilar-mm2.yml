@@ -115,7 +115,9 @@ jobs:
 
       - name: Compilar (mks_robin_nano_v1_3_f4)
         working-directory: build
-        run: pio run -e mks_robin_nano_v1_3_f4
+        run: |
+          pio run -e mks_robin_nano_v1_3_f4
+          bash pruebas/verificar-buffer-pantalla.sh .pio/build/mks_robin_nano_v1_3_f4/firmware.elf
 
       - name: Prueba de render de íconos (LVGL de la pantalla)
         working-directory: build
@@ -162,6 +164,7 @@ jobs:
           python3 pruebas/preflight.py
           bash pruebas/sanity-check.sh
           pio run -e mks_robin_nano_v1_3_f4
+          bash pruebas/verificar-buffer-pantalla.sh .pio/build/mks_robin_nano_v1_3_f4/firmware.elf
           OUT=dist/Magna2-230-BLTouch
           rm -rf "$OUT"
           cp -r dist/Magna2-230 "$OUT"
