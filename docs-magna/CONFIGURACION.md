@@ -80,3 +80,7 @@ Los íconos son `bmp_custom1..6` del tema. En la pantalla MKS se ejecutan sin co
 - Apaga la luz de fondo de la pantalla (PD13, `TFT_BACKLIGHT_PIN`); la placa y la impresión siguen igual.
 - El primer toque solo la prende: ese toque no llega a los botones.
 - Cualquier pantalla nueva la prende, por ejemplo un aviso de filamento o de impresión terminada.
+
+**Desde el WiFi (MagnAir):** `M256 B0` apaga la pantalla, `M256 B255` la prende y `M256` contesta cómo está. Apagada así, el primer toque la prende sin apretar nada.
+
+**Calibración y carpetas (MagnAir):** `M257` contesta por WiFi los valores de calibración en uso, una línea por grupo (`M257 mpc P=… C=…`, `M257 pasos X=…`, …) y `M257 fin`. La lista de archivos por WiFi entra a las carpetas (`M20 L /CARPETA`) y `M23 /CARPETA/ARCHIVO.GCO` imprime desde ahí.

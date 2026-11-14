@@ -221,3 +221,22 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - `bash pruebas/sanity-check.sh`: SanityCheck de Marlin con g++.
 - `bash pruebas/verificar-valores.sh`: 31 valores clave.
 - `python3 pruebas/verificar-perfiles.py`: perfiles vs firmware.
+
+### Etapa 22 (2026-11-14) — prender/apagar la pantalla por WiFi (M256)
+- Para el botón de pantalla de MagnAir (firmware/página/apps del módulo WiFi, repo aparte).
+- `aplicar_colores.py` agrega `magna_pantalla_apagar()` y `magna_pantalla_encendida()` junto al apagado automático (tft_lvgl_configuration.cpp). En `wifi_module.cpp` (función `wifi_gcode_exec`), un `case 256` antes del `case 115`: "M256" responde `M256 B255` o `M256 B0`, "B0" apaga, "B1".."B255" prende. Lo atiende la UI MKS y no pasa por la cola de G-code. Marlin no define M256 con esta pantalla (requiere `HAS_LCD_BRIGHTNESS`). Si se apaga a mano, el primer toque la prende sin apretar nada, y cualquier pantalla nueva (avisos) también la prende.
+- Ojo con las comillas: el reemplazo está dentro de un string de Python, por eso en `aplicar_colores.py` se escribe `\\r\\n`. La primera versión metía saltos de línea reales dentro del literal de C y no compilaba.
+- Compilación manual completa: 381.476 bytes (77 %).
+
+### Etapa 23 (2026-11-14) — calibración guardada (M257) y carpetas de la SD por WiFi
+- Para MagnAir etapa 6. Todo en `aplicar_colores.py`, sobre `wifi_module.cpp`.
+- **M257** (`case 257` dentro de `wifi_gcode_exec`, junto al M256): `magna_m257()` manda por WiFi una línea por grupo, `M257 <grupo> K=v ...`, y `M257 fin`. Grupos: `mpc` P C R A F H (o `pidhotend` P I D), `pidcama` P I D, `pasos` X Y Z E0 E1, `avance` K0 K1, `vibraciones` XF XD YF YD, `altura` S Z (S=1 `probe.offset.z`, S=0 `home_offset.z`), `velmax` y `acelmax` X Y Z E, `acel` P R T. Hace falta porque la UI MKS no reenvía al WiFi la salida de M503. Los números con `dtostrf`. Includes nuevos: planner.h, stepper.h, motion.h y probe.h (si `HAS_BED_PROBE`).
+- **Carpetas:** `get_file_list` toma la ruta de `M20 L /DIR`, hace `card.cd()` por cada parte, lista y vuelve con `card.cdroot()` (el original ignoraba la ruta). M23/M24 usan la ruta completa (`strchr(name+1,'/')`) en lugar del último `/`, con el comportamiento viejo como respaldo.
+- Compilación manual completa: normal 382.612 bytes (77 %), BLTouch 396.880 bytes (80 %).
+
+### Etapa 24 (2026-11-14) — créditos en "Acerca de"
+- Pedido del usuario: que la información del sistema de la impresora diga "Creado por Andrés Londero" y su correo.
+- `assets-tema/creditos.inc` → `magna_creditos(scr, estilo, latino)`: dos etiquetas abajo a la izquierda (x 12, y 236 y 272), a la izquierda del botón Atrás (x ≥ 359, y ≥ 178). El nombre va con la letra grande (Latin-1, por la "é"); en idiomas no latinos va "Created by Andres Londero" con la letra de la pantalla. El correo en rojo claro con la letra normal. Ojo: `lv_label_create(scr, (lv_obj_t *)NULL)` con el cast, porque MKS tiene una sobrecarga `lv_label_create(scr, const char *texto)` y `NULL` solo sería ambiguo en C++.
+- `aplicar_colores.py` pega el `.inc` antes de `lv_draw_about()` en `draw_about.cpp` y llama a `magna_creditos()` después de la línea "Protocol".
+- Prueba de render: modo `acerca` en `render.c`; `verificar_render.py` controla que se vean el nombre y el correo y que no se metan en el botón Atrás.
+- Compilación manual completa: 382.856 bytes (77 %).

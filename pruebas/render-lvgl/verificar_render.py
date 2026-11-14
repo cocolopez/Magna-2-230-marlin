@@ -87,5 +87,11 @@ if len(bloques) < 3: err.append(f'calentando: temperatura y texto encimados ({le
 im_ = dibujar('imprimiendo')
 if not es_rojo(im_[56 * 480 + 230]): err.append('imprimiendo: la barra no se pinta de rojo')
 if sum(1 for y in range(40, 74) for x in range(300, 380) if min(im_[y * 480 + x]) > 200) < 60: err.append('imprimiendo: no se ve el porcentaje')
+# ---- Acerca de: créditos abajo a la izquierda, sin tocar el botón Atrás ni los datos de Marlin
+ac = dibujar('acerca')
+claros = lambda x0, x1, y0, y1: sum(1 for y in range(y0, y1) for x in range(x0, x1) if min(ac[y * 480 + x]) > 200)
+if claros(12, 340, 238, 264) < 150: err.append('acerca: no se ve "Creado por Andrés Londero"')
+if sum(1 for y in range(272, 292) for x in range(12, 340) if ac[y * 480 + x][0] > 200 and ac[y * 480 + x][1] < 170) < 60: err.append('acerca: no se ve el correo')
+if claros(340, 359, 230, 300) > 0: err.append('acerca: los créditos se meten en el botón Atrás')
 for e in err: print('MAL ', e)
 print('OK: los íconos se dibujan bien con la LVGL de la pantalla' if not err else f'FALLA: {len(err)} problemas'); sys.exit(1 if err else 0)

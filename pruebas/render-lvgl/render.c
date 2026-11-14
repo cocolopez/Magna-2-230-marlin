@@ -15,6 +15,7 @@
 #include "decoracion_menus.inc"   /* assets-tema/: el mismo código que se pega en draw_ui.cpp */
 #include "estilo_dialogos.inc"
 #include "fuente_grande.inc"
+#include "creditos.inc"
 #include "fuente_normal.inc"      /* /tmp: Roboto 16, solo para la prueba */
 
 static const char *DIR_ASSETS;
@@ -115,6 +116,14 @@ int main(int argc,char**argv){
     magna_estilo_barra(b,&magna_fuente_grande); lv_obj_align(p,b,LV_ALIGN_CENTER,0,0);
     lv_bar_set_value(b,45,LV_ANIM_OFF);
     lv_obj_t *e=etiqueta(s,"Extrusor1: 210/210   Cama: 60/60\nTiempo: 01:23:45   Z: 12.40"); lv_obj_set_pos(e,205,100);
+  }
+  else if(!strcmp(modo,"acerca")){
+    /* draw_about.cpp: datos de Marlin centrados, botón Atrás abajo a la derecha y los créditos */
+    const char *t[]={"Robin_nano","Marlin 2.1.3-b3 (2026-11-14)","github.com/MarlinFirmware/Marlin",
+                     "UUID: cede2a2f-41a2-4748-9b12-c55c62f367ff","Protocol: 1.0"};
+    for(int i=0;i<5;i++){ lv_obj_t *l=etiqueta(s,t[i]); lv_obj_align(l,NULL,LV_ALIGN_CENTER,0,-80+30*i); }
+    boton(s,"F:/bmp_return.bin","Atras",3,1);
+    magna_creditos(s,&lbl,1);
   }
   else {
     const char *ims[]={"F:/bmp_tool.bin","F:/bmp_set.bin","F:/bmp_printing.bin"}; int xs[]={20,180,340};

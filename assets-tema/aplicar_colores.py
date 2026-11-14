@@ -68,6 +68,9 @@ static bool magna_menu_de_iconos(const DISP_STATE s) {
 """
 DIALOGOS = open(os.path.join(AQUI, 'estilo_dialogos.inc'), encoding='utf-8').read()
 FUENTE = open(os.path.join(AQUI, 'fuente_grande.inc'), encoding='utf-8').read()
+CREDITOS = open(os.path.join(AQUI, 'creditos.inc'), encoding='utf-8').read()
+ACERCA_INICIO = 'void lv_draw_about() {\n'
+ACERCA_FIN = '  lv_obj_align(protocol, nullptr, LV_ALIGN_CENTER, 0, 40);\n'
 IDIOMA = """
 // Magna2-230 (tema): la letra grande tiene ASCII + Latin-1; en chino, japonés, coreano, ruso,
 // griego o turco se deja la letra original de la pantalla.
@@ -82,8 +85,10 @@ bool magna_idioma_latino() {
 }
 
 """
-DECLARACIONES = """// Magna2-230: apagado automático de la pantalla (tft_lvgl_configuration.cpp)
+DECLARACIONES = """// Magna2-230: apagado automático de la pantalla y M256 por WiFi (tft_lvgl_configuration.cpp)
 void magna_pantalla_despertar();
+void magna_pantalla_apagar();
+bool magna_pantalla_encendida();
 // Magna2-230 (tema): letra grande y barras (estilo_dialogos.inc, fuente_grande.inc)
 extern lv_font_t magna_fuente_grande;
 bool magna_idioma_latino();
@@ -139,6 +144,15 @@ void magna_pantalla_despertar() {
     magna_apagada = false;
   }
 }
+// Magna2-230: prender/apagar la luz a pedido (M256 por WiFi, desde MagnAir). Apagada a mano, el primer
+// toque la prende sin apretar nada, igual que con el apagado automático.
+void magna_pantalla_apagar() {
+  #if PIN_EXISTS(TFT_BACKLIGHT)
+    WRITE(TFT_BACKLIGHT_PIN, LOW);
+    magna_apagada = true;
+  #endif
+}
+bool magna_pantalla_encendida() { return !magna_apagada; }
 static void magna_pantalla_revisar() {
   #if PIN_EXISTS(TFT_BACKLIGHT)
     if (MAGNA_PANTALLA_APAGADO_MIN > 0 && !magna_apagada
@@ -162,6 +176,164 @@ bool my_touchpad_read(lv_indev_drv_t * indev_driver, lv_indev_data_t * data) {
   if (tragar) tocando = false;
   magna_pantalla_revisar();
   data->state = tocando ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL;"""
+# M256 por WiFi (MagnAir): "M256" responde el estado, "M256 B0" apaga la pantalla y "M256 B255" la prende.
+# Lo atiende el módulo de WiFi de la UI MKS (no pasa por la cola de G-code). Marlin no tiene M256 con esta
+# pantalla (HAS_LCD_BRIGHTNESS), así que el número está libre; se usa la misma letra B de brillo.
+WIFI_M115 = """      case 115:
+        ZERO(tempBuf);"""
+WIFI_M256 = """      case 257: magna_m257(); send_ok_to_wifi(); break;  // Magna2-230 (MagnAir): datos de calibración
+
+      case 256: {  // Magna2-230 (MagnAir): luz de la pantalla. "M256" = estado, "B0" apaga, "B1".."B255" prende
+        const char * const bStr = strchr(mStr, 'B');
+        if (bStr) {
+          if (atoi(bStr + 1) > 0) magna_pantalla_despertar(); else magna_pantalla_apagar();
+        }
+        print_to_wifi(magna_pantalla_encendida() ? "M256 B255\\r\\n" : "M256 B0\\r\\n");
+        send_ok_to_wifi();
+      } break;
+
+"""
+# M257 por WiFi (MagnAir): manda los valores de calibración guardados, uno por grupo, con el formato
+# "M257 <grupo> CLAVE=valor ..." y al final "M257 fin". Hace falta porque la UI MKS no reenvía al WiFi
+# lo que contestan los comandos normales (M503, M306, M301...): solo sus respuestas propias.
+WIFI_INCLUDES_VIEJO = '#include "../../../gcode/gcode.h"\n'
+WIFI_INCLUDES_NUEVO = WIFI_INCLUDES_VIEJO + """#include "../../../module/planner.h"  // Magna2-230 (MagnAir): M257
+#include "../../../module/stepper.h"
+#include "../../../module/motion.h"
+#if HAS_BED_PROBE
+  #include "../../../module/probe.h"
+#endif
+"""
+WIFI_EXEC = 'static void wifi_gcode_exec(uint8_t * const cmd_line) {\n'
+WIFI_M257_FUNC = """// Magna2-230 (MagnAir): M257 = valores de calibración guardados, por WiFi.
+static void magna_m257_linea(const char *grupo, const char * const claves[], const float valores[], const uint8_t decimales[], const uint8_t n) {
+  char linea[160], num[20];
+  snprintf(linea, sizeof(linea), "M257 %s", grupo);
+  for (uint8_t i = 0; i < n; i++) {
+    dtostrf(valores[i], 1, decimales[i], num);
+    const size_t l = strlen(linea);
+    snprintf(linea + l, sizeof(linea) - l, " %s=%s", claves[i], num);
+  }
+  const size_t l = strlen(linea);
+  snprintf(linea + l, sizeof(linea) - l, "\\r\\n");
+  print_to_wifi(linea);
+}
+
+static void magna_m257() {
+  #if ENABLED(MPCTEMP)
+  {
+    const MPC_t &m = thermalManager.temp_hotend[0].mpc;
+    const char * const k[] = { "P", "C", "R", "A", "F", "H" };
+    const float v[] = { m.heater_power, m.block_heat_capacity, m.sensor_responsiveness, m.ambient_xfer_coeff_fan0,
+                        TERN0(MPC_INCLUDE_FAN, m.fan255_adjustment), m.filament_heat_capacity_permm };
+    const uint8_t d[] = { 2, 4, 4, 4, 4, 5 };
+    magna_m257_linea("mpc", k, v, d, 6);
+  }
+  #elif ENABLED(PIDTEMP)
+  {
+    const char * const k[] = { "P", "I", "D" };
+    const float v[] = { thermalManager.temp_hotend[0].pid.p(), thermalManager.temp_hotend[0].pid.i(), thermalManager.temp_hotend[0].pid.d() };
+    const uint8_t d[] = { 2, 2, 2 };
+    magna_m257_linea("pidhotend", k, v, d, 3);
+  }
+  #endif
+  #if ENABLED(PIDTEMPBED)
+  {
+    const char * const k[] = { "P", "I", "D" };
+    const float v[] = { thermalManager.temp_bed.pid.p(), thermalManager.temp_bed.pid.i(), thermalManager.temp_bed.pid.d() };
+    const uint8_t d[] = { 2, 2, 2 };
+    magna_m257_linea("pidcama", k, v, d, 3);
+  }
+  #endif
+  {
+    const char * const k[] = { "X", "Y", "Z", "E0", "E1" };
+    const float v[] = { planner.settings.axis_steps_per_mm[X_AXIS], planner.settings.axis_steps_per_mm[Y_AXIS],
+                        planner.settings.axis_steps_per_mm[Z_AXIS], planner.settings.axis_steps_per_mm[E_AXIS_N(0)],
+                        planner.settings.axis_steps_per_mm[E_AXIS_N(EXTRUDERS > 1 ? 1 : 0)] };
+    const uint8_t d[] = { 2, 2, 2, 2, 2 };
+    magna_m257_linea("pasos", k, v, d, 5);
+  }
+  #if ENABLED(LIN_ADVANCE)
+  {
+    const char * const k[] = { "K0", "K1" };
+    const float v[] = { planner.extruder_advance_K[E_INDEX_N(0)], planner.extruder_advance_K[E_INDEX_N(EXTRUDERS > 1 ? 1 : 0)] };
+    const uint8_t d[] = { 3, 3 };
+    magna_m257_linea("avance", k, v, d, 2);
+  }
+  #endif
+  #if ENABLED(INPUT_SHAPING_X) && ENABLED(INPUT_SHAPING_Y)
+  {
+    const char * const k[] = { "XF", "XD", "YF", "YD" };
+    const float v[] = { stepper.get_shaping_frequency(X_AXIS), stepper.get_shaping_damping_ratio(X_AXIS),
+                        stepper.get_shaping_frequency(Y_AXIS), stepper.get_shaping_damping_ratio(Y_AXIS) };
+    const uint8_t d[] = { 2, 3, 2, 3 };
+    magna_m257_linea("vibraciones", k, v, d, 4);
+  }
+  #endif
+  {
+    // ajuste fino de la altura Z: con sonda, M851 Z (S=1); sin sonda, M206 Z (S=0)
+    const char * const k[] = { "S", "Z" };
+    #if HAS_BED_PROBE
+      const float v[] = { 1, probe.offset.z };
+    #elif HAS_HOME_OFFSET
+      const float v[] = { 0, home_offset.z };
+    #else
+      const float v[] = { 0, 0 };
+    #endif
+    const uint8_t d[] = { 0, 3 };
+    magna_m257_linea("altura", k, v, d, 2);
+  }
+  {
+    const char * const k[] = { "X", "Y", "Z", "E" };
+    const float vel[] = { planner.settings.max_feedrate_mm_s[X_AXIS], planner.settings.max_feedrate_mm_s[Y_AXIS],
+                          planner.settings.max_feedrate_mm_s[Z_AXIS], planner.settings.max_feedrate_mm_s[E_AXIS_N(0)] };
+    const float ace[] = { (float)planner.settings.max_acceleration_mm_per_s2[X_AXIS], (float)planner.settings.max_acceleration_mm_per_s2[Y_AXIS],
+                          (float)planner.settings.max_acceleration_mm_per_s2[Z_AXIS], (float)planner.settings.max_acceleration_mm_per_s2[E_AXIS_N(0)] };
+    const uint8_t d[] = { 0, 0, 0, 0 };
+    magna_m257_linea("velmax", k, vel, d, 4);
+    magna_m257_linea("acelmax", k, ace, d, 4);
+  }
+  {
+    const char * const k[] = { "P", "R", "T" };
+    const float v[] = { planner.settings.acceleration, planner.settings.retract_acceleration, planner.settings.travel_acceleration };
+    const uint8_t d[] = { 0, 0, 0 };
+    magna_m257_linea("acel", k, v, d, 3);
+  }
+  print_to_wifi("M257 fin\\r\\n");
+}
+
+"""
+
+# Carpetas por WiFi (MagnAir): la UI MKS ignora la ruta de "M20" (exploreDisk lista siempre la carpeta
+# actual, que después de montar es la raíz). Se entra a la carpeta pedida ("M20 L /CARPETA/SUB", nombres
+# cortos 8.3), se lista y se vuelve a la raíz.
+LISTA_VIEJA = """  exploreDisk(path, 0, with_longnames);
+}"""
+LISTA_NUEVA = """  #if HAS_MEDIA
+    // Magna2-230 (MagnAir): entrar a la carpeta pedida ("M20 L /CARPETA/SUB")
+    const char *ruta = strchr(path, '/');
+    while (ruta && *ruta) {
+      while (*ruta == '/') ruta++;
+      char parte[FILENAME_LENGTH + 1] = { 0 };
+      uint8_t n = 0;
+      while (*ruta && *ruta != '/' && *ruta != ' ' && n < FILENAME_LENGTH) parte[n++] = *ruta++;
+      while (*ruta && *ruta != '/') ruta++;
+      if (n) card.cd(parte);
+    }
+  #endif
+  exploreDisk(path, 0, with_longnames);
+  TERN_(HAS_MEDIA, card.cdroot());  // Magna2-230: la pantalla y las subidas siguen en la raíz
+}"""
+
+# Imprimir desde una carpeta (MagnAir): M23/M24 por WiFi usaban solo lo que está después de la última "/",
+# o sea siempre la raíz. Ahora se usa la ruta completa ("M23 /CARPETA/ARCHIVO.GCO"); sin carpeta es igual que antes.
+M23_VIEJO = "              char *cur_name = strrchr(list_file.file_name[sel_id],'/');\n"
+M23_NUEVO = ("              char *cur_name = strchr(list_file.file_name[sel_id] + 1, '/');  // Magna2-230 (MagnAir): ruta completa\n"
+             "              if (!cur_name) cur_name = strrchr(list_file.file_name[sel_id], '/');\n")
+M24_VIEJO = "                char *cur_name = strrchr(list_file.file_name[sel_id], '/');\n\n                MediaFile file;\n"
+M24_NUEVO = ("                char *cur_name = strchr(list_file.file_name[sel_id] + 1, '/');  // Magna2-230 (MagnAir): ruta completa\n"
+             "                if (!cur_name) cur_name = strrchr(list_file.file_name[sel_id], '/');\n\n                MediaFile file;\n")
+
 LIMPIAR = '  lv_obj_clean(scr);\n\n  // breadcrumbs\n'
 ESTILO_TITULO = '  if (titleLabel)\n    lv_obj_set_style(titleLabel, &tft_style_label_rel);\n'
 
@@ -192,6 +364,14 @@ CAMBIOS = [
         queue.inject(public_buf_m);""", """        queue.inject(F("G28\\nG29\\nM500"));  // Magna2-230 (BLTouch): home, malla de 5x5 y guardar (el comando guardado en la pantalla era G29 sin home)""", 'BLTouch: botón Nivelación hace G28 + G29 + M500'),
     ('tft_lvgl_configuration.cpp', TOUCH_VIEJO, TOUCH_NUEVO, 'pantalla: apagado automático y encendido con un toque'),
     ('draw_ui.cpp', CREAR + '  lv_obj_t *scr = lv_obj_create(nullptr, nullptr);\n', CREAR + '  magna_pantalla_despertar();  // Magna2-230: una pantalla nueva (aviso, fin de impresión) prende la luz\n  lv_obj_t *scr = lv_obj_create(nullptr, nullptr);\n', 'pantalla: se prende sola con cada pantalla nueva'),
+    ('wifi_module.cpp', WIFI_M115, WIFI_M256 + WIFI_M115, 'WiFi: M256 prende/apaga la pantalla y M257 manda la calibración (MagnAir)'),
+    ('wifi_module.cpp', WIFI_INCLUDES_VIEJO, WIFI_INCLUDES_NUEVO, 'WiFi: includes para M257'),
+    ('wifi_module.cpp', WIFI_EXEC, WIFI_M257_FUNC + WIFI_EXEC, 'WiFi: función M257 (datos de calibración)'),
+    ('wifi_module.cpp', LISTA_VIEJA, LISTA_NUEVA, 'WiFi: listar carpetas de la SD (M20 L /CARPETA)'),
+    ('wifi_module.cpp', M23_VIEJO, M23_NUEVO, 'WiFi: M23 con ruta completa (imprimir desde carpetas)'),
+    ('wifi_module.cpp', M24_VIEJO, M24_NUEVO, 'WiFi: M24 con ruta completa (imprimir desde carpetas)'),
+    ('draw_about.cpp', ACERCA_INICIO, CREDITOS + '\n' + ACERCA_INICIO, 'Acerca de: código de los créditos'),
+    ('draw_about.cpp', ACERCA_FIN, ACERCA_FIN + '  magna_creditos(scr, &tft_style_label_rel, magna_idioma_latino());  // Magna2-230: créditos\n', 'Acerca de: créditos (Andrés Londero)'),
     ('draw_ready_print.cpp', '  scr = lv_screen_create(PRINT_READY_UI, "");\n', '  scr = lv_screen_create(PRINT_READY_UI, "");\n' + DECORACION, 'pantalla principal: MAGNA 2 + raya roja + líneas de capas'),
 ]
 ok = falta = 0
