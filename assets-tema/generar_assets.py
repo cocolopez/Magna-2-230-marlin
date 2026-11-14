@@ -248,6 +248,31 @@ def g_custom(c, n):
     c.rect(34, 26, 84, 76, radio=8)
     c.texto(52, 51, "C", 22, WH); c.texto(68, 53, str(n), 18, RD)
 
+def g_calibrar(c, que):
+    """Calibrar hotend o cama: el objeto y una curva de temperatura que sube y se estabiliza."""
+    c.linea([(56, 24), (56, 78), (94, 78)], GR, 2)                       # ejes del gráfico
+    pts = [(56 + t, 72 - 40 * (1 - math.exp(-t / 8.0))) for t in range(0, 37, 2)]
+    c.linea(pts, RD, 3.5)
+    c.linea([(56, 33), (94, 33)], WH, 1.5)                               # temperatura objetivo
+    if que == 'hotend':
+        g_boquilla(c, cx=34, cy=46, gota=False)
+    else:
+        c.poli([(14, 66), (50, 66), (46, 76), (18, 76)], relleno=WH)
+        for x in (24, 32, 40):
+            c.linea([(x, 58), (x + 3, 51), (x - 3, 44), (x, 37)], RD if x == 32 else WH, 2.5)
+
+def g_dos_en_uno_flecha(c, n, sube):
+    """Hotend 2 en 1 con la rama del filamento n en rojo y una flecha: sube = estacionar, baja = cargar."""
+    izq = (n == 1)
+    c.linea([(44, 22), (58.5, 48)], RD if izq else WH, 4 if izq else 2.5)
+    c.linea([(73, 22), (58.5, 48)], WH if izq else RD, 2.5 if izq else 4)
+    c.linea([(58.5, 48), (58.5, 62)], WH, 4)
+    c.poli([(50, 62), (67, 62), (62, 74), (55, 74)], relleno=WH)
+    x = 26 if izq else 91
+    if sube: flecha(c, x, 66, x, 22, RD, 9, 4)
+    else: flecha(c, x, 22, x, 66, RD, 9, 4)
+    c.texto(x, 78, str(n), 14, WH)
+
 def g_volver(c):
     """Volver: flecha en U, entera dentro del cuadro (punta grande a la izquierda)."""
     cx, cy, r = 64, 51, 19
@@ -368,7 +393,14 @@ ICONOS = {
     "usb_disk": g_usb, "usb_disk_sel": g_usb,
     "wifi": g_wifi, "cloud": g_nube, "about": g_info, "language": g_globo,
     "machine_para": g_deslizadores, "eeprom_settings": g_guardar, "function1": g_rayo,
-    **{f"custom{i}": (lambda i: lambda c: g_custom(c, i))(i) for i in range(1, 8)},
+    # botones de Ajustes > Más (CUSTOM_MENU_MAIN en Configuration_adv.h)
+    "custom1": lambda c: g_calibrar(c, 'hotend'),
+    "custom2": lambda c: g_calibrar(c, 'cama'),
+    "custom3": lambda c: g_dos_en_uno_flecha(c, 1, True),
+    "custom4": lambda c: g_dos_en_uno_flecha(c, 2, True),
+    "custom5": lambda c: g_dos_en_uno_flecha(c, 1, False),
+    "custom6": lambda c: g_dos_en_uno_flecha(c, 2, False),
+    "custom7": lambda c: g_custom(c, 7),
     "return": g_volver,
     "Add": lambda c: g_masmenos(c, "+"), "Dec": lambda c: g_masmenos(c, "-"),
     "xAdd": lambda c: g_eje(c, "X", "+"), "xDec": lambda c: g_eje(c, "X", "-"),

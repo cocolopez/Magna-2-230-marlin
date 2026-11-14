@@ -145,6 +145,31 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - **Prueba:** el render en host verifica que `lv_obj_get_child_back(scr)` sea el título y aplica el mismo achicado que Mover.
 - **Resultado:** 352.564 bytes (71 %), sin avisos nuevos con -Wall.
 
+### Etapa 18 (2026-11-13) — botones propios, letra grande en los mensajes y barras del tema
+- **Botones en Ajustes → Más:** `CUSTOM_MENU_MAIN`, `MAIN_MENU_ITEM_1..6`. La interfaz MKS los muestra en `draw_more.cpp` con `bmp_custom1..6` y los ejecuta con `queue.inject`, sin confirmar.
+  - Calib. hotend: `M306 T` + `M500`.
+  - Calib. cama: `M303 E-1 S60 C8 U1` + `M500`.
+  - Estacionar 1/2 (E-100) y Cargar 1/2 (E+100 y purga de 20), a 210 °C con `M217 S0`.
+- **Íconos nuevos en `generar_assets.py`:**
+  - `g_calibrar` (objeto + curva de temperatura) para custom1-2;
+  - `g_dos_en_uno_flecha` para custom3-6;
+  - custom7 queda genérico.
+- **Letra grande:**
+  - `assets-tema/generar_fuente.py` genera `fuente_grande.inc`: Roboto 26 px, 4 bpp, ASCII + Latin-1, 191 caracteres, ~25 KB. Es formato `lv_font_fmt_txt` de LVGL 6.1 con inicializadores posicionales (vale en C y C++). Se commitea generada.
+  - `aplicar_colores.py` crea `mks_ui/magna_fuente_grande.cpp` con ese contenido.
+  - Solo se usa si el idioma es latino (`magna_idioma_latino()`: EN/DE/FR/SP/IT/PT).
+- **Mensajes (`draw_dialog.cpp`):**
+  - Al final de `lv_draw_dialog`, `magna_texto_grande(labelDialog)`: letra grande, salto de línea a 460 px, centrado, mantiene la altura y queda por encima de los botones.
+  - En los mensajes de calentar, la temperatura también va grande, a -95 en vez de -50.
+  - `BTN_OK_Y`/`BTN_CANCEL_Y` pasan de 180 a 250.
+  - Barra de carga/descarga: 400×34 en y=160, con `magna_estilo_barra`.
+- **Barras:** `estilo_dialogos.inc` → `magna_estilo_barra(barra, letra)`: fondo #222→#161616 redondeado con borde #6A1418 y relleno rojo #E62A30→#9A161C. La de impresión (`draw_printing.cpp`) usa la letra grande para el porcentaje.
+- **Prueba de render ampliada:** `render.c` tiene los modos principal, menu, mas, carga, calentando e imprimiendo, con el mismo código .inc. La letra normal se simula con Roboto 16 generada en /tmp.
+  - Revisa: botones con ícono, texto grande (≥ 40 filas), barra roja/vacía oscura, Cancelar visible, temperatura y texto sin encimarse, porcentaje visible.
+- **Resultado:**
+  - Firmware 381.136 bytes (77 %; la letra suma ~28 KB). Preflight y SanityCheck OK.
+  - Sin avisos nuevos con -Wall. Los avisos `-Wexpansion-to-defined` de `draw_more.cpp` son de la macro `HAS_USER_ITEM` de Marlin, que ahora se compila.
+
 ## Estado / pendiente
 - PlatformIO no está disponible en el entorno de Claude. Igual se compila y enlaza todo con `pruebas/compilacion-manual/` (ver etapa 6). El firmware oficial lo compila GitHub Actions.
 - Los perfiles no se abrieron en los slicers reales (no se puede instalar Cura acá). Se validaron contra la foto de ajustes de Cura 5.10 y contra el firmware.

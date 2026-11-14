@@ -66,6 +66,54 @@ static bool magna_menu_de_iconos(const DISP_STATE s) {
 }
 
 """
+DIALOGOS = open(os.path.join(AQUI, 'estilo_dialogos.inc'), encoding='utf-8').read()
+FUENTE = open(os.path.join(AQUI, 'fuente_grande.inc'), encoding='utf-8').read()
+IDIOMA = """
+// Magna2-230 (tema): la letra grande tiene ASCII + Latin-1; en chino, japonés, coreano, ruso,
+// griego o turco se deja la letra original de la pantalla.
+bool magna_idioma_latino() {
+  switch (gCfgItems.language) {
+    case LANG_ENGLISH: case LANG_GERMAN: case LANG_FRENCH: case LANG_SPANISH:
+    case LANG_ITALY: case LANG_PORTUGUESE:
+      return true;
+    default:
+      return false;
+  }
+}
+
+"""
+DECLARACIONES = """// Magna2-230 (tema): letra grande y barras (estilo_dialogos.inc, fuente_grande.inc)
+extern lv_font_t magna_fuente_grande;
+bool magna_idioma_latino();
+void magna_texto_grande(lv_obj_t *etiqueta);
+void magna_estilo_barra(lv_obj_t *barra, const lv_font_t *letra);
+
+"""
+ARCHIVO_FUENTE = ('/**\n * Magna2-230 (tema): letra grande (Roboto 26 px, ASCII + Latin-1).\n'
+                  ' * Archivo agregado por assets-tema/aplicar_colores.py a partir de fuente_grande.inc.\n */\n'
+                  '#include "../../../inc/MarlinConfigPre.h"\n\n#if HAS_TFT_LVGL_UI\n\n#include <lvgl.h>\n\n'
+                  + FUENTE + '\n#endif // HAS_TFT_LVGL_UI\n')
+DIALOGO_FIN = """  // Magna2-230 (tema): mensajes con letra grande y barra del tema
+  if (magna_idioma_latino()) {
+    magna_texto_grande(labelDialog);
+    if (DIALOG_IS(TYPE_FILAMENT_LOAD_HEAT, TYPE_FILAMENT_UNLOAD_HEAT)) {
+      magna_texto_grande(tempText1);
+      filament_sprayer_temp();
+    }
+    const lv_coord_t limite = BTN_OK_Y - 8;  // que el texto no pise los botones
+    if (lv_obj_get_y(labelDialog) + lv_obj_get_height(labelDialog) > limite)
+      lv_obj_set_y(labelDialog, LV_MATH_MAX(40, limite - lv_obj_get_height(labelDialog)));
+  }
+  if (DIALOG_IS(TYPE_FILAMENT_LOADING, TYPE_FILAMENT_UNLOADING)) {
+    lv_obj_set_pos(filament_bar, 40, 160);
+    lv_obj_set_size(filament_bar, 400, 34);
+    magna_estilo_barra(filament_bar, nullptr);
+  }
+"""
+ROTARY_DIALOGO = '  #if HAS_ROTARY_ENCODER\n    if (gCfgItems.encoder_enable) {\n      if (btnOk) lv_group_add_obj(g, btnOk);'
+BARRA_IMPRESION = '  lv_label_set_text(bar1ValueText, "0%");\n  lv_obj_align(bar1ValueText, bar1, LV_ALIGN_CENTER, 0, 0);\n'
+ALINEAR_PORCENTAJE = '  lv_obj_align(bar1ValueText, bar1, LV_ALIGN_CENTER, 0, 0);\n'
+
 CREAR = 'lv_obj_t* lv_screen_create(DISP_STATE newScreenType, const char *title) {\n'
 LIMPIAR = '  lv_obj_clean(scr);\n\n  // breadcrumbs\n'
 ESTILO_TITULO = '  if (titleLabel)\n    lv_obj_set_style(titleLabel, &tft_style_label_rel);\n'
@@ -84,11 +132,20 @@ CAMBIOS = [
     ('draw_ui.cpp', 'tft_style_scr.body.main_color   = LV_COLOR_BACKGROUND;', 'tft_style_scr.body.main_color   = LV_COLOR_MAKE(0x14, 0x14, 0x14);', 'fondo: degradé, arriba gris oscuro'),
     ('draw_ui.cpp', 'tft_style_scr.body.grad_color   = LV_COLOR_BACKGROUND;', 'tft_style_scr.body.grad_color   = LV_COLOR_MAKE(0x5C, 0x0E, 0x14);', 'fondo: degradé, abajo rojo oscuro'),
     ('draw_ui.cpp', CREAR, '\n' + INC + MENUS + CREAR, 'menús: código de la decoración marcada'),
+    ('draw_ui.cpp', '\n' + INC + MENUS + CREAR, '\n' + INC + MENUS + DIALOGOS + IDIOMA + CREAR, 'mensajes: letra grande y barras (código)'),
+    ('draw_ui.h', 'lv_obj_t* lv_screen_create(DISP_STATE newScreenType, const char *title = nullptr);', DECLARACIONES + 'lv_obj_t* lv_screen_create(DISP_STATE newScreenType, const char *title = nullptr);', 'mensajes: declaraciones'),
+    ('draw_dialog.cpp', '#define BTN_OK_Y      180\n#define BTN_CANCEL_Y  180', '#define BTN_OK_Y      250  // Magna2-230: más abajo, para que entre el texto grande\n#define BTN_CANCEL_Y  250', 'mensajes: botones más abajo'),
+    ('draw_dialog.cpp', '  lv_obj_align(tempText1, nullptr, LV_ALIGN_CENTER, 0, -50);', '  lv_obj_align(tempText1, nullptr, LV_ALIGN_CENTER, 0, magna_idioma_latino() ? -95 : -50);  // Magna2-230', 'mensajes: temperatura encima del texto grande'),
+    ('draw_dialog.cpp', ROTARY_DIALOGO, DIALOGO_FIN + ROTARY_DIALOGO, 'mensajes: letra grande y barra de carga/descarga'),
+    ('draw_printing.cpp', BARRA_IMPRESION, BARRA_IMPRESION + '  magna_estilo_barra(bar1, magna_idioma_latino() ? &magna_fuente_grande : nullptr);  // Magna2-230 (tema)\n' + ALINEAR_PORCENTAJE, 'imprimiendo: barra del tema y porcentaje grande'),
     ('draw_ui.cpp', LIMPIAR, '  lv_obj_clean(scr);\n\n  // Magna2-230 (tema): decoración marcada, dibujada con el fondo (no agrega objetos)\n  const bool magna_menu = magna_menu_de_iconos(newScreenType);\n  if (magna_menu) magna_decorar_menu(scr, !title || title[0] != \'\\0\', newScreenType == PRINT_FILE_UI);\n\n  // breadcrumbs\n', 'menús: dibujar la decoración al crear la pantalla'),
     ('draw_ui.cpp', ESTILO_TITULO, ESTILO_TITULO + '  if (magna_menu && titleLabel && newScreenType != MOVE_MOTOR_UI && newScreenType != BABYSTEP_UI)  // Magna2-230: esas dos escriben su estado arriba a la derecha\n    magna_marca_titulo(scr, titleLabel, &tft_style_label_rel);\n', 'menús: MAGNA 2 a la derecha del título'),
     ('draw_ready_print.cpp', '  scr = lv_screen_create(PRINT_READY_UI, "");\n', '  scr = lv_screen_create(PRINT_READY_UI, "");\n' + DECORACION, 'pantalla principal: MAGNA 2 + raya roja + líneas de capas'),
 ]
 ok = falta = 0
+p = os.path.join(R, 'magna_fuente_grande.cpp')
+if os.path.exists(p) and open(p, encoding='utf-8').read() == ARCHIVO_FUENTE: print('ya aplicado: letra grande (archivo)'); ok += 1
+else: open(p, 'w', encoding='utf-8').write(ARCHIVO_FUENTE); print('ok: letra grande (archivo magna_fuente_grande.cpp)'); ok += 1
 for f, a, b, para in CAMBIOS:
     p = os.path.join(R, f); s = open(p, encoding='utf-8').read()
     if b in s: print('ya aplicado:', para); ok += 1; continue

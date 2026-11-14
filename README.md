@@ -92,6 +92,7 @@ Los valores mecánicos (pasos, direcciones de motores, finales de carrera, termi
 | **Babystepping** | Ajusta Z en vivo durante la primera capa |
 | **Contador de impresiones**, **EEPROM** | Estadísticas y configuración guardada con `M500` |
 | **WiFi MKS** | Envío de archivos y control por red |
+| **Botones propios en Ajustes → Más** | Calibrar hotend, calibrar cama, estacionar y cargar cada filamento del 2 en 1, con un toque y sin escribir comandos |
 
 ## Tema de la pantalla
 
@@ -103,6 +104,10 @@ Tema propio, minimalista: fondo oscuro con degradé, íconos de trazo blanco con
 </p>
 <p align="center">
   <img src="docs-magna/capturas/configuracion.png" width="48%" alt="Menú Configuración">
+  <img src="docs-magna/capturas/mas.png" width="48%" alt="Ajustes, Más: botones propios">
+</p>
+<p align="center">
+  <img src="docs-magna/capturas/mensaje-carga.png" width="48%" alt="Mensaje de carga de filamento con letra grande">
 </p>
 
 <p align="center">
@@ -113,9 +118,11 @@ Tema propio, minimalista: fondo oscuro con degradé, íconos de trazo blanco con
 - **Íconos transparentes:** dejan ver el fondo de la pantalla.
 - **Fondo y colores:** el degradé, los colores de los menús y la decoración de la pantalla principal los aplica [`assets-tema/aplicar_colores.py`](assets-tema/aplicar_colores.py) al compilar.
 - **Menús de íconos:** franja oscura del título con acento rojo, "MAGNA 2" a la derecha, línea roja con marcas tipo regla, separador punteado entre filas y tres líneas de capas abajo ([`assets-tema/decoracion_menus.inc`](assets-tema/decoracion_menus.inc)). Se dibuja junto con el fondo de la pantalla, sin agregar objetos. En Mover y Babystep no lleva "MAGNA 2", porque ahí arriba a la derecha va la posición.
+- **Mensajes con letra grande:** todos los mensajes (carga y retiro de filamento, pausa, errores, WiFi, etc.) usan una letra de 26 px en vez de 16, con salto de línea automático, y los botones bajan para dejarle lugar. La letra ([`generar_fuente.py`](assets-tema/generar_fuente.py), Roboto con acentos y ñ) se usa en español, inglés, portugués, italiano, francés y alemán; en los otros idiomas queda la original.
+- **Barras de progreso del tema:** la de carga/descarga de filamento y la de impresión son rojas, redondeadas y sobre fondo oscuro. El porcentaje de impresión va con la letra grande ([`assets-tema/estilo_dialogos.inc`](assets-tema/estilo_dialogos.inc)).
 - **Para volver a los íconos de fábrica:** copiá a la SD la carpeta `assets` original de Makerbase.
 
-> Las capturas son una simulación generada a partir de los mismos archivos que se cargan en la pantalla ([`generar_capturas.py`](assets-tema/generar_capturas.py)).
+> Las capturas de "Más" y del mensaje de carga son el dibujo real de la librería gráfica de la pantalla (LVGL 6.1 de MKS) con el mismo código del firmware (`pruebas/render-lvgl`); las demás son una simulación hecha con los mismos archivos ([`generar_capturas.py`](assets-tema/generar_capturas.py)).
 
 ## Perfiles de slicer
 
@@ -200,8 +207,8 @@ En orden ([`docs-magna/CALIBRACION.md`](docs-magna/CALIBRACION.md)):
 
 | # | Qué | Comando |
 |---|---|---|
-| 1 | Temperatura del hotend (MPC) | `M306 T` → `M500` |
-| 2 | PID de la cama | `M303 E-1 S60 C8 U1` → `M500` |
+| 1 | Temperatura del hotend (MPC) | Botón **Ajustes → Más → Calib. hotend** (con la máquina fría) |
+| 2 | PID de la cama | Botón **Ajustes → Más → Calib. cama** |
 | 3 | Largo del cambio de filamento 2 en 1 (si hace falta) | `CAMBIO` en `perfiles-slicer/generar_perfiles.py` |
 | 4 | Linear Advance por extrusor | `M900 T0 K..` / `M900 T1 K..` → `M500` |
 | 5 | Input Shaping | `M593 X F..` / `M593 Y F..` → `M500` |

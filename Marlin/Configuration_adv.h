@@ -4096,33 +4096,38 @@
 // @section custom main menu
 
 // Custom Menu: Main Menu
-//#define CUSTOM_MENU_MAIN
+// Magna2-230: en la pantalla MKS son los 6 botones extra de Ajustes > Más (íconos bmp_custom1..6 del tema).
+// Ojo: en la pantalla MKS se ejecutan al tocarlos, sin pedir confirmación.
+#define CUSTOM_MENU_MAIN
 #if ENABLED(CUSTOM_MENU_MAIN)
   //#define CUSTOM_MENU_MAIN_TITLE "Custom Commands"
-  #define CUSTOM_MENU_MAIN_SCRIPT_DONE "M117 User Script Done"
+  #define CUSTOM_MENU_MAIN_SCRIPT_DONE "M117 Listo"  // Magna2-230
   #define CUSTOM_MENU_MAIN_SCRIPT_AUDIBLE_FEEDBACK
   //#define CUSTOM_MENU_MAIN_SCRIPT_RETURN   // Return to status screen after a script
   #define CUSTOM_MENU_MAIN_ONLY_IDLE         // Only show custom menu when the machine is idle
 
-  #define MAIN_MENU_ITEM_1_DESC "Home & UBL Info"
-  #define MAIN_MENU_ITEM_1_GCODE "G28\nG29 W"
-  //#define MAIN_MENU_ITEM_1_CONFIRM          // Show a confirmation dialog before this action
+  // Magna2-230: calibrar el hotend (MPC). Hacerlo con la máquina FRÍA. Tarda 5-10 min y guarda solo.
+  #define MAIN_MENU_ITEM_1_DESC "Calib. hotend"
+  #define MAIN_MENU_ITEM_1_GCODE "M306 T\nM500"
 
-  #define MAIN_MENU_ITEM_2_DESC "Preheat for " PREHEAT_1_LABEL
-  #define MAIN_MENU_ITEM_2_GCODE "M140 S" STRINGIFY(PREHEAT_1_TEMP_BED) "\nM104 S" STRINGIFY(PREHEAT_1_TEMP_HOTEND)
-  //#define MAIN_MENU_ITEM_2_CONFIRM
+  // Magna2-230: calibrar la cama (PID a 60 °C, 8 ciclos). Guarda solo.
+  #define MAIN_MENU_ITEM_2_DESC "Calib. cama"
+  #define MAIN_MENU_ITEM_2_GCODE "M303 E-1 S60 C8 U1\nM500"
 
-  //#define MAIN_MENU_ITEM_3_DESC "Preheat for " PREHEAT_2_LABEL
-  //#define MAIN_MENU_ITEM_3_GCODE "M140 S" STRINGIFY(PREHEAT_2_TEMP_BED) "\nM104 S" STRINGIFY(PREHEAT_2_TEMP_HOTEND)
-  //#define MAIN_MENU_ITEM_3_CONFIRM
+  // Magna2-230: hotend 2 en 1. Estacionar = retirar el filamento 100 mm, arriba de la unión
+  // (cuando está cargado hasta la boquilla). Cargar = bajarlo desde ahí y purgar 20 mm.
+  // Mismo largo que los perfiles de slicer (perfiles-slicer/generar_perfiles.py, CAMBIO).
+  #define MAIN_MENU_ITEM_3_DESC "Estacionar 1"
+  #define MAIN_MENU_ITEM_3_GCODE "M217 S0\nM109 S210\nT0\nM82\nG92 E0\nG1 E-100 F1500\nG92 E0\nM104 S0"
 
-  //#define MAIN_MENU_ITEM_4_DESC "Heat Bed/Home/Level"
-  //#define MAIN_MENU_ITEM_4_GCODE "M140 S" STRINGIFY(PREHEAT_2_TEMP_BED) "\nG28\nG29"
-  //#define MAIN_MENU_ITEM_4_CONFIRM
+  #define MAIN_MENU_ITEM_4_DESC "Estacionar 2"
+  #define MAIN_MENU_ITEM_4_GCODE "M217 S0\nM109 S210\nT1\nM82\nG92 E0\nG1 E-100 F1500\nG92 E0\nM104 S0"
 
-  //#define MAIN_MENU_ITEM_5_DESC "Home & Info"
-  //#define MAIN_MENU_ITEM_5_GCODE "G28\nM503"
-  //#define MAIN_MENU_ITEM_5_CONFIRM
+  #define MAIN_MENU_ITEM_5_DESC "Cargar 1"
+  #define MAIN_MENU_ITEM_5_GCODE "M217 S0\nM109 S210\nT0\nM82\nG92 E0\nG1 E100 F1500\nG1 E120 F180\nG92 E0\nM104 S0"
+
+  #define MAIN_MENU_ITEM_6_DESC "Cargar 2"
+  #define MAIN_MENU_ITEM_6_GCODE "M217 S0\nM109 S210\nT1\nM82\nG92 E0\nG1 E100 F1500\nG1 E120 F180\nG92 E0\nM104 S0"
 #endif
 
 // @section custom config menu

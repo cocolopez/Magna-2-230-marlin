@@ -64,3 +64,12 @@ El zip "Magna 2 230_2.1.2.1" no traía `Configuration.h`, solo el binario compil
 Cómo calibrarlas: `CALIBRACION.md`.
 
 **Linear Advance.** Queda activado con K = 0 (sin efecto) hasta que lo calibres: `M900 T0 K0.xx`, `M900 T1 K0.xx`, `M500`.
+
+## Botones propios (Ajustes → Más)
+`CUSTOM_MENU_MAIN` en `Configuration_adv.h`, con `MAIN_MENU_ITEM_1..6`:
+- Calib. hotend: `M306 T`, `M500`.
+- Calib. cama: `M303 E-1 S60 C8 U1`, `M500`.
+- Estacionar 1 / 2: 210 °C, `T0`/`T1`, retirar 100 mm.
+- Cargar 1 / 2: 210 °C, `T0`/`T1`, bajar 100 mm y purgar 20 mm.
+
+Los íconos son `bmp_custom1..6` del tema. En la pantalla MKS se ejecutan sin confirmación.

@@ -2,8 +2,21 @@
 
 Hacelas en este orden. Al final de cada una, guardá con `M500`.
 
+**Cómo se manda un comando (por ejemplo `M500`):** en la pantalla tocá **Ajustes → Más → Gcode**, escribilo con el teclado y tocá OK. `M500` guarda los ajustes en la memoria de la placa para que no se borren al apagar.
+
+**Botones propios en Ajustes → Más** (se ejecutan apenas se tocan, sin preguntar):
+
+| Botón | Qué hace |
+|---|---|
+| Calib. hotend | `M306 T` + `M500`: calibra el MPC del hotend. Con la máquina **fría**. Tarda 5–10 min |
+| Calib. cama | `M303 E-1 S60 C8 U1` + `M500`: calibra el PID de la cama a 60 °C |
+| Estacionar 1 / 2 | Calienta a 210 °C y retira ese filamento 100 mm, arriba de la unión del 2 en 1 |
+| Cargar 1 / 2 | Calienta a 210 °C, baja ese filamento 100 mm desde la posición de estacionado y purga 20 mm |
+
+Se configuran en `Marlin/Configuration_adv.h` (`CUSTOM_MENU_MAIN`, `MAIN_MENU_ITEM_1..6`).
+
 ## 1. Temperatura del hotend (MPC)
-Este firmware usa MPC en vez de PID para el hotend.
+Este firmware usa MPC en vez de PID para el hotend. **Lo más fácil:** botón **Calib. hotend** con la máquina fría. Si lo hacés con comandos:
 1. Con la máquina fría, sin filamento colgando de la boquilla: `M306 T`.
 2. La máquina hace home, calienta, deja enfriar y mide. Tarda unos minutos.
 3. `M500`.
@@ -11,7 +24,7 @@ Este firmware usa MPC en vez de PID para el hotend.
 Si tu cartucho calefactor es de 50 W (y no de 40 W), cargalo antes: `M306 P50`.
 
 ## 2. Temperatura de la cama (PID)
-`M303 E-1 S60 C8 U1` y después `M500`.
+Botón **Calib. cama**, o `M303 E-1 S60 C8 U1` y después `M500`.
 
 ## 3. Largo del cambio de filamento (hotend 2 en 1)
 El cambio entre T0 y T1 lo hacen **los perfiles de slicer**, como el perfil de fábrica de Hellbot. Retiran el filamento 100 mm, por encima de la unión en "Y". Por eso el firmware trae `TOOLCHANGE_FS_LENGTH 0` y cada gcode de inicio manda `M217 S0`. Detalles en `perfiles-slicer/README.md`.
