@@ -240,3 +240,6 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - `aplicar_colores.py` pega el `.inc` antes de `lv_draw_about()` en `draw_about.cpp` y llama a `magna_creditos()` después de la línea "Protocol".
 - Prueba de render: modo `acerca` en `render.c`; `verificar_render.py` controla que se vean el nombre y el correo y que no se metan en el botón Atrás.
 - Compilación manual completa: 382.856 bytes (77 %).
+
+### Etapa 25 (2026-11-14) — revertida
+- Se había puesto fondo negro liso y texto en español en el aviso "Updating wifi model firmware" (franjas de colores en una foto del usuario). El usuario pidió volver atrás: **no cambiar nada de la interfaz sin consultarlo antes**. Quedó exactamente como en la etapa 24 (degradé de siempre).
