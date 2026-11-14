@@ -153,8 +153,30 @@ jobs:
           ls -la "$OUT"
           echo "Robin_nano35.bin: $(stat -c%s "$OUT/Robin_nano35.bin") bytes" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Subir artefacto
+      # ---------------------------------------------------------------- versión con BLTouch
+      # Mismo firmware + variantes/bltouch.py (sonda BLTouch, nivelación automática 5x5).
+      - name: Compilar versión BLTouch
+        working-directory: build
+        run: |
+          python3 variantes/bltouch.py .
+          python3 pruebas/preflight.py
+          bash pruebas/sanity-check.sh
+          pio run -e mks_robin_nano_v1_3_f4
+          OUT=dist/Magna2-230-BLTouch
+          rm -rf "$OUT"
+          cp -r dist/Magna2-230 "$OUT"
+          cp .pio/build/mks_robin_nano_v1_3_f4/Robin_nano35.bin "$OUT/"
+          cp docs-magna/BLTOUCH.md "$OUT/"
+          echo "Robin_nano35.bin (BLTouch): $(stat -c%s "$OUT/Robin_nano35.bin") bytes" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Subir artefacto (sin BLTouch)
         uses: actions/upload-artifact@v4
         with:
           name: Magna2-230-firmware
           path: build/dist/Magna2-230
+
+      - name: Subir artefacto (con BLTouch)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Magna2-230-firmware-BLTouch
+          path: build/dist/Magna2-230-BLTouch
