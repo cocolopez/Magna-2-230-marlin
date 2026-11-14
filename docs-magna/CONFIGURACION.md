@@ -73,3 +73,10 @@ Cómo calibrarlas: `CALIBRACION.md`.
 - Cargar 1 / 2: 210 °C, `T0`/`T1`, bajar 100 mm y purgar 20 mm.
 
 Los íconos son `bmp_custom1..6` del tema. En la pantalla MKS se ejecutan sin confirmación.
+
+## Apagado automático de la pantalla
+`MAGNA_PANTALLA_APAGADO_MIN 5` en `Configuration_adv.h` (opción propia de este repo; 0 = nunca).
+- Lo implementa `aplicar_colores.py` en `tft_lvgl_configuration.cpp` (lectura del táctil) y en `lv_screen_create`.
+- Apaga la luz de fondo de la pantalla (PD13, `TFT_BACKLIGHT_PIN`); la placa y la impresión siguen igual.
+- El primer toque solo la prende: ese toque no llega a los botones.
+- Cualquier pantalla nueva la prende, por ejemplo un aviso de filamento o de impresión terminada.

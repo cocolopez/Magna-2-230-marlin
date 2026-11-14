@@ -35,6 +35,7 @@ Firmware **Marlin 2.1.3-beta3** configurado para la impresora 3D **Hellbot Magna
 | **Mejoras** | Linear Advance, Input Shaping, control de temperatura MPC, cambio automático de filamento para el hotend 2 en 1 y más (ver abajo) |
 | **Slicers** | Perfiles para Cura 5, PrusaSlicer 2.6+ y OrcaSlicer 2.x |
 | **WiFi** | Firmware oficial del módulo MKS Robin WiFi (opcional) |
+| **BLTouch** | Versión opcional con sensor BLTouch y nivelación automática de 5×5 puntos (se compilan las dos) |
 | **Compilación** | Automática en GitHub Actions: subís `mm2.zip` y te devuelve todo listo para la SD |
 
 ## Hardware compatible
@@ -47,6 +48,7 @@ Firmware **Marlin 2.1.3-beta3** configurado para la impresora 3D **Hellbot Magna
 | Extrusión | Doble extrusor Dual Drive con hotend **2 en 1** (una boquilla) |
 | Drivers | TMC2209 (X/Y) en modo standalone |
 | WiFi | MKS Robin WiFi (ESP8266) |
+| Sensor (opcional) | BLTouch en el conector BLTouch (PA8) y en Z-: usar la versión **BLTouch** ([`docs-magna/BLTOUCH.md`](docs-magna/BLTOUCH.md)) |
 
 > ⚠️ Este firmware es **solo para la Robin Nano V1.3**. La V1.2 (STM32F103) y la V3 usan otros firmwares.
 
@@ -92,6 +94,7 @@ Los valores mecánicos (pasos, direcciones de motores, finales de carrera, termi
 | **Babystepping** | Ajusta Z en vivo durante la primera capa |
 | **Contador de impresiones**, **EEPROM** | Estadísticas y configuración guardada con `M500` |
 | **WiFi MKS** | Envío de archivos y control por red |
+| **Apagado automático de la pantalla** | Apaga la luz de la pantalla después de 5 minutos sin tocarla. El primer toque solo la prende, sin apretar nada; los avisos (falta de filamento, impresión terminada) también la prenden. Se cambia con `MAGNA_PANTALLA_APAGADO_MIN` en `Configuration_adv.h` (0 = nunca) |
 | **Botones propios en Ajustes → Más** | Calibrar hotend, calibrar cama, estacionar y cargar cada filamento del 2 en 1, con un toque y sin escribir comandos |
 
 ## Tema de la pantalla
@@ -157,7 +160,7 @@ Todos se generan desde un único script ([`generar_perfiles.py`](perfiles-slicer
    2. descarga Marlin oficial (la versión de `MARLIN_VERSION`);
    3. le aplica la configuración y el tema;
    4. corre las pruebas y compila.
-4. En **Actions → Compilar Magna 2 230 (mm2.zip)** se descarga el artefacto **`Magna2-230-firmware`**:
+4. En **Actions → Compilar Magna 2 230 (mm2.zip)** se descargan dos artefactos: **`Magna2-230-firmware`** (normal) y **`Magna2-230-firmware-BLTouch`** (para la impresora con BLTouch, con `BLTOUCH.md` adentro). Los dos tienen esta forma:
 
 ```
 Magna2-230-firmware/
@@ -240,6 +243,7 @@ GitHub Actions las corre antes de cada compilación:
 │   └── Configuration_adv.h
 ├── assets-tema/                tema de la pantalla (generador, íconos, colores, capturas)
 ├── perfiles-slicer/            Cura, PrusaSlicer, OrcaSlicer
+├── variantes/bltouch.py        convierte la configuración en la versión BLTouch
 ├── wifi/                       firmware oficial del módulo WiFi
 ├── docs-magna/                 configuración, calibración, flasheo, pruebas y capturas
 ├── pruebas/                    pruebas automáticas y compilación manual

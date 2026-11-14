@@ -8,8 +8,9 @@
 #
 # Qué publica (en la pestaña Releases del repo):
 #   - Magna2-230-firmware-<versión>.zip  -> Robin_nano35.bin + assets + opcional-wifi + COMO-FLASHEAR.md
+#   - Magna2-230-firmware-BLTouch-<versión>.zip -> lo mismo, compilado para BLTouch (+ BLTOUCH.md)
 #   - Magna2-230-perfiles-slicer-<versión>.zip -> perfiles de Cura, PrusaSlicer y OrcaSlicer
-#   - Robin_nano35.bin suelto
+#   - Robin_nano35.bin suelto (sin BLTouch)
 #
 # Este archivo va en .github/workflows/publicar-release.yml (junto a compilar-mm2.yml).
 
@@ -131,6 +132,20 @@ jobs:
           cp $PB/Robin_nano35.bin publicar/Robin_nano35.bin
           TAM=$(stat -c%s $PB/Robin_nano35.bin)
           echo "tam=$TAM" >> "$GITHUB_OUTPUT"
+
+      - name: Compilar y armar la versión BLTouch
+        working-directory: build
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          python3 variantes/bltouch.py .
+          python3 pruebas/preflight.py
+          bash pruebas/sanity-check.sh
+          pio run -e mks_robin_nano_v1_3_f4
+          OUT=publicar/Magna2-230-firmware-BLTouch-$V
+          cp -r "publicar/Magna2-230-firmware-$V" "$OUT"
+          cp .pio/build/mks_robin_nano_v1_3_f4/Robin_nano35.bin "$OUT/"
+          cp docs-magna/BLTOUCH.md "$OUT/"
+          (cd publicar && zip -qr "Magna2-230-firmware-BLTouch-$V.zip" "Magna2-230-firmware-BLTouch-$V")
           ls -la publicar
 
       - name: Notas de la versión
@@ -145,18 +160,19 @@ jobs:
           | Archivo | Contenido |
           |---|---|
           | \`Magna2-230-firmware-$V.zip\` | \`Robin_nano35.bin\` + carpeta \`assets\` + \`opcional-wifi/\` + instrucciones |
+          | \`Magna2-230-firmware-BLTouch-$V.zip\` | Lo mismo, para la impresora con **BLTouch** (nivelación automática). Ver \`BLTOUCH.md\` adentro |
           | \`Magna2-230-perfiles-slicer-$V.zip\` | Perfiles de Cura, PrusaSlicer y OrcaSlicer |
-          | \`Robin_nano35.bin\` | Solo el firmware (sin íconos) |
+          | \`Robin_nano35.bin\` | Solo el firmware sin BLTouch (sin íconos) |
 
           ### Instalación
           1. Guardá tu configuración actual con \`M503\`.
           2. Copiá \`Robin_nano35.bin\` y la carpeta \`assets\` a la raíz de una microSD en FAT32 (y \`opcional-wifi/MksWifi.bin\` si querés actualizar el WiFi).
           3. Encendé la impresora con la SD puesta y **no la apagues** mientras actualiza.
           4. Cargá la configuración nueva: \`M502\` y luego \`M500\`.
-          5. Calibrá: \`M306 T\` (hotend), \`M303 E-1 S60 C8 U1\` (cama), \`M217 S..\`, \`M900\` y \`M593\`.
+          5. Calibrá con los botones de **Ajustes → Más** (Calib. hotend y Calib. cama), y después \`M900\` y \`M593\` (ver CALIBRACION.md).
 
           ### Incluye
-          Doble extrusor con hotend 2 en 1 y cambio de filamento automático · Input Shaping · MPC · Linear Advance · S-Curve · 2 sensores de filamento · pausa/M600 · recuperación ante cortes de luz · apagado por inactividad · cancelar objetos (M486) · tiempo restante (M73) · WiFi MKS.
+          Doble extrusor con hotend 2 en 1 · versión opcional con BLTouch · Input Shaping · MPC · Linear Advance · S-Curve · 2 sensores de filamento · pausa/M600 · recuperación ante cortes de luz · apagado por inactividad · cancelar objetos (M486) · tiempo restante (M73) · WiFi MKS.
 
           Firmware: $(( ${{ steps.paq.outputs.tam }} / 1024 )) KB · Compilado desde \`${GITHUB_SHA::7}\`.
           Más información en el [README](${{ github.server_url }}/${{ github.repository }}#readme).
@@ -173,5 +189,6 @@ jobs:
           draft: ${{ github.event.inputs.borrador == 'true' }}
           files: |
             build/publicar/Magna2-230-firmware-${{ steps.ver.outputs.version }}.zip
+            build/publicar/Magna2-230-firmware-BLTouch-${{ steps.ver.outputs.version }}.zip
             build/publicar/Magna2-230-perfiles-slicer-${{ steps.ver.outputs.version }}.zip
             build/publicar/Robin_nano35.bin

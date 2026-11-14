@@ -176,6 +176,32 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - `verificar-assets.py` acepta `bmp_preview.bin` como imagen sin encabezado de 80.000 bytes.
 - La vista previa real de la pieza depende del slicer (miniatura MKS dentro del gcode). El usuario no la quiere: no se hace.
 
+### Etapa 20 (2026-11-13) — versión con BLTouch (dos firmwares por compilación)
+- `variantes/bltouch.py <raíz>` aplica reemplazos exactos e idempotentes, marcados `// Magna2-230 BLTouch`. Falla si no encuentra alguno.
+  - Configuration.h:
+    - BLTOUCH, con `Z_MIN_ENDSTOP_HIT_STATE HIGH` (señal en Z-, servo en PA8 = SERVO0_PIN de pins_MKS_ROBIN_NANO_common.h);
+    - AUTO_BED_LEVELING_BILINEAR con GRID 5;
+    - ENABLE_LEVELING_AFTER_G28, para no tocar los perfiles;
+    - Z_SAFE_HOMING y MULTIPLE_PROBING 2;
+    - NOZZLE_TO_PROBE_OFFSET {0,0,0}: Z=0 es seguro, la boquilla queda en el aire;
+    - PROBING_MARGIN 45, seguro con soportes de hasta 45 mm, porque el offset del soporte del usuario se desconoce (charlieburgos solo tiene binarios de la 300 BLT y no hay soporte estándar).
+  - Configuration_adv.h: PROBE_OFFSET_WIZARD (START_Z -1) y BABYSTEP_ZPROBE_OFFSET.
+- **Arreglo de Marlin 2.1.3-b3:** `lcd/menu/menu_probe_offset.cpp` se compila con PROBE_OFFSET_WIZARD aunque no haya MarlinUI (features.ini) y falla con "screenFunc_t does not name a type". Se le agrega `&& HAS_MARLINUI_MENU` en el `#if`; la pantalla MKS usa su `draw_z_offset_wizard.cpp`.
+- `aplicar_colores.py`: en `draw_tool.cpp`, el botón de nivelación con ABL inyecta `G28\nG29\nM500`. Antes leía el comando guardado en la flash SPI, que por defecto es "G29N\nM500"; G29 sin home falla con `homing_needed_error`. Solo se compila con BILINEAR.
+- **Workflows:**
+  - `compilar-mm2.yml` compila la normal y después aplica la variante, corre preflight y SanityCheck, recompila y sube dos artefactos: `Magna2-230-firmware` y `Magna2-230-firmware-BLTouch` (este con BLTOUCH.md).
+  - `publicar-release.yml` agrega `Magna2-230-firmware-BLTouch-<v>.zip`.
+- **Verificado local:** variante aplicada dos veces (idempotente), preflight y SanityCheck OK, compilación completa de 395.464 bytes (80 %), con G29, M851, LevelingBilinear y BLTouch enlazados.
+- **Docs:** `docs-magna/BLTOUCH.md` (conexión, offsets, asistente Z, Autolevel, problemas).
+
+### Etapa 21 (2026-11-13) — apagado automático de la pantalla
+- `MAGNA_PANTALLA_APAGADO_MIN 5` (Configuration_adv.h, opción propia; 0 = desactivado).
+- `aplicar_colores.py` reemplaza el comienzo de `my_touchpad_read` en `tft_lvgl_configuration.cpp`. Agrega `magna_pantalla_despertar()` y `magna_pantalla_revisar()`, que se llaman en cada lectura del táctil (LVGL lee cada ~30 ms, así que no hace falta otro temporizador).
+  - Con el tiempo cumplido: `WRITE(TFT_BACKLIGHT_PIN, LOW)` (PD13).
+  - El toque que la prende se "traga": se informa REL hasta que se suelta.
+- `lv_screen_create` llama a `magna_pantalla_despertar()`, así cualquier pantalla nueva (diálogos de filamento, fin de impresión, pausa) la prende. `GUI_RefreshPage` solo recrea pantallas en los avisos de WiFi.
+- Compilado: 381.352 bytes (77 %). La función queda enlazada y el preprocesado confirma que escribe PD13.
+
 ## Estado / pendiente
 - PlatformIO no está disponible en el entorno de Claude. Igual se compila y enlaza todo con `pruebas/compilacion-manual/` (ver etapa 6). El firmware oficial lo compila GitHub Actions.
 - Los perfiles no se abrieron en los slicers reales (no se puede instalar Cura acá). Se validaron contra la foto de ajustes de Cura 5.10 y contra el firmware.

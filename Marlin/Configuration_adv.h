@@ -4095,6 +4095,11 @@
 
 // @section custom main menu
 
+// Magna2-230: apagado automático de la pantalla MKS. Después de estos minutos sin tocarla se
+// apaga la luz de fondo; el primer toque la prende (sin apretar nada) y cualquier aviso nuevo
+// (falta de filamento, impresión terminada) también. 0 = no se apaga nunca.
+#define MAGNA_PANTALLA_APAGADO_MIN 5
+
 // Custom Menu: Main Menu
 // Magna2-230: en la pantalla MKS son los 6 botones extra de Ajustes > Más (íconos bmp_custom1..6 del tema).
 // Ojo: en la pantalla MKS se ejecutan al tocarlos, sin pedir confirmación.

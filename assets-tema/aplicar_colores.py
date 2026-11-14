@@ -82,7 +82,9 @@ bool magna_idioma_latino() {
 }
 
 """
-DECLARACIONES = """// Magna2-230 (tema): letra grande y barras (estilo_dialogos.inc, fuente_grande.inc)
+DECLARACIONES = """// Magna2-230: apagado automático de la pantalla (tft_lvgl_configuration.cpp)
+void magna_pantalla_despertar();
+// Magna2-230 (tema): letra grande y barras (estilo_dialogos.inc, fuente_grande.inc)
 extern lv_font_t magna_fuente_grande;
 bool magna_idioma_latino();
 void magna_texto_grande(lv_obj_t *etiqueta);
@@ -115,6 +117,51 @@ BARRA_IMPRESION = '  lv_label_set_text(bar1ValueText, "0%");\n  lv_obj_align(bar
 ALINEAR_PORCENTAJE = '  lv_obj_align(bar1ValueText, bar1, LV_ALIGN_CENTER, 0, 0);\n'
 
 CREAR = 'lv_obj_t* lv_screen_create(DISP_STATE newScreenType, const char *title) {\n'
+# Apagado automático de la pantalla: se apaga la luz de fondo (PD13) después de
+# MAGNA_PANTALLA_APAGADO_MIN minutos sin tocarla (Configuration_adv.h; 0 = nunca). El primer toque
+# solo la prende (no aprieta el botón que esté debajo). Cualquier pantalla nueva (por ejemplo un
+# aviso de falta de filamento o de impresión terminada) también la prende.
+TOUCH_VIEJO = """bool my_touchpad_read(lv_indev_drv_t * indev_driver, lv_indev_data_t * data) {
+  static xy_int_t last { 0, 0 };
+  data->state = get_point(&last.x, &last.y) ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL;"""
+TOUCH_NUEVO = """// Magna2-230: apagado automático de la pantalla (MAGNA_PANTALLA_APAGADO_MIN en Configuration_adv.h)
+#ifndef MAGNA_PANTALLA_APAGADO_MIN
+  #define MAGNA_PANTALLA_APAGADO_MIN 0
+#endif
+static millis_t magna_ultimo_uso = 0;
+static bool magna_apagada = false;
+void magna_pantalla_despertar() {
+  magna_ultimo_uso = millis();
+  if (magna_apagada) {
+    #if PIN_EXISTS(TFT_BACKLIGHT)
+      WRITE(TFT_BACKLIGHT_PIN, HIGH);
+    #endif
+    magna_apagada = false;
+  }
+}
+static void magna_pantalla_revisar() {
+  #if PIN_EXISTS(TFT_BACKLIGHT)
+    if (MAGNA_PANTALLA_APAGADO_MIN > 0 && !magna_apagada
+        && ELAPSED(millis(), magna_ultimo_uso + MIN_TO_MS(MAGNA_PANTALLA_APAGADO_MIN))) {
+      WRITE(TFT_BACKLIGHT_PIN, LOW);
+      magna_apagada = true;
+    }
+  #endif
+}
+
+bool my_touchpad_read(lv_indev_drv_t * indev_driver, lv_indev_data_t * data) {
+  static xy_int_t last { 0, 0 };
+  static bool tragar = false;  // Magna2-230: el toque que prende la pantalla no aprieta nada
+  bool tocando = get_point(&last.x, &last.y);
+  if (tocando) {
+    if (magna_apagada) tragar = true;
+    magna_pantalla_despertar();
+  }
+  else
+    tragar = false;
+  if (tragar) tocando = false;
+  magna_pantalla_revisar();
+  data->state = tocando ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL;"""
 LIMPIAR = '  lv_obj_clean(scr);\n\n  // breadcrumbs\n'
 ESTILO_TITULO = '  if (titleLabel)\n    lv_obj_set_style(titleLabel, &tft_style_label_rel);\n'
 
@@ -140,6 +187,11 @@ CAMBIOS = [
     ('draw_printing.cpp', BARRA_IMPRESION, BARRA_IMPRESION + '  magna_estilo_barra(bar1, magna_idioma_latino() ? &magna_fuente_grande : nullptr);  // Magna2-230 (tema)\n' + ALINEAR_PORCENTAJE, 'imprimiendo: barra del tema y porcentaje grande'),
     ('draw_ui.cpp', LIMPIAR, '  lv_obj_clean(scr);\n\n  // Magna2-230 (tema): decoración marcada, dibujada con el fondo (no agrega objetos)\n  const bool magna_menu = magna_menu_de_iconos(newScreenType);\n  if (magna_menu) magna_decorar_menu(scr, !title || title[0] != \'\\0\', newScreenType == PRINT_FILE_UI);\n\n  // breadcrumbs\n', 'menús: dibujar la decoración al crear la pantalla'),
     ('draw_ui.cpp', ESTILO_TITULO, ESTILO_TITULO + '  if (magna_menu && titleLabel && newScreenType != MOVE_MOTOR_UI && newScreenType != BABYSTEP_UI)  // Magna2-230: esas dos escriben su estado arriba a la derecha\n    magna_marca_titulo(scr, titleLabel, &tft_style_label_rel);\n', 'menús: MAGNA 2 a la derecha del título'),
+    ('draw_tool.cpp', """        get_gcode_command(AUTO_LEVELING_COMMAND_ADDR, (uint8_t *)public_buf_m);
+        public_buf_m[sizeof(public_buf_m) - 1] = 0;
+        queue.inject(public_buf_m);""", """        queue.inject(F("G28\\nG29\\nM500"));  // Magna2-230 (BLTouch): home, malla de 5x5 y guardar (el comando guardado en la pantalla era G29 sin home)""", 'BLTouch: botón Nivelación hace G28 + G29 + M500'),
+    ('tft_lvgl_configuration.cpp', TOUCH_VIEJO, TOUCH_NUEVO, 'pantalla: apagado automático y encendido con un toque'),
+    ('draw_ui.cpp', CREAR + '  lv_obj_t *scr = lv_obj_create(nullptr, nullptr);\n', CREAR + '  magna_pantalla_despertar();  // Magna2-230: una pantalla nueva (aviso, fin de impresión) prende la luz\n  lv_obj_t *scr = lv_obj_create(nullptr, nullptr);\n', 'pantalla: se prende sola con cada pantalla nueva'),
     ('draw_ready_print.cpp', '  scr = lv_screen_create(PRINT_READY_UI, "");\n', '  scr = lv_screen_create(PRINT_READY_UI, "");\n' + DECORACION, 'pantalla principal: MAGNA 2 + raya roja + líneas de capas'),
 ]
 ok = falta = 0
