@@ -220,6 +220,7 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - `python3 pruebas/preflight.py`: chequeos de preflight de PlatformIO.
 - `bash pruebas/sanity-check.sh`: SanityCheck de Marlin con g++.
 - `bash pruebas/verificar-valores.sh`: 31 valores clave.
+- `bash pruebas/verificar-buffer-pantalla.sh <firmware.elf>`: el buffer de imagen de la pantalla tiene que quedar alineado (si no, colores corridos).
 - `python3 pruebas/verificar-perfiles.py`: perfiles vs firmware.
 
 ### Etapa 22 (2026-11-14) — prender/apagar la pantalla por WiFi (M256)
@@ -243,3 +244,10 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 
 ### Etapa 25 (2026-11-14) — revertida
 - Se había puesto fondo negro liso y texto en español en el aviso "Updating wifi model firmware" (franjas de colores en una foto del usuario). El usuario pidió volver atrás: **no cambiar nada de la interfaz sin consultarlo antes**. Quedó exactamente como en la etapa 24 (degradé de siempre).
+
+### Etapa 26 (2026-11-14) — CAUSA REAL de los colores corridos en toda la pantalla
+- Síntoma (fotos del usuario): todas las pantallas, incluso el logo de arranque, con los colores corridos (rojo → azul/cian, franjas en el degradé). Con el firmware original de Hellbot se veía bien; con el nuestro de anoche (23 hs) también.
+- Diagnóstico: simulando la imagen con los 2 bytes de cada píxel invertidos sale idéntica a la foto. Los dos firmwares mandan la misma inicialización ILI9488 (verificado en los binarios). La diferencia está en `bmp_public_buf` (`tft_lvgl_configuration.cpp`), el buffer por donde pasa TODA la imagen: el logo (`lcdDrawLogo`), LVGL (`lv_disp_buf_init`) y las vistas previas. Está declarado `uint8_t bmp_public_buf[16 * 1024]`, sin alineación. En el firmware actual quedaba en **0x2000d625 (impar)**. El DMA del FSMC copia de a media palabra (2 bytes) y con una dirección impar lee corrido un byte → colores corridos. Cada variable nueva mueve el buffer: anoche cayó par por casualidad, y las etapas 21 a 24 lo dejaron impar.
+- Arreglo (`aplicar_colores.py`): `__attribute__((aligned(4))) uint8_t bmp_public_buf[16 * 1024];`. Ahora queda en 0x2000d628. No cambia nada de la interfaz.
+- Para que no vuelva a pasar: `pruebas/verificar-buffer-pantalla.sh <firmware.elf>` falla si el buffer no queda en un múltiplo de 4. El workflow lo corre después de cada `pio run` (normal y BLTouch).
+- Lección: un buffer `uint8_t` que se manda por DMA de 16 bits tiene que estar alineado; un error así aparece y desaparece solo según el tamaño de las otras variables.

@@ -370,6 +370,7 @@ CAMBIOS = [
     ('wifi_module.cpp', LISTA_VIEJA, LISTA_NUEVA, 'WiFi: listar carpetas de la SD (M20 L /CARPETA)'),
     ('wifi_module.cpp', M23_VIEJO, M23_NUEVO, 'WiFi: M23 con ruta completa (imprimir desde carpetas)'),
     ('wifi_module.cpp', M24_VIEJO, M24_NUEVO, 'WiFi: M24 con ruta completa (imprimir desde carpetas)'),
+    ('tft_lvgl_configuration.cpp', 'uint8_t bmp_public_buf[16 * 1024];\n', '__attribute__((aligned(4))) uint8_t bmp_public_buf[16 * 1024];  // Magna2-230: alineado; el DMA de la pantalla copia de a 2 bytes y con una dirección impar mostraba todos los colores corridos\n', 'pantalla: buffer de imagen alineado (colores corridos)'),
     ('draw_about.cpp', ACERCA_INICIO, CREDITOS + '\n' + ACERCA_INICIO, 'Acerca de: código de los créditos'),
     ('draw_about.cpp', ACERCA_FIN, ACERCA_FIN + '  magna_creditos(scr, &tft_style_label_rel, magna_idioma_latino());  // Magna2-230: créditos\n', 'Acerca de: créditos (Andrés Londero)'),
     ('draw_ready_print.cpp', '  scr = lv_screen_create(PRINT_READY_UI, "");\n', '  scr = lv_screen_create(PRINT_READY_UI, "");\n' + DECORACION, 'pantalla principal: MAGNA 2 + raya roja + líneas de capas'),

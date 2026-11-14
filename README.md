@@ -231,6 +231,7 @@ GitHub Actions las corre antes de cada compilación:
 | `pruebas/preflight.py` | Los chequeos previos de PlatformIO: placa/entorno, script del sensor de filamento, ubicación de la configuración |
 | `pruebas/sanity-check.sh` | Los *SanityCheck* de Marlin sobre la configuración |
 | `pruebas/verificar-valores.sh` | 31 valores clave de la Magna (pasos, direcciones, funciones activadas…) |
+| `pruebas/verificar-buffer-pantalla.sh` | Que el buffer de imagen de la pantalla quede alineado; si no, todos los colores se ven corridos (lo corre el workflow) |
 | `pruebas/verificar-assets.py` | Formato de los íconos del tema (código de formato, tamaño, transparencia, que entren comprimidos) |
 | `pruebas/render-lvgl/` | Dibuja la pantalla principal con la librería LVGL real de la pantalla y verifica que los íconos se vean bien |
 | `pruebas/verificar-perfiles.py` | Que los perfiles de slicer estén bien formados y coincidan con el firmware |
