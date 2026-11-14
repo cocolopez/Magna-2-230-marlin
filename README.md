@@ -88,6 +88,7 @@ Los valores mecánicos (pasos, direcciones de motores, finales de carrera, termi
 | **Sensores de filamento** (2) | Pausa si se acaba el filamento, 15 mm después de detectarlo (`M412`) |
 | **Pausa y cambio de filamento** (`M600`) | Aparta el cabezal y espera el cambio, con "purgar más / continuar" en la pantalla |
 | **Recuperación ante cortes de luz** | Retoma la impresión desde la SD |
+| **Ventilador del hotend automático** | Se prende solo cuando el hotend pasa de 50 °C y se apaga cuando se enfría (salida HE1; hay que pasar el cable del ventilador ahí, ver `CLAUDE.md` etapa 28) |
 | **Apagado por inactividad** | Si el hotend está caliente y quieto 10 min, apaga los calentadores |
 | **Cancelar objetos** (`M486`) | Cancela una pieza que falló sin parar las demás |
 | **Tiempo restante del slicer** (`M73`) | La pantalla muestra el tiempo calculado por el slicer |

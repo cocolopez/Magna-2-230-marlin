@@ -260,3 +260,12 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - MagnAir los usa para: el historial (filamento de cada impresión = diferencia de `F` entre el principio y el final), las estadísticas, y los interruptores de Control → Protecciones.
 - La recuperación tras corte de luz sigue apagada de fábrica (`PLR_ENABLED_DEFAULT false`); se prende desde MagnAir (M413 S1 + M500).
 - Compilación manual completa: 383.128 bytes (77 %); `bmp_public_buf` sigue alineado (0x2000d628).
+
+### Etapa 28 (2026-11-14) — ventilador del hotend automático (HE1)
+- Pedido del usuario: que el ventilador del disipador del hotend no quede siempre prendido.
+- Cableado real (fotos del usuario): cable de red de 4 pares hasta el hotend. Marrón/blanco = calentador (HE0 − y HE1 +; los "+" de HE0/HE1 son 24 V fijos y el MOSFET corta el "−"); naranja/blanco = FAN (capa, PB1); azul/blanco = TH1 (termistor); verde/blanco = ventilador del disipador en un conector **+12/24V− fijo** (abajo a la derecha). El rojo/negro de al lado, también fijo, es otro ventilador (no se toca).
+- `Configuration_adv.h`: `E0_AUTO_FAN_PIN PB0` (salida HE1; con `SINGLENOZZLE` hay un solo hotend y PB0 era `FAN1_PIN`, que Marlin deja de usar como ventilador M106 cuando coincide con un auto-fan). Se prende arriba de 50 °C (`EXTRUDER_AUTO_FAN_TEMPERATURE`) a velocidad 255.
+- **Cambio de cables (lo hace el usuario, después de instalar este firmware, con todo desenchufado):** sacar el verde/blanco del conector +12/24V; el cable del pin "+" a HE0 + (libre) y el del "−" a HE1 −. Probar: calentar a 60 °C → tiene que girar; si no gira, apagar enseguida (sin ventilador el calor sube y tapa el hotend) y revisar la polaridad.
+- Con el firmware viejo y los cables ya movidos el ventilador **no** giraría nunca: el orden es firmware primero, cables después.
+- Compilación manual completa: 383.168 bytes (77 %); `bmp_public_buf` alineado (0x2000d630).
+

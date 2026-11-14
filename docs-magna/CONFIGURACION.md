@@ -60,6 +60,7 @@ El zip "Magna 2 230_2.1.2.1" no traía `Configuration.h`, solo el binario compil
 | Cancelar objetos | `CANCEL_OBJECTS` | `M486` desde el slicer |
 | Tiempo restante del slicer | `SET_PROGRESS_MANUALLY` | `M73` desde el slicer |
 | Distancia del sensor de filamento | `FILAMENT_RUNOUT_DISTANCE_MM 15` | `M412 D..` |
+| Ventilador del hotend automático (salida HE1, arriba de 50 °C) | `E0_AUTO_FAN_PIN PB0` | — |
 
 Cómo calibrarlas: `CALIBRACION.md`.
 
