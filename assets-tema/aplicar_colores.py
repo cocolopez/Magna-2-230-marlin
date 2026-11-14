@@ -84,8 +84,8 @@ CAMBIOS = [
     ('draw_ui.cpp', 'tft_style_scr.body.main_color   = LV_COLOR_BACKGROUND;', 'tft_style_scr.body.main_color   = LV_COLOR_MAKE(0x14, 0x14, 0x14);', 'fondo: degradé, arriba gris oscuro'),
     ('draw_ui.cpp', 'tft_style_scr.body.grad_color   = LV_COLOR_BACKGROUND;', 'tft_style_scr.body.grad_color   = LV_COLOR_MAKE(0x5C, 0x0E, 0x14);', 'fondo: degradé, abajo rojo oscuro'),
     ('draw_ui.cpp', CREAR, '\n' + INC + MENUS + CREAR, 'menús: código de la decoración marcada'),
-    ('draw_ui.cpp', LIMPIAR, '  lv_obj_clean(scr);\n\n  // Magna2-230 (tema): decoración marcada detrás de todo\n  const bool magna_menu = magna_menu_de_iconos(newScreenType);\n  if (magna_menu) magna_decorar_menu(scr, !title || title[0] != \'\\0\', newScreenType == PRINT_FILE_UI);\n\n  // breadcrumbs\n', 'menús: dibujar la decoración al crear la pantalla'),
-    ('draw_ui.cpp', ESTILO_TITULO, ESTILO_TITULO + '  if (magna_menu && titleLabel) magna_marca_titulo(scr, titleLabel, &tft_style_label_rel);  // Magna2-230\n', 'menús: MAGNA 2 a la derecha del título'),
+    ('draw_ui.cpp', LIMPIAR, '  lv_obj_clean(scr);\n\n  // Magna2-230 (tema): decoración marcada, dibujada con el fondo (no agrega objetos)\n  const bool magna_menu = magna_menu_de_iconos(newScreenType);\n  if (magna_menu) magna_decorar_menu(scr, !title || title[0] != \'\\0\', newScreenType == PRINT_FILE_UI);\n\n  // breadcrumbs\n', 'menús: dibujar la decoración al crear la pantalla'),
+    ('draw_ui.cpp', ESTILO_TITULO, ESTILO_TITULO + '  if (magna_menu && titleLabel && newScreenType != MOVE_MOTOR_UI && newScreenType != BABYSTEP_UI)  // Magna2-230: esas dos escriben su estado arriba a la derecha\n    magna_marca_titulo(scr, titleLabel, &tft_style_label_rel);\n', 'menús: MAGNA 2 a la derecha del título'),
     ('draw_ready_print.cpp', '  scr = lv_screen_create(PRINT_READY_UI, "");\n', '  scr = lv_screen_create(PRINT_READY_UI, "");\n' + DECORACION, 'pantalla principal: MAGNA 2 + raya roja + líneas de capas'),
 ]
 ok = falta = 0

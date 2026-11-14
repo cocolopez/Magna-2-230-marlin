@@ -121,7 +121,7 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
   - revisa que cada clave exista, los límites (detectó la retracción de 40), las calidades completas y la suma de carga y retiro = 100;
   - revisa que M217 S0 esté en los tres slicers y que Z se compense.
 - **Menús, variante B "marcada" más detalles:**
-  - Código en `assets-tema/decoracion_menus.inc`: un solo objeto LVGL con `design_cb` y `lv_draw_rect`, que no captura toques. Dibuja la franja del título, el acento, la línea roja con marcas de regla, el separador punteado, tres capas y la columna de navegación en archivos.
+  - Código en `assets-tema/decoracion_menus.inc` (en la etapa 17 pasó a dibujarse dentro del fondo de la pantalla). Dibuja la franja del título, el acento, la línea roja con marcas de regla, el separador punteado, tres capas y la columna de navegación en archivos.
   - Etiqueta "MAGNA 2" a la derecha del título; se borra si se pisa con el título.
   - `aplicar_colores.py` lo pega en `draw_ui.cpp` con una lista blanca de 15 pantallas de íconos.
   - El render en host compila el mismo .inc (`render menu`) y verifica línea, franja, punteado, capas, degradé e íconos.
@@ -130,6 +130,20 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
   - Abajo pasó de #2E0A0D a #5C0E14.
   - Capas más claras: principal 0x80+i·0x14; menús 0x86/0xAE/0xD6.
   - Capturas regeneradas (`generar_capturas.py` dibuja la misma decoración).
+
+### Etapa 17 (2026-11-13) — corrección: pantalla Mover
+- **Qué reportó el usuario** (con fotos), en la pantalla Mover:
+  - los íconos solo aparecían al tocar;
+  - la decoración quedaba cortada a ~380 px;
+  - "MAGNA 2" se encimaba con "Z:0.0mm".
+- **Causa:**
+  - `draw_move_motor.cpp` (y `draw_z_offset_wizard.cpp`) hace `lv_obj_get_child_back(scr)` suponiendo que el primer hijo es el título y le pone ancho 379.
+  - La decoración de la etapa 16 era un objeto hijo creado antes del título, así que la achicaba a ella. Además, la etiqueta de posición se dibuja a TFT_WIDTH-100.
+- **Solución:**
+  - `decoracion_menus.inc` ya no crea objetos: envuelve el `design_cb` del objeto pantalla (primero el fondo original, después los trazos). El título vuelve a ser el primer hijo.
+  - "MAGNA 2" no se pone en MOVE_MOTOR_UI ni en BABYSTEP_UI, porque escriben su estado arriba a la derecha.
+- **Prueba:** el render en host verifica que `lv_obj_get_child_back(scr)` sea el título y aplica el mismo achicado que Mover.
+- **Resultado:** 352.564 bytes (71 %), sin avisos nuevos con -Wall.
 
 ## Estado / pendiente
 - PlatformIO no está disponible en el entorno de Claude. Igual se compila y enlaza todo con `pruebas/compilacion-manual/` (ver etapa 6). El firmware oficial lo compila GitHub Actions.

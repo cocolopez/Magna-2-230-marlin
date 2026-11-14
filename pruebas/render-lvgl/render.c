@@ -42,6 +42,10 @@ int main(int argc,char**argv){
     static lv_style_t lbl; lv_style_copy(&lbl,&lv_style_plain); lbl.text.color=LV_COLOR_WHITE; lbl.text.font=LV_FONT_DEFAULT;
     magna_decorar_menu(s,true,false);
     lv_obj_t *tit=lv_label_create(s,(lv_obj_t*)NULL); lv_label_set_text(tit,"Ready>Settings"); lv_obj_set_style(tit,&lbl); lv_obj_set_pos(tit,3,5);
+    /* como hace draw_move_motor.cpp: toma el primer hijo de la pantalla como título y lo achica.
+       Tiene que ser el título de verdad (la decoración no puede crear objetos). */
+    if(lv_obj_get_child_back(s,NULL)!=tit){ fprintf(stderr,"el primer hijo de la pantalla no es el titulo\n"); return 3; }
+    lv_obj_set_width(lv_obj_get_child_back(s,NULL),480-101);
     magna_marca_titulo(s,tit,&lbl);
     const char *m[]={"F:/bmp_preHeat.bin","F:/bmp_extruct.bin","F:/bmp_mov.bin","F:/bmp_zero.bin",
                      "F:/bmp_leveling.bin","F:/bmp_filamentchange.bin","F:/bmp_more.bin","F:/bmp_return.bin"};

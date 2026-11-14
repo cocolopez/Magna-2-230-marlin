@@ -1,8 +1,10 @@
 /* Magna2-230 (tema): decoración "marcada" de los menús de íconos.
  *
- * Todo se dibuja desde UN solo objeto transparente, detrás de los botones y sin capturar
- * toques, con lv_draw_rect (LVGL 6.1). Así no se crean decenas de objetos lv_line y no se
- * gasta memoria de la pantalla.
+ * Se dibuja como parte del FONDO de la pantalla: se envuelve la función de dibujo (design_cb)
+ * del objeto pantalla y, después del degradé, se agregan los trazos con lv_draw_rect.
+ * No se crea ningún objeto hijo: algunas pantallas de MKS (Mover, asistente de Z) toman el
+ * primer hijo de la pantalla como si fuera el título (lv_obj_get_child_back) y lo achican.
+ * Una primera versión usaba un objeto hijo y en Mover quedaba recortado y tapaba los íconos.
  *
  *   - franja oscura del título con acento rojo a la izquierda
  *   - línea roja de lado a lado debajo del título, con marcas tipo regla
@@ -26,6 +28,7 @@
 
 static lv_style_t magna_st_rect;
 static uint8_t magna_con_titulo, magna_con_nav;
+static lv_design_cb_t magna_fondo_orig;   /* dibujo original de la pantalla (degradé) */
 
 static void magna_rect(const lv_area_t *mask, lv_coord_t x1, lv_coord_t y1, lv_coord_t x2, lv_coord_t y2,
                        uint8_t r, uint8_t g, uint8_t b) {
@@ -37,9 +40,8 @@ static void magna_rect(const lv_area_t *mask, lv_coord_t x1, lv_coord_t y1, lv_c
 }
 
 static bool magna_dibujar(lv_obj_t *obj, const lv_area_t *mask, lv_design_mode_t modo) {
-  (void)obj;
-  if (modo == LV_DESIGN_COVER_CHK) return false;   /* transparente: no tapa el fondo */
-  if (modo != LV_DESIGN_DRAW_MAIN) return true;
+  const bool res = magna_fondo_orig(obj, mask, modo);   /* primero el fondo normal */
+  if (modo != LV_DESIGN_DRAW_MAIN) return res;
 
   const lv_coord_t fin_filas = magna_con_nav ? MAGNA_X_NAV - 4 : MAGNA_ANCHO;
   lv_coord_t x;
@@ -69,12 +71,11 @@ static bool magna_dibujar(lv_obj_t *obj, const lv_area_t *mask, lv_design_mode_t
 
   if (magna_con_nav)
     magna_rect(mask, MAGNA_X_NAV, 40, MAGNA_X_NAV, 304, 0x8C, 0x18, 0x1E);
-  return true;
+  return res;
 }
 
-/* Crea la capa de decoración. Llamar ANTES de crear el título y los botones (queda detrás). */
+/* Activa la decoración en el fondo de esta pantalla (no crea objetos). */
 static void magna_decorar_menu(lv_obj_t *scr, bool con_titulo, bool con_nav) {
-  lv_obj_t *d;
   lv_style_copy(&magna_st_rect, &lv_style_plain);
   magna_st_rect.body.radius = 0;
   magna_st_rect.body.border.width = 0;
@@ -82,14 +83,15 @@ static void magna_decorar_menu(lv_obj_t *scr, bool con_titulo, bool con_nav) {
   magna_st_rect.body.opa = LV_OPA_COVER;
   magna_con_titulo = con_titulo;
   magna_con_nav = con_nav;
-  d = lv_obj_create(scr, (lv_obj_t *)NULL);
-  lv_obj_set_pos(d, 0, 0);
-  lv_obj_set_size(d, MAGNA_ANCHO, MAGNA_ALTO);
-  lv_obj_set_click(d, false);
-  lv_obj_set_design_cb(d, magna_dibujar);
+  if (lv_obj_get_design_cb(scr) != magna_dibujar) {
+    magna_fondo_orig = lv_obj_get_design_cb(scr);
+    lv_obj_set_design_cb(scr, magna_dibujar);
+  }
+  lv_obj_invalidate(scr);
 }
 
-/* "MAGNA 2" chico a la derecha del título. Si el título es largo y se pisarían, no se pone. */
+/* "MAGNA 2" chico a la derecha del título. Si el título es largo y se pisarían, no se pone.
+   No usar en pantallas que escriben su propio estado arriba a la derecha (Mover, Babystep). */
 static void magna_marca_titulo(lv_obj_t *scr, lv_obj_t *titulo, const lv_style_t *base) {
   static lv_style_t st_gris, st_rojo;
   lv_obj_t *dos, *magna;
