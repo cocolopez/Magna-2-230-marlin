@@ -125,6 +125,7 @@ jobs:
           LV=$(find .pio/libdeps -maxdepth 2 -type d -name lvgl | head -1)
           if [ -n "$LV" ] && [ -d assets-tema/assets ]; then
             python3 pruebas/render-lvgl/verificar_render.py "$LV" assets-tema/assets render-pantalla-principal.png
+            python3 assets-tema/simular_arranque.py arranque-animado.gif   # etapa 32: tiras y constantes del arranque
           else
             echo "Sin LVGL o sin tema: se saltea"
           fi
