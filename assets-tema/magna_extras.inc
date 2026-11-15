@@ -129,11 +129,22 @@ void magna_reloj_crear(void) {
   lv_obj_set_hidden(mg_reloj, true);
 }
 
+/* true si algo tapa toda la pantalla (gráfico, piezas, nivelación, mensaje, bloqueo...): ahí la hora
+ * chica se pisaba con el título de la tapa, así que se esconde. */
+static int mg_tapa_visible(void) {
+  lv_obj_t *c = lv_obj_get_child(lv_layer_top(), (lv_obj_t *)NULL);
+  while (c) {
+    if (c != mg_reloj && !lv_obj_get_hidden(c) && lv_obj_get_width(c) >= 480 && lv_obj_get_height(c) >= 320) return 1;
+    c = lv_obj_get_child(lv_layer_top(), c);
+  }
+  return 0;
+}
+
 void magna_reloj_mostrar(uint32_t ahora_ms, int visible) {
   char t[8];
   int h, m;
   if (!mg_reloj) return;
-  if (!visible || !magna_hora(ahora_ms, &h, &m, NULL)) { mg_ocultar(mg_reloj, 1); return; }
+  if (!visible || mg_tapa_visible() || !magna_hora(ahora_ms, &h, &m, NULL)) { mg_ocultar(mg_reloj, 1); return; }
   snprintf(t, sizeof t, "%02d:%02d", h, m);
   mg_poner_texto(mg_reloj, t);
   /* centrada arriba: a la derecha se pisaba con "MAGNA" del título de las subpantallas */

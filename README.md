@@ -1,269 +1,217 @@
-# Marlin 2.1.3 para Hellbot Magna 2 230
+# Marlin 2.1.3 para la Hellbot Magna 2 230
 
-Firmware **Marlin 2.1.3-beta3** configurado para la impresora 3D **Hellbot Magna 2 230**, con placa **MKS Robin Nano V1.3** y pantalla táctil **MKS TFT35**. Incluye un tema visual propio para la pantalla, perfiles para Cura, PrusaSlicer y OrcaSlicer, y compilación automática en GitHub Actions.
+Marlin 2.1.3-beta3 configurado para la Hellbot Magna 2 230 con placa MKS Robin Nano V1.3 y pantalla táctil TFT35. Le hice un tema propio a la pantalla, le agregué cosas que el firmware de fábrica no tenía (hora, tiempo restante con hora de fin, resumen al terminar, cancelar una pieza…) y armé perfiles para Cura, PrusaSlicer y OrcaSlicer.
+
+Se compila solo en GitHub: subís `mm2.zip` y te devuelve lo que va en la SD.
 
 <p align="center">
-  <img src="docs-magna/capturas/arranque.png" width="48%" alt="Pantalla de arranque">
-  <img src="docs-magna/capturas/principal.png" width="48%" alt="Pantalla principal">
+  <img src="docs-magna/capturas/arranque.gif" width="49%" alt="Arranque">
+  <img src="docs-magna/capturas/principal.png" width="49%" alt="Pantalla principal">
 </p>
-
----
 
 ## Contenido
 
-- [Qué trae](#qué-trae)
-- [Hardware compatible](#hardware-compatible)
-- [Firmware](#firmware)
-- [Tema de la pantalla](#tema-de-la-pantalla)
+- [La pantalla](#la-pantalla)
+  - [Pantalla principal](#pantalla-principal)
+  - [Imprimiendo](#imprimiendo)
+  - [Al terminar](#al-terminar)
+  - [Mensajes, bloqueo y siempre encendida](#mensajes-bloqueo-y-siempre-encendida)
+  - [Menús](#menús)
+  - [Nivelación con BLTouch](#nivelación-con-bltouch)
+- [Qué cambia en Marlin](#qué-cambia-en-marlin)
+- [Ventilador del hotend automático](#ventilador-del-hotend-automático)
+- [Hardware](#hardware)
 - [Perfiles de slicer](#perfiles-de-slicer)
 - [Firmware del WiFi](#firmware-del-wifi)
-- [Cómo compilar](#cómo-compilar)
-- [Cómo instalar en la impresora](#cómo-instalar-en-la-impresora)
-- [Calibración después de instalar](#calibración-después-de-instalar)
-- [Pruebas automáticas](#pruebas-automáticas)
-- [Estructura del repositorio](#estructura-del-repositorio)
-- [Créditos y licencia](#créditos-y-licencia)
+- [Compilar](#compilar)
+- [Instalar](#instalar)
+- [Calibrar](#calibrar)
+- [Créditos](#créditos)
 
----
+## La pantalla
 
-## Qué trae
+Fondo oscuro con degradé, íconos de trazo blanco con detalles en rojo y una animación de arranque con una pieza que se imprime capa por capa. Todos los íconos los genera un script ([assets-tema/](assets-tema/)), no hay imágenes sacadas de otro lado. Tienen el mismo formato que los de Makerbase, así que para volver a los de fábrica alcanza con copiar la carpeta `assets` original.
 
-| | |
-|---|---|
-| **Firmware** | Marlin oficial 2.1.3-b3 con la configuración de la Magna 2 230 |
-| **Pantalla** | Interfaz MKS (LVGL) táctil, en español, con tema propio negro, rojo y blanco |
-| **Mejoras** | Linear Advance, Input Shaping, control de temperatura MPC, cambio automático de filamento para el hotend 2 en 1 y más (ver abajo) |
-| **Slicers** | Perfiles para Cura 5, PrusaSlicer 2.6+ y OrcaSlicer 2.x |
-| **WiFi** | Firmware oficial del módulo MKS Robin WiFi (opcional) |
-| **BLTouch** | Versión opcional con sensor BLTouch y nivelación automática de 5×5 puntos (se compilan las dos) |
-| **Compilación** | Automática en GitHub Actions: subís `mm2.zip` y te devuelve todo listo para la SD |
+Las capturas de abajo son el dibujo real de la librería gráfica de la pantalla (LVGL de MKS) con el mismo código del firmware; las genera una de las pruebas automáticas. En la de impresión le agregué a mano la imagen de la pieza, porque la prueba no la carga.
 
-## Hardware compatible
+### Pantalla principal
 
-| Componente | Modelo |
-|---|---|
-| Impresora | Hellbot Magna 2 230 (230 × 230 × 250 mm) |
-| Placa | MKS Robin Nano **V1.3** (STM32F407VET6, 512 KB) |
-| Pantalla | MKS TFT35 táctil (480 × 320) |
-| Extrusión | Doble extrusor Dual Drive con hotend **2 en 1** (una boquilla) |
-| Drivers | TMC2209 (X/Y) en modo standalone |
-| WiFi | MKS Robin WiFi (ESP8266) |
-| Sensor (opcional) | BLTouch en el conector BLTouch (PA8) y en Z-: usar la versión **BLTouch** ([`docs-magna/BLTOUCH.md`](docs-magna/BLTOUCH.md)) |
+Hora grande con la fecha, y los íconos de WiFi y de Telegram (prendidos si están andando). La hora la pasa el módulo WiFi con [MagnAir](#firmware-del-wifi); sin MagnAir la pantalla queda como siempre. Abajo a la derecha está el gráfico de temperaturas de los últimos 10 minutos.
 
-> ⚠️ Este firmware es **solo para la Robin Nano V1.3**. La V1.2 (STM32F103) y la V3 usan otros firmwares.
+<p>
+  <img src="docs-magna/capturas/principal.png" width="49%" alt="Pantalla principal">
+  <img src="docs-magna/capturas/grafico.png" width="49%" alt="Gráfico de temperaturas">
+</p>
 
-## Firmware
+### Imprimiendo
 
-**Base:** Marlin oficial **2.1.3-b3**, idéntico al release de MarlinFirmware. El repositorio guarda solo los archivos propios de la Magna. La versión de Marlin está en `MARLIN_VERSION` y GitHub Actions la descarga al compilar.
+Arriba la barra grande y una línea con la capa, lo que falta y a qué hora termina: `Capa 57/210 · faltan 2:15 · fin 23:25`. Si el gcode no trae miniatura aparece la pieza del arranque en lugar de la "G" de Makerbase.
 
-Los valores mecánicos (pasos, direcciones de motores, finales de carrera, termistores, aceleraciones y PID de la cama) se tomaron de un firmware 2.1.2.1 que ya funcionaba en esta máquina. El detalle de cada valor y de dónde sale está en [`docs-magna/CONFIGURACION.md`](docs-magna/CONFIGURACION.md).
+Desde esta pantalla se puede cancelar una sola pieza cuando hay varias en la cama (las demás siguen), ver el gráfico y bloquear la pantalla. Mientras imprime, el ventilador gira, la barra tiene un brillo que la recorre y las temperaturas cambian de color hasta que llegan.
 
-### Configuración principal
+<p>
+  <img src="docs-magna/capturas/imprimiendo.png" width="49%" alt="Imprimiendo">
+  <img src="docs-magna/capturas/cancelar-pieza.png" width="49%" alt="Cancelar una pieza">
+</p>
+
+Para que aparezcan las capas y los nombres de las piezas, Cura tiene que agregar un par de líneas al gcode. Está explicado en [docs-magna/CURA-PANTALLA.md](docs-magna/CURA-PANTALLA.md). Si mandás el archivo desde el editor de la app MagnAir, lo agrega solo.
+
+### Al terminar
+
+Un resumen con lo que tardó, el filamento que usó y lo que costó, y una melodía corta. También suena otra cuando pide cambiar el filamento.
+
+<p>
+  <img src="docs-magna/capturas/resumen.png" width="49%" alt="Resumen al terminar">
+  <img src="docs-magna/capturas/carga-filamento.png" width="49%" alt="Cargando filamento">
+</p>
+
+### Mensajes, bloqueo y siempre encendida
+
+Desde la app, la página o el bot de Telegram se le puede mandar un mensaje a la pantalla ("cambiá el filamento a PETG negro"). El gcode también puede traerlos: el editor de la app los pone en la capa que elijas.
+
+Mientras imprime se puede bloquear la pantalla para que nadie toque nada (se desbloquea deslizando), y si querés que no se apague hay un modo "siempre encendida" con la hora, el porcentaje y la hora de fin en grande.
+
+<p>
+  <img src="docs-magna/capturas/mensaje.png" width="32%" alt="Mensaje">
+  <img src="docs-magna/capturas/bloqueo.png" width="32%" alt="Pantalla bloqueada">
+  <img src="docs-magna/capturas/siempre-encendida.png" width="32%" alt="Siempre encendida">
+</p>
+
+La pantalla se apaga sola a los 5 minutos sin tocarla. El primer toque solo la prende, y los avisos (falta de filamento, impresión terminada) también.
+
+### Menús
+
+Franja del título con la hora al medio, una línea roja tipo regla y "MAGNA 2" a la derecha. Los mensajes usan una letra más grande que la original y en *Ajustes → Más* agregué botones para calibrar el hotend y la cama, estacionar y cargar cada filamento del 2 en 1 sin escribir comandos.
+
+<p>
+  <img src="docs-magna/capturas/menu-ajustes.png" width="49%" alt="Menú Ajustes">
+  <img src="docs-magna/capturas/mas.png" width="49%" alt="Ajustes, Más">
+</p>
+
+<p align="center"><img src="docs-magna/capturas/iconos.png" width="98%" alt="Íconos del tema"></p>
+
+### Nivelación con BLTouch
+
+Si tenés BLTouch hay una versión aparte del firmware con nivelación automática de 5 × 5 puntos. Mientras mide, la pantalla va mostrando el mapa de la cama con colores: verde está bien, amarillo y rojo son los puntos altos o bajos. Cómo conectarlo: [docs-magna/BLTOUCH.md](docs-magna/BLTOUCH.md).
+
+<p><img src="docs-magna/capturas/nivelacion-bltouch.png" width="49%" alt="Nivelación con BLTouch"></p>
+
+## Qué cambia en Marlin
+
+Los valores mecánicos (pasos, sentido de los motores, finales de carrera, termistores, aceleraciones y PID de la cama) salen de un firmware 2.1.2.1 que ya andaba bien en esta máquina. El detalle está en [docs-magna/CONFIGURACION.md](docs-magna/CONFIGURACION.md).
 
 | Parámetro | Valor |
 |---|---|
-| Placa (`MOTHERBOARD`) | `BOARD_MKS_ROBIN_NANO_V1_3_F4` |
-| Entorno de compilación | `mks_robin_nano_v1_3_f4` |
 | Área de impresión | 230 × 230 × 250 mm |
 | Pasos/mm X · Y · Z · E0 · E1 | 80 · 80 · 400 · 425 · 423 |
 | Velocidad máxima | 300 · 300 · 5 · 25 · 25 mm/s |
 | Aceleración máxima | 2000 · 2000 · 100 · 8000 · 8000 mm/s² |
-| Aceleración impresión / viaje | 2000 / 2000 mm/s² |
 | Jerk X · Y · Z · E | 10 · 10 · 0.3 · 5 |
-| Termistores hotend / cama | Tipo 1 (100k NTC) |
 | Temperatura máxima hotend / cama | 275 °C / 120 °C |
-| Extrusores | 2, con boquilla única (`SINGLENOZZLE`) |
-| Sensores de filamento | 2 (uno por extrusor) |
-| Puerto serie | UART3, 115200 baudios |
+| Extrusores | 2 con una sola boquilla (hotend 2 en 1) |
 
-### Funciones activadas
+Lo que activé:
 
-| Función | Para qué sirve |
+- **Input Shaping** (`M593`) para imprimir más rápido con menos marcas en las esquinas.
+- **MPC** para el hotend, que mantiene la temperatura más pareja que el PID. Se calibra con un botón.
+- **Linear Advance** por extrusor (`M900`).
+- **Cambio de filamento del 2 en 1**: los perfiles retiran el filamento 100 mm y cargan el otro, como el perfil de fábrica.
+- **Dos sensores de filamento**, `M600` con "purgar más / continuar" en la pantalla y recuperación tras un corte de luz.
+- **Cancelar objetos** (`M486`), tiempo restante del slicer (`M73`), babystep, contador de impresiones y apagado de los calentadores si quedan prendidos 10 minutos sin hacer nada.
+- Comandos nuevos para que [MagnAir](#firmware-del-wifi) pueda prender y apagar la pantalla, leer la calibración y las estadísticas, entrar en carpetas de la SD y pasarle la hora y los mensajes a la pantalla.
+
+## Ventilador del hotend automático
+
+El ventilador del hotend se prende solo cuando pasa los 50 °C y se apaga cuando se enfría. Para eso tiene que estar conectado a la salida **HE1** de la placa, que en la Magna 2 230 viene libre: el cable verde al **+** y el blanco al **−**.
+
+## Hardware
+
+| | |
 |---|---|
-| **Cambio de filamento 2 en 1** | Los perfiles de slicer retiran el filamento 100 mm (por encima de la unión) y cargan el otro, como el perfil de fábrica. El firmware trae `TOOLCHANGE_FILAMENT_SWAP` para cambios a mano (`M217 S100`) |
-| **Input Shaping** X/Y | Reduce el *ringing* y permite imprimir más rápido. Se ajusta con `M593` |
-| **MPC** (control predictivo de temperatura) | Temperatura del hotend más estable que con PID. Se calibra con `M306 T` |
-| **Linear Advance** | Compensa la presión en la boquilla: esquinas más limpias. `M900` por extrusor |
-| **S-Curve**, jerk clásico, límite de frecuencia XY, suavizado adaptativo de pasos | Movimiento más suave y menos vibración |
-| **Sensores de filamento** (2) | Pausa si se acaba el filamento, 15 mm después de detectarlo (`M412`) |
-| **Pausa y cambio de filamento** (`M600`) | Aparta el cabezal y espera el cambio, con "purgar más / continuar" en la pantalla |
-| **Recuperación ante cortes de luz** | Retoma la impresión desde la SD |
-| **Ventilador del hotend automático** | Se prende solo cuando el hotend pasa de 50 °C y se apaga cuando se enfría (salida HE1; hay que pasar el cable del ventilador ahí, ver `CLAUDE.md` etapa 28) |
-| **Hora, capas y hora de fin** | Hora en todas las pantallas (la pasa MagnAir), íconos de WiFi y Telegram, y en la impresión "Capa 57/210 · faltan 2:15 · fin 23:40" (capas: ver `docs-magna/CURA-PANTALLA.md`) |
-| **Pantalla: más funciones** | Resumen al terminar (tiempo, filamento, costo), mensajes desde MagnAir/Telegram, bloqueo, "siempre encendida" mientras imprime, melodías, animaciones (ventilador, barra, temperaturas, arranque), gráfico de temperaturas, nivelación en vivo (BLTouch), cancelar una pieza y vista en vivo del recorrido |
-| **Apagado por inactividad** | Si el hotend está caliente y quieto 10 min, apaga los calentadores |
-| **Cancelar objetos** (`M486`) | Cancela una pieza que falló sin parar las demás |
-| **Tiempo restante del slicer** (`M73`) | La pantalla muestra el tiempo calculado por el slicer |
-| **Babystepping** | Ajusta Z en vivo durante la primera capa |
-| **Contador de impresiones**, **EEPROM** | Estadísticas y configuración guardada con `M500` |
-| **WiFi MKS** | Envío de archivos y control por red |
-| **Apagado automático de la pantalla** | Apaga la luz de la pantalla después de 5 minutos sin tocarla. El primer toque solo la prende, sin apretar nada; los avisos (falta de filamento, impresión terminada) también la prenden. Se cambia con `MAGNA_PANTALLA_APAGADO_MIN` en `Configuration_adv.h` (0 = nunca) |
-| **Pantalla desde MagnAir** | Por WiFi, `M256 B0` apaga la luz de la pantalla, `M256 B255` la prende y `M256` dice cómo está. Lo usa el botón de pantalla de MagnAir (la app y la página del módulo WiFi) |
-| **Créditos** | En *Configuración → Acerca de* figura "Creado por Andrés Londero" y andreslondero@gmail.com, abajo de los datos de Marlin |
-| **Estadísticas y protecciones para MagnAir** | `M257` también informa si están activos la recuperación tras corte de luz y el sensor de filamento, y las estadísticas de Marlin (impresiones, horas, filamento). MagnAir lo usa para el historial, las estadísticas y los interruptores de Control |
-| **Calibración y carpetas para MagnAir** | Por WiFi, `M257` contesta los valores en uso (MPC/PID, pasos, avance de presión, vibraciones, altura Z, velocidades y aceleraciones) y la lista de la SD entra a las carpetas (`M20 L /CARPETA`); también se puede imprimir desde una carpeta |
-| **Botones propios en Ajustes → Más** | Calibrar hotend, calibrar cama, estacionar y cargar cada filamento del 2 en 1, con un toque y sin escribir comandos |
+| Impresora | Hellbot Magna 2 230 |
+| Placa | MKS Robin Nano **V1.3** (STM32F407, 512 KB) |
+| Pantalla | MKS TFT35 táctil (480 × 320) |
+| Extrusión | Doble extrusor Dual Drive con hotend 2 en 1 |
+| Drivers | TMC2209 en X e Y |
+| WiFi | MKS Robin WiFi (ESP8266) |
+| BLTouch (opcional) | Conector BLTouch y Z-, con la versión BLTouch del firmware |
 
-## Tema de la pantalla
-
-Tema propio, minimalista: fondo oscuro con degradé, íconos de trazo blanco con detalles en rojo, y una pantalla de arranque con una pieza impresa en capas. Todos los íconos y la pantalla de arranque están generados por código en [`assets-tema/`](assets-tema/), sin imágenes de terceros.
-
-<p align="center">
-  <img src="docs-magna/capturas/ajustes.png" width="48%" alt="Menú Ajustes">
-  <img src="docs-magna/capturas/imprimiendo.png" width="48%" alt="Pantalla de impresión">
-</p>
-<p align="center">
-  <img src="docs-magna/capturas/configuracion.png" width="48%" alt="Menú Configuración">
-  <img src="docs-magna/capturas/mas.png" width="48%" alt="Ajustes, Más: botones propios">
-</p>
-<p align="center">
-  <img src="docs-magna/capturas/mensaje-carga.png" width="48%" alt="Mensaje de carga de filamento con letra grande">
-</p>
-
-<p align="center">
-  <img src="docs-magna/capturas/iconos.png" width="96%" alt="Íconos del tema">
-</p>
-
-- **Vista previa por defecto:** cuando el gcode no trae miniatura, la pantalla de impresión muestra la pieza del arranque con "SIN VISTA PREVIA" en lugar de la "G" azul de Makerbase (`bmp_preview.bin`, 200×200).
-- **139 archivos:** mismo formato y tamaño que los originales de Makerbase, así que reemplazan a los de fábrica sin cambiar el firmware.
-- **Íconos transparentes:** dejan ver el fondo de la pantalla.
-- **Fondo y colores:** el degradé, los colores de los menús y la decoración de la pantalla principal los aplica [`assets-tema/aplicar_colores.py`](assets-tema/aplicar_colores.py) al compilar.
-- **Menús de íconos:** franja oscura del título con acento rojo, "MAGNA 2" a la derecha, línea roja con marcas tipo regla, separador punteado entre filas y tres líneas de capas abajo ([`assets-tema/decoracion_menus.inc`](assets-tema/decoracion_menus.inc)). Se dibuja junto con el fondo de la pantalla, sin agregar objetos. En Mover y Babystep no lleva "MAGNA 2", porque ahí arriba a la derecha va la posición.
-- **Mensajes con letra grande:** todos los mensajes (carga y retiro de filamento, pausa, errores, WiFi, etc.) usan una letra de 26 px en vez de 16, con salto de línea automático, y los botones bajan para dejarle lugar. La letra ([`generar_fuente.py`](assets-tema/generar_fuente.py), Roboto con acentos y ñ) se usa en español, inglés, portugués, italiano, francés y alemán; en los otros idiomas queda la original.
-- **Barras de progreso del tema:** la de carga/descarga de filamento y la de impresión son rojas, redondeadas y sobre fondo oscuro. El porcentaje de impresión va con la letra grande ([`assets-tema/estilo_dialogos.inc`](assets-tema/estilo_dialogos.inc)).
-- **Para volver a los íconos de fábrica:** copiá a la SD la carpeta `assets` original de Makerbase.
-
-> Las capturas de "Más" y del mensaje de carga son el dibujo real de la librería gráfica de la pantalla (LVGL 6.1 de MKS) con el mismo código del firmware (`pruebas/render-lvgl`); las demás son una simulación hecha con los mismos archivos ([`generar_capturas.py`](assets-tema/generar_capturas.py)).
+> Este firmware es **solo para la Robin Nano V1.3**. La V1.2 (STM32F103) y la V3 usan otros.
 
 ## Perfiles de slicer
 
-En [`perfiles-slicer/`](perfiles-slicer/), ajustados a esta máquina y a este firmware:
+En [perfiles-slicer/](perfiles-slicer/) hay perfiles hechos para esta máquina y este firmware:
 
-| Slicer | Archivos | Cómo se importa |
-|---|---|---|
-| **Cura 5.10 o superior** | `cura/` (máquina, extrusores y calidades por material) | Doble clic en `cura/instalar-windows.bat` (o `instalar-mac-linux.sh`): lo copia en la carpeta de la versión más nueva de Cura |
-| **PrusaSlicer 2.6+** | `prusaslicer/Magna2-230_PrusaSlicer_bundle.ini` | Archivo → Importar → Importar paquete de configuración |
-| **OrcaSlicer 2.x** | `orcaslicer/machine`, `process`, `filament` | Archivo → Importar → Importar configuraciones |
+| Slicer | Cómo se instala |
+|---|---|
+| Cura 5.10 o más nuevo | Doble clic en `cura/instalar-windows.bat` (o `instalar-mac-linux.sh`) |
+| PrusaSlicer 2.6+ | Archivo → Importar → Importar paquete de configuración (`prusaslicer/`) |
+| OrcaSlicer 2.x | Archivo → Importar → Importar configuraciones (`orcaslicer/`) |
 
-- **Calidades:** 0.12 Fina · 0.20 Normal · 0.28 Borrador.
-- **Filamentos:** PLA · PETG · ABS.
-- **G-code de inicio:** doble línea de purga. Al terminar, el cabezal se aparta y presenta la pieza.
-- **Cambio de extrusor:** lo hace el firmware, así que la retracción de cambio del slicer va en 0.
-
-Todos se generan desde un único script ([`generar_perfiles.py`](perfiles-slicer/generar_perfiles.py)), así quedan coherentes entre sí. Más detalles en [`perfiles-slicer/README.md`](perfiles-slicer/README.md).
+Calidades 0.12, 0.20 y 0.28 para PLA, PETG y ABS, con doble línea de purga al empezar y la pieza al frente al terminar. Los tres salen del mismo script ([generar_perfiles.py](perfiles-slicer/generar_perfiles.py)) para que no queden distintos entre sí.
 
 ## Firmware del WiFi
 
-[`wifi/MksWifi.bin`](wifi/) es el **firmware oficial de Makerbase CS1.0.4_200227** para el módulo MKS Robin WiFi (ESP8266). Es opcional: solo hace falta para actualizar o reparar el WiFi. Ver [`wifi/README.md`](wifi/README.md).
+Para el módulo WiFi hay dos opciones:
 
-## Cómo compilar
+- **MagnAir**, mi firmware para el módulo, con página web, apps de Android y Windows y bot de Telegram. Es el que le pasa la hora, los mensajes y las opciones a la pantalla. Está en su propio repo.
+- El **oficial de Makerbase** (CS1.0.4), en [wifi/](wifi/), por si querés volver al de fábrica.
 
-### Con GitHub Actions (recomendado)
+## Compilar
 
-1. **Solo la primera vez:** crear en el repo `.github/workflows/compilar-mm2.yml` y `.github/workflows/publicar-release.yml` con el contenido de los archivos de [`github-workflows/`](github-workflows/).
-2. Subir **`mm2.zip`** a la raíz del repo (Add file → Upload files).
-3. El workflow hace todo solo:
-   1. descomprime el zip en el repo y guarda los archivos;
-   2. descarga Marlin oficial (la versión de `MARLIN_VERSION`);
-   3. le aplica la configuración y el tema;
-   4. corre las pruebas y compila.
-4. En **Actions → Compilar Magna 2 230 (mm2.zip)** se descargan dos artefactos: **`Magna2-230-firmware`** (normal) y **`Magna2-230-firmware-BLTouch`** (para la impresora con BLTouch, con `BLTOUCH.md` adentro). Los dos tienen esta forma:
+Con GitHub Actions:
+
+1. La primera vez, copiá los archivos de [github-workflows/](github-workflows/) a `.github/workflows/` en el repo.
+2. Subí `mm2.zip` a la raíz del repo (Add file → Upload files).
+3. El workflow descomprime el zip, baja Marlin oficial, le aplica la configuración y el tema, corre las pruebas y compila.
+4. En Actions bajás **Magna2-230-firmware** o **Magna2-230-firmware-BLTouch**:
 
 ```
 Magna2-230-firmware/
-├── Robin_nano35.bin      ← firmware
-├── assets/               ← íconos, logo y fuente de la pantalla
-├── opcional-wifi/        ← firmware del WiFi (solo si se quiere actualizar)
+├── Robin_nano35.bin      firmware
+├── assets/               íconos, logo y letras de la pantalla
+├── opcional-wifi/        firmware oficial del WiFi
 └── COMO-FLASHEAR.md
 ```
 
-### Publicar una versión (Releases)
+Para publicar una versión en Releases: Actions → Publicar versión Magna 2 230 → Run workflow (o un tag `v1.0`).
 
-El workflow [`publicar-release.yml`](github-workflows/publicar-release.yml) compila y publica una versión descargable en la pestaña **Releases**:
-
-- **A mano:** **Actions → Publicar versión Magna 2 230 → Run workflow**, con un nombre (por ejemplo `v1.0`) o vacío para usar la fecha. Opcionalmente, como borrador.
-- **Con un tag:** `git tag v1.0 && git push --tags`.
-
-Cada versión publica:
-
-| Archivo | Contenido |
-|---|---|
-| `Magna2-230-firmware-<versión>.zip` | `Robin_nano35.bin`, `assets`, `opcional-wifi/` e instrucciones |
-| `Magna2-230-perfiles-slicer-<versión>.zip` | Perfiles de Cura, PrusaSlicer y OrcaSlicer |
-| `Robin_nano35.bin` | Solo el firmware |
-
-### En una PC
+En la compu:
 
 ```bash
-bash pruebas/armar-local.sh                      # baja Marlin y aplica la configuración en build/
+bash pruebas/armar-local.sh                      # baja Marlin y le aplica la configuración en build/
 python3 assets-tema/aplicar_colores.py build     # aplica el tema
-cd build && pio run -e mks_robin_nano_v1_3_f4    # compila con PlatformIO
+cd build && pio run -e mks_robin_nano_v1_3_f4
 ```
 
-El firmware queda en `build/.pio/build/mks_robin_nano_v1_3_f4/Robin_nano35.bin`. Para usar los íconos del tema, copiá `assets-tema/assets/*.bin` dentro de la carpeta `assets` generada.
+Antes de compilar se corren varias pruebas: los chequeos de Marlin sobre la configuración, los valores clave de la Magna, el formato de los íconos, que los perfiles coincidan con el firmware y el dibujo de las pantallas con la LVGL real (de ahí salen las capturas de arriba). Están en [pruebas/](pruebas/).
 
-## Cómo instalar en la impresora
+## Instalar
 
-1. Guardar los valores actuales: conectar por USB y mandar `M503`.
-2. Formatear una microSD en **FAT32** y copiar en la raíz `Robin_nano35.bin` y la carpeta `assets`. Opcional: `MksWifi.bin`.
-3. Con la impresora apagada, insertar la SD y encender. **No apagar mientras actualiza**: primero el firmware, después los íconos y después el WiFi.
-4. Al terminar, los archivos de la SD quedan renombrados: `ROBIN_NANO35.CUR`, `_assets` y `MKSWIFI.CUR`.
-5. Cargar la configuración nueva en la EEPROM: `M502` y después `M500`.
+1. Guardá tus valores actuales: por USB, `M503`.
+2. En una microSD en FAT32 copiá `Robin_nano35.bin` y la carpeta `assets`.
+3. Con la impresora apagada, poné la SD y prendela. No la apagues mientras actualiza (primero el firmware y después los íconos).
+4. Cargá la configuración nueva: `M502` y `M500`.
 
-Paso a paso completo: [`docs-magna/COMO-FLASHEAR.md`](docs-magna/COMO-FLASHEAR.md). Para volver al firmware anterior, se repite el proceso con el `.bin` viejo.
+Paso a paso: [docs-magna/COMO-FLASHEAR.md](docs-magna/COMO-FLASHEAR.md). Para volver atrás se hace lo mismo con el `.bin` anterior.
 
-## Calibración después de instalar
+## Calibrar
 
-En orden ([`docs-magna/CALIBRACION.md`](docs-magna/CALIBRACION.md)):
+Después de instalar, en este orden ([docs-magna/CALIBRACION.md](docs-magna/CALIBRACION.md)):
 
-| # | Qué | Comando |
-|---|---|---|
-| 1 | Temperatura del hotend (MPC) | Botón **Ajustes → Más → Calib. hotend** (con la máquina fría) |
-| 2 | PID de la cama | Botón **Ajustes → Más → Calib. cama** |
-| 3 | Largo del cambio de filamento 2 en 1 (si hace falta) | `CAMBIO` en `perfiles-slicer/generar_perfiles.py` |
-| 4 | Linear Advance por extrusor | `M900 T0 K..` / `M900 T1 K..` → `M500` |
-| 5 | Input Shaping | `M593 X F..` / `M593 Y F..` → `M500` |
+1. Hotend (MPC): *Ajustes → Más → Calib. hotend*, con la máquina fría.
+2. Cama (PID): *Ajustes → Más → Calib. cama*.
+3. Linear Advance de cada extrusor: `M900 T0 K..` y `M900 T1 K..`, después `M500`.
+4. Input Shaping: `M593 X F..` y `M593 Y F..`, después `M500`.
 
-Antes de imprimir, hacer las pruebas básicas de [`docs-magna/PRUEBAS-EN-IMPRESORA.md`](docs-magna/PRUEBAS-EN-IMPRESORA.md): temperaturas, finales de carrera, sentido de los ejes y extrusores.
+Antes de la primera impresión revisá temperaturas, finales de carrera y el sentido de los motores ([docs-magna/PRUEBAS-EN-IMPRESORA.md](docs-magna/PRUEBAS-EN-IMPRESORA.md)).
 
-## Pruebas automáticas
+## Créditos
 
-GitHub Actions las corre antes de cada compilación:
+Creado por **Andrés Londero** · [andreslondero@gmail.com](mailto:andreslondero@gmail.com) (también figura en *Configuración → Acerca de* de la pantalla).
 
-| Prueba | Qué verifica |
-|---|---|
-| `pruebas/preflight.py` | Los chequeos previos de PlatformIO: placa/entorno, script del sensor de filamento, ubicación de la configuración |
-| `pruebas/sanity-check.sh` | Los *SanityCheck* de Marlin sobre la configuración |
-| `pruebas/verificar-valores.sh` | 31 valores clave de la Magna (pasos, direcciones, funciones activadas…) |
-| `pruebas/verificar-buffer-pantalla.sh` | Que el buffer de imagen de la pantalla quede alineado; si no, todos los colores se ven corridos (lo corre el workflow) |
-| `pruebas/verificar-assets.py` | Formato de los íconos del tema (código de formato, tamaño, transparencia, que entren comprimidos) |
-| `pruebas/render-lvgl/` | Dibuja la pantalla principal con la librería LVGL real de la pantalla y verifica que los íconos se vean bien |
-| `pruebas/verificar-perfiles.py` | Que los perfiles de slicer estén bien formados y coincidan con el firmware |
-| `pruebas/compilacion-manual/` | Compilación y enlazado completos sin PlatformIO, para diagnosticar errores |
+- [Marlin Firmware](https://github.com/MarlinFirmware/Marlin), licencia GPL-3.0. Acá solo está la configuración y lo que agregué.
+- La interfaz de la pantalla es la MKS UI (LVGL) que viene con Marlin; la fuente `FontUNIGBK.bin` y el firmware oficial del WiFi son de [Makerbase](https://github.com/makerbase-mks).
+- Los valores de la máquina salen del firmware 2.1.2.1 para la Magna 2 de [charlieburgos](https://github.com/charlieburgos/Hellbot-Magna-2).
 
-## Estructura del repositorio
-
-```
-├── MARLIN_VERSION              versión de Marlin que se descarga (2.1.3-b3)
-├── platformio.ini              entorno por defecto: mks_robin_nano_v1_3_f4
-├── Marlin/
-│   ├── Configuration.h         configuración de la Magna (líneas marcadas "// Magna2-230")
-│   └── Configuration_adv.h
-├── assets-tema/                tema de la pantalla (generador, íconos, colores, capturas)
-├── perfiles-slicer/            Cura, PrusaSlicer, OrcaSlicer
-├── variantes/bltouch.py        convierte la configuración en la versión BLTouch
-├── wifi/                       firmware oficial del módulo WiFi
-├── docs-magna/                 configuración, calibración, flasheo, pruebas y capturas
-├── pruebas/                    pruebas automáticas y compilación manual
-└── github-workflows/           copia de los workflows (compilar y publicar versión)
-```
-
-## Créditos y licencia
-
-- **[Marlin Firmware](https://github.com/MarlinFirmware/Marlin):** licencia GPL-3.0. Este repositorio solo agrega configuración y archivos propios.
-- **Interfaz de pantalla:** MKS UI (LVGL) incluida en Marlin. La fuente `FontUNIGBK.bin` es de [Makerbase](https://github.com/makerbase-mks).
-- **Firmware del WiFi:** oficial de [Makerbase MKS-WIFI](https://github.com/makerbase-mks/MKS-WIFI).
-- **Valores de la máquina:** tomados del firmware 2.1.2.1 de la comunidad para la Magna 2 de [charlieburgos](https://github.com/charlieburgos/Hellbot-Magna-2).
-- **Tema visual, perfiles y scripts:** propios de este repositorio.
-
-> Usalo bajo tu responsabilidad. Antes de la primera impresión, verificá las temperaturas, los finales de carrera y el sentido de los motores.
+> Usalo bajo tu responsabilidad. Antes de imprimir, verificá temperaturas, finales de carrera y el sentido de los motores.

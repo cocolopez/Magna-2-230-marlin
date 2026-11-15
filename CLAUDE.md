@@ -72,7 +72,7 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 
 ### Etapa 12 (2026-11-13) — README para GitHub
 - `README.md` reescrito para la portada del repo: qué trae, hardware, firmware y configuración, funciones, tema con capturas, slicers, WiFi, compilación, instalación, calibración, pruebas, estructura y créditos. A pedido del usuario no menciona a Claude.
-- Capturas en `docs-magna/capturas/` (arranque, principal, ajustes, configuración, imprimiendo, íconos), generadas por `assets-tema/generar_capturas.py` a partir de los `.bin` reales, con el degradé y la decoración del firmware (x2 y con marco).
+- Capturas en `docs-magna/capturas/`: desde la etapa 36 salen del render real (`pruebas/render-lvgl`, ver etapa 36); `assets-tema/generar_capturas.py` (simulación vieja) ya no se usa para el README.
 - El README anterior (específico de la Magna) se reemplazó por este.
 
 ### Etapa 13 (2026-11-13) — workflow para publicar versiones
@@ -321,3 +321,10 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - **Íconos en blanco al volver del gráfico** a la pantalla principal: los íconos de MKS se leen comprimidos de la memoria SPI de principio a fin, y al borrar la tapa LVGL redibujaba la pantalla de abajo por pedazos. Ahora, al cerrar una tapa (gráfico, piezas, nivelación), `mg_cerrar_pendientes` llama a `magna_rehacer_pantalla` (glue en `extras_pantalla.py`, se registra con `magna_rehacer_funcion`): limpia la caché de imágenes y vuelve a armar la principal o la de impresión como cuando se vuelve desde un menú; en otras pantallas solo la invalida.
 - El usuario vio lo mismo al cerrar un **mensaje** (M117 / `/mensaje`): ahora cualquier cosa que tapa la pantalla pide rehacerla al cerrarse (`mg_pedir_rehacer`: mensaje, bloqueo, "siempre encendida", gráfico, piezas, nivelación) y se hace en el tick (`mg_rehacer_si_hace_falta`, nunca dentro de un evento de LVGL; no mientras sigue "siempre encendida"). En pantallas que no son la principal ni la de impresión se repite la pantalla arriba de la pila y se usa `clear_cur_ui()` + `draw_return_ui()`, como los diálogos de MKS.
 - Compila: 426.044 bytes (86 %). Sin probar en la impresora todavía.
+
+### Etapa 36 (2026-11-15) — README nuevo con capturas por sección
+- Pedido del usuario: descripciones de GitHub escritas con naturalidad (sin sonar a texto de IA ni sobreexplicar), capturas actualizadas y cada sección con sus capturas.
+- `README.md` reescrito: secciones de la pantalla (principal, imprimiendo, al terminar, mensajes/bloqueo/siempre encendida, menús, BLTouch), qué cambia en Marlin, ventilador por HE1 (verde +, blanco −), hardware, perfiles, WiFi, compilar, instalar, calibrar, créditos. Sin referencias a etapas ni a este archivo.
+- `docs-magna/capturas/`: PNG 480 × 320 del render real (`verificar_render.py` deja `/tmp/rnd-<modo>.png`: principal2→principal, grafico, piezas→cancelar-pieza, resumen, carga→carga-filamento, mensaje, bloqueo, ambiente→siempre-encendida, menu→menu-ajustes, mas, nivel→nivelacion-bltouch, acerca); `imprimiendo.png` = render impresion2 con la imagen de la pieza pegada (la prueba no carga la vista previa); `arranque.gif` de `simular_arranque.py`; `iconos.png` se mantiene. Las capturas viejas (simuladas) se borraron.
+- Al hacer las capturas se vio que la hora chica (ahora al medio) se pisaba con los títulos de las tapas (gráfico, piezas): `mg_tapa_visible()` la esconde mientras algo de 480 × 320 tapa la pantalla. Render: 0 fallas.
+
