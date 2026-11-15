@@ -315,3 +315,9 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 
 ### Etapa 34 (2026-11-14) — M263: mensaje en la pantalla desde el gcode
 - `M263 <texto>` (agregado a la lista de códigos con texto de `parser.cpp`, case 263 en `gcode.cpp`, `magna_m263()` en magna_extras.cpp): muestra la caja de mensaje (la misma del M117 por WiFi) y prende la pantalla. Lo agrega el editor de gcode de MagnAir ("Mensaje en la pantalla" en una capa). 425.852 bytes (86 %).
+
+### Etapa 35 (2026-11-15) — arreglos vistos en la impresora
+- **Hora chica centrada arriba** en las subpantallas (`magna_reloj_mostrar`): a la derecha se pisaba con "MAGNA" del título. La pantalla principal no cambia. `verificar_render.py` ahora la busca al medio.
+- **Íconos en blanco al volver del gráfico** a la pantalla principal: los íconos de MKS se leen comprimidos de la memoria SPI de principio a fin, y al borrar la tapa LVGL redibujaba la pantalla de abajo por pedazos. Ahora, al cerrar una tapa (gráfico, piezas, nivelación), `mg_cerrar_pendientes` llama a `magna_rehacer_pantalla` (glue en `extras_pantalla.py`, se registra con `magna_rehacer_funcion`): limpia la caché de imágenes y vuelve a armar la principal o la de impresión como cuando se vuelve desde un menú; en otras pantallas solo la invalida.
+- El usuario vio lo mismo al cerrar un **mensaje** (M117 / `/mensaje`): ahora cualquier cosa que tapa la pantalla pide rehacerla al cerrarse (`mg_pedir_rehacer`: mensaje, bloqueo, "siempre encendida", gráfico, piezas, nivelación) y se hace en el tick (`mg_rehacer_si_hace_falta`, nunca dentro de un evento de LVGL; no mientras sigue "siempre encendida"). En pantallas que no son la principal ni la de impresión se repite la pantalla arriba de la pila y se usa `clear_cur_ui()` + `draw_return_ui()`, como los diálogos de MKS.
+- Compila: 426.044 bytes (86 %). Sin probar en la impresora todavía.

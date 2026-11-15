@@ -62,10 +62,34 @@ void magna_vista_crear_impresion(lv_obj_t *scr) {
   magna_vista_crear(scr, magna_redibujar_previa);
 }
 
+// Volver a armar la pantalla de abajo después de cerrar un mensaje, el bloqueo, "siempre encendida", el gráfico, las piezas o la nivelación (ver
+// mg_cerrar_pendientes): igual que cuando se vuelve a ella desde un menú.
+static void magna_rehacer_pantalla() {
+  lv_img_cache_invalidate_src(NULL);
+  switch (disp_state) {
+    case PRINT_READY_UI: lv_clear_ready_print(); lv_draw_ready_print(); break;
+    case PRINTING_UI: lv_clear_printing(); magna_redibujar_previa(); lv_draw_printing(); break;
+    default:
+      // cualquier otra pantalla: se repite arriba en la pila y se "vuelve" a ella, como hacen los diálogos de MKS
+      if (disp_state_stack._disp_state[disp_state_stack._disp_index] == disp_state && disp_state_stack._disp_index < 98) {
+        disp_state_stack._disp_index++;
+        disp_state_stack._disp_state[disp_state_stack._disp_index] = disp_state;
+        clear_cur_ui();
+        draw_return_ui();
+      }
+      else lv_obj_invalidate(lv_scr_act());
+      break;
+  }
+}
+
 static void magna_tick33(const uint32_t ahora) {
   static uint32_t muestra = 0;
   static bool listo = false;
-  if (!listo) { TERN_(CANCEL_OBJECTS, magna_piezas_funciones(magna_cancelar_pieza, magna_pieza_cancelada)); listo = true; }
+  if (!listo) {
+    TERN_(CANCEL_OBJECTS, magna_piezas_funciones(magna_cancelar_pieza, magna_pieza_cancelada));
+    magna_rehacer_funcion(magna_rehacer_pantalla);
+    listo = true;
+  }
   if (!muestra || ahora - muestra >= 5000) {       // una muestra cada 5 s para el gráfico
     muestra = ahora | 1;
     magna_hist_agregar(thermalManager.wholeDegHotend(0), thermalManager.degTargetHotend(0),
@@ -222,6 +246,7 @@ void magna_arranque_animado();
 // Magna2-230 (etapa 33): gráfico, nivelación, piezas, vista en vivo (magna_extras.cpp)
 void magna_botones_impresion(lv_obj_t *scr);
 void magna_boton_grafico_principal(lv_obj_t *scr);
+void magna_rehacer_funcion(void (*f)(void));
 void magna_nivel_abrir(int nx, int ny);
 void magna_vista_crear_impresion(lv_obj_t *scr);
 void magna_vista_olvidar(void);

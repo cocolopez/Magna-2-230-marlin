@@ -101,7 +101,7 @@ if r.returncode: err.append('textos de magna_extras.inc: ' + r.stdout.strip().sp
 i2 = dibujar('impresion2')
 if not es_rojo(i2[52 * 480 + 230]): err.append('impresion2: la barra no se pinta de rojo')
 if sum(1 for y in range(73, 90) for x in range(210, 470) if i2[y * 480 + x][0] > 200 and i2[y * 480 + x][1] > 150) < 80: err.append('impresion2: no se ve la línea "Capa · faltan · fin"')
-if sum(1 for y in range(8, 26) for x in range(430, 478) if min(i2[y * 480 + x]) > 160) < 20: err.append('impresion2: no se ve la hora chica arriba a la derecha')
+if sum(1 for y in range(8, 26) for x in range(215, 265) if min(i2[y * 480 + x]) > 160) < 20: err.append('impresion2: no se ve la hora chica arriba al medio')
 if any(min(i2[y * 480 + x]) > 200 for y in range(73, 86) for x in range(205, 212)) and False: pass
 # ---- etapa 30: principal con hora grande, fecha e íconos
 p2 = dibujar('principal2')

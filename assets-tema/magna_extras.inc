@@ -136,7 +136,8 @@ void magna_reloj_mostrar(uint32_t ahora_ms, int visible) {
   if (!visible || !magna_hora(ahora_ms, &h, &m, NULL)) { mg_ocultar(mg_reloj, 1); return; }
   snprintf(t, sizeof t, "%02d:%02d", h, m);
   mg_poner_texto(mg_reloj, t);
-  lv_obj_set_pos(mg_reloj, 476 - lv_obj_get_width(mg_reloj), 10);
+  /* centrada arriba: a la derecha se pisaba con "MAGNA" del título de las subpantallas */
+  lv_obj_set_pos(mg_reloj, (480 - lv_obj_get_width(mg_reloj)) / 2, 10);
   mg_ocultar(mg_reloj, 0);
 }
 
@@ -408,6 +409,19 @@ void magna_resumen(lv_obj_t *scr, lv_obj_t *titulo, uint32_t seg, float mm) {
 }
 
 /* --- mensaje desde MagnAir o Telegram ("M117 texto" por WiFi) --- */
+/* Al cerrar algo que tapaba la pantalla (mensaje, bloqueo, "siempre encendida", gráfico, piezas,
+ * nivelación) la de abajo se vuelve a armar entera: los íconos de MKS se leen comprimidos de la memoria
+ * SPI y solo se pueden leer de principio a fin, así que redibujar solo un pedazo los dejaba en blanco.
+ * Se pide con mg_pedir_rehacer() y se hace en el tick (nunca dentro de un evento de LVGL). La función
+ * la pone el código de Marlin (magna_rehacer_funcion); en las pruebas queda vacía. */
+static void (*mg_rehacer)(void);
+static int mg_rehacer_pend;
+void magna_rehacer_funcion(void (*f)(void)) { mg_rehacer = f; }
+static void mg_pedir_rehacer(void) { mg_rehacer_pend = 1; }
+static void mg_rehacer_si_hace_falta(void) {
+  if (mg_rehacer_pend) { mg_rehacer_pend = 0; if (mg_rehacer) mg_rehacer(); }
+}
+
 static lv_obj_t *mg_msg;
 static int mg_msg_borrar;
 
@@ -547,6 +561,7 @@ int magna_ambiente_visible(void) { return mg_amb != NULL; }
 void magna_ambiente_cerrar(void) {
   if (!mg_amb) return;
   lv_obj_del(mg_amb);
+  mg_pedir_rehacer();
   mg_amb = mg_amb_pct = mg_amb_barra = mg_amb_fin = mg_amb_hora = NULL;
 }
 
@@ -605,10 +620,11 @@ void magna_ambiente_mostrar(uint32_t ahora_ms) {
 
 /* Borra (fuera de los eventos de LVGL) lo que se cerró con un toque. Una vez por segundo. */
 void magna_capa_arriba_tick(uint32_t ahora_ms, int imprimiendo) {
-  if (mg_msg_borrar && mg_msg) { lv_obj_del(mg_msg); mg_msg = NULL; mg_msg_borrar = 0; }
-  if (mg_bloq_borrar && mg_bloq) { lv_obj_del(mg_bloq); mg_bloq = mg_bloq_desliz = NULL; mg_bloq_borrar = 0; }
+  if (mg_msg_borrar && mg_msg) { lv_obj_del(mg_msg); mg_msg = NULL; mg_msg_borrar = 0; mg_pedir_rehacer(); }
+  if (mg_bloq_borrar && mg_bloq) { lv_obj_del(mg_bloq); mg_bloq = mg_bloq_desliz = NULL; mg_bloq_borrar = 0; mg_pedir_rehacer(); }
   if (!imprimiendo) { magna_ambiente_cerrar(); magna_desbloquear(); }
   if (mg_amb) magna_ambiente_actualizar(ahora_ms);
+  else mg_rehacer_si_hace_falta();   /* con "siempre encendida" abierta no hace falta (y se vería por debajo) */
 }
 
 /* =================================================================================================
@@ -743,8 +759,9 @@ static void mg_cerrar_luego(lv_obj_t **o) {
   for (i = 0; i < 4; i++) if (!mg_cerrar[i] || mg_cerrar[i] == o) { mg_cerrar[i] = o; return; }
 }
 static void mg_cerrar_pendientes(void) {
-  int i;
-  for (i = 0; i < 4; i++) if (mg_cerrar[i]) { if (*mg_cerrar[i]) { lv_obj_del(*mg_cerrar[i]); *mg_cerrar[i] = NULL; } mg_cerrar[i] = NULL; }
+  int i, cerro = 0;
+  for (i = 0; i < 4; i++) if (mg_cerrar[i]) { if (*mg_cerrar[i]) { lv_obj_del(*mg_cerrar[i]); *mg_cerrar[i] = NULL; cerro = 1; } mg_cerrar[i] = NULL; }
+  if (cerro) { mg_pedir_rehacer(); mg_rehacer_si_hace_falta(); }
 }
 
 /* Botón chico de íconos de líneas (sin fondo), para las pantallas de MKS */
