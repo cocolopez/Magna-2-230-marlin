@@ -36,7 +36,7 @@ Las capturas de abajo son el dibujo real de la librería gráfica de la pantalla
 
 ### Pantalla principal
 
-Hora grande con la fecha, y los íconos de WiFi y de Telegram (prendidos si están andando). La hora la pasa el módulo WiFi con [MagnAir](#firmware-del-wifi); sin MagnAir la pantalla queda como siempre. Abajo a la derecha está el gráfico de temperaturas de los últimos 10 minutos.
+Hora grande con la fecha, y los íconos de WiFi y de Telegram (prendidos si están andando). Abajo, mientras la cama y el hotend están calientes, el calor de la cama sube y al hotend se le cae una gota, y los números cambian de color y titilan hasta llegar a la temperatura. La hora la pasa el módulo WiFi con [MagnAir](#firmware-del-wifi); sin MagnAir la pantalla queda como siempre. Abajo a la derecha está el gráfico de temperaturas de los últimos 10 minutos.
 
 <p>
   <img src="docs-magna/capturas/principal.png" width="49%" alt="Pantalla principal">
@@ -47,7 +47,7 @@ Hora grande con la fecha, y los íconos de WiFi y de Telegram (prendidos si est�
 
 Arriba la barra grande y una línea con la capa, lo que falta y a qué hora termina: `Capa 57/210 · faltan 2:15 · fin 23:25`. Si el gcode no trae miniatura aparece la pieza del arranque en lugar de la "G" de Makerbase.
 
-Desde esta pantalla se puede cancelar una sola pieza cuando hay varias en la cama (las demás siguen), ver el gráfico y bloquear la pantalla. Mientras imprime, el ventilador gira, la barra tiene un brillo que la recorre y las temperaturas cambian de color hasta que llegan.
+Desde esta pantalla se puede cancelar una sola pieza cuando hay varias en la cama (las demás siguen), ver el gráfico y bloquear la pantalla. Mientras imprime, el ventilador gira según la velocidad, la barra tiene un brillo que la recorre, el calor de la cama sube, la gota del hotend cae y las temperaturas cambian de color hasta que llegan. Las animaciones se pueden apagar desde MagnAir.
 
 <p>
   <img src="docs-magna/capturas/imprimiendo.png" width="49%" alt="Imprimiendo">

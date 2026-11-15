@@ -652,6 +652,22 @@ static uint8_t mg_an_activa = 1;       /* opción prendida, pantalla prendida y 
 static lv_style_t mg_an_st_temp[2];
 static const lv_style_t *mg_an_st_orig[2];
 static const char *const MG_VENT[3] = { "F:/bmp_fan_state.bin", "F:/bmp_fan_state1.bin", "F:/bmp_fan_state2.bin" };
+/* etapa 37: calor que sube en la cama y gota que cae en el hotend (pantalla principal e impresión) */
+static const char *const MG_CAMA[3] = { "F:/bmp_bed_state.bin", "F:/bmp_bed_state1.bin", "F:/bmp_bed_state2.bin" };
+static const char *const MG_BOQ[3] = { "F:/bmp_ext1_state.bin", "F:/bmp_ext1_state1.bin", "F:/bmp_ext1_state2.bin" };
+static lv_obj_t *mg_an_ic_ext, *mg_an_ic_cama;
+static uint8_t mg_an_cuadro_ext, mg_an_cuadro_cama;
+
+static void mg_an_poner(lv_obj_t *b, const char *src) {
+  lv_imgbtn_set_src(b, LV_BTN_STATE_REL, src);
+  lv_imgbtn_set_src(b, LV_BTN_STATE_PR, src);
+}
+
+/* Íconos de hotend y cama que se animan mientras están calientes (cualquiera puede ser NULL). */
+void magna_anim_iconos(lv_obj_t *hotend, lv_obj_t *cama) {
+  mg_an_ic_ext = hotend; mg_an_ic_cama = cama;
+  mg_an_cuadro_ext = mg_an_cuadro_cama = 0;
+}
 
 void magna_anim_registrar(lv_obj_t *ventilador, lv_obj_t *barra, lv_obj_t *temp_hotend, lv_obj_t *temp_cama) {
   static lv_style_t st_brillo;
@@ -677,7 +693,7 @@ void magna_anim_registrar(lv_obj_t *ventilador, lv_obj_t *barra, lv_obj_t *temp_
 }
 
 /* La pantalla de impresión se borra: olvidar sus objetos. */
-void magna_anim_olvidar(void) { mg_an_vent = mg_an_barra = mg_an_brillo = mg_an_ext = mg_an_cama = NULL; }
+void magna_anim_olvidar(void) { mg_an_vent = mg_an_barra = mg_an_brillo = mg_an_ext = mg_an_cama = mg_an_ic_ext = mg_an_ic_cama = NULL; }
 
 /* Datos de Marlin, una vez por segundo */
 void magna_anim_datos(int vel, int t_ext, int obj_ext, int t_cama, int obj_cama, int activa) {
@@ -699,12 +715,14 @@ lv_color_t magna_color_temp(int actual, int objetivo) {
 }
 
 static void mg_an_tarea(lv_task_t *tarea) {
-  static uint8_t cuadro, cuenta, brillo_x, parpadeo;
+  static uint8_t cuadro, cuenta, brillo_x, parpadeo, cuenta_calor;
   int i;
   (void)tarea;
   if (!mg_an_activa) {
     /* apagadas: todo quieto como antes */
     if (mg_an_vent && cuadro) { lv_imgbtn_set_src(mg_an_vent, LV_BTN_STATE_REL, MG_VENT[0]); lv_imgbtn_set_src(mg_an_vent, LV_BTN_STATE_PR, MG_VENT[0]); cuadro = 0; }
+    if (mg_an_ic_ext && mg_an_cuadro_ext) { mg_an_poner(mg_an_ic_ext, MG_BOQ[0]); mg_an_cuadro_ext = 0; }
+    if (mg_an_ic_cama && mg_an_cuadro_cama) { mg_an_poner(mg_an_ic_cama, MG_CAMA[0]); mg_an_cuadro_cama = 0; }
     if (mg_an_brillo) mg_ocultar(mg_an_brillo, 1);
     for (i = 0; i < 2; i++) {
       lv_obj_t *l = i ? mg_an_cama : mg_an_ext;
@@ -720,6 +738,21 @@ static void mg_an_tarea(lv_task_t *tarea) {
       cuadro = (uint8_t)((cuadro + 1) % 3);
       lv_imgbtn_set_src(mg_an_vent, LV_BTN_STATE_REL, MG_VENT[cuadro]);
       lv_imgbtn_set_src(mg_an_vent, LV_BTN_STATE_PR, MG_VENT[cuadro]);
+    }
+  }
+  /* calor de la cama y gota del hotend: un cuadro cada 360 ms mientras tienen temperatura pedida (o siguen
+   * calientes después de apagarlos); quietos y en el primer cuadro cuando están fríos */
+  if (++cuenta_calor >= 3) {
+    cuenta_calor = 0;
+    if (mg_an_ic_cama) {
+      const int caliente = mg_an_temp[1][1] > 0 || mg_an_temp[1][0] >= 40;
+      const uint8_t nuevo = caliente ? (uint8_t)((mg_an_cuadro_cama + 1) % 3) : 0;
+      if (nuevo != mg_an_cuadro_cama) { mg_an_cuadro_cama = nuevo; mg_an_poner(mg_an_ic_cama, MG_CAMA[nuevo]); }
+    }
+    if (mg_an_ic_ext) {
+      const int caliente = mg_an_temp[0][1] > 0 || mg_an_temp[0][0] >= 50;
+      const uint8_t nuevo = caliente ? (uint8_t)((mg_an_cuadro_ext + 1) % 3) : 0;
+      if (nuevo != mg_an_cuadro_ext) { mg_an_cuadro_ext = nuevo; mg_an_poner(mg_an_ic_ext, MG_BOQ[nuevo]); }
     }
   }
   /* brillo: recorre la parte llena de la barra */

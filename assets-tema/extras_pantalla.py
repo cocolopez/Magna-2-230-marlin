@@ -241,6 +241,7 @@ void magna_melodia_atencion();
 // Magna2-230 (etapa 32): animaciones (magna_extras.cpp)
 void magna_anim_iniciar(void);
 void magna_anim_registrar(lv_obj_t *ventilador, lv_obj_t *barra, lv_obj_t *temp_hotend, lv_obj_t *temp_cama);
+void magna_anim_iconos(lv_obj_t *hotend, lv_obj_t *cama);
 void magna_anim_olvidar(void);
 void magna_arranque_animado();
 // Magna2-230 (etapa 33): gráfico, nivelación, piezas, vista en vivo (magna_extras.cpp)
@@ -352,10 +353,21 @@ INIT_ANIM_VIEJO = '  magna_reloj_crear();  // Magna2-230 (etapa 30): hora chica 
 INIT_ANIM_NUEVO = INIT_ANIM_VIEJO + '  magna_anim_iniciar();  // etapa 32: animaciones de la pantalla de impresión\n'
 ANIM_REG_ANCLA = '  magna_candado_crear(scr);  // Magna2-230 (etapa 31): bloquear la pantalla mientras imprime\n'
 ANIM_REG_NUEVO = ANIM_REG_ANCLA + '  magna_anim_registrar(buttonFanstate, bar1, labelExt1, TERN(HAS_HEATED_BED, labelBed, nullptr));  // etapa 32\n'
+# etapa 37: en la pantalla de impresión también se animan los íconos de hotend y cama
+ANIM_REG_NUEVO += '  magna_anim_iconos(buttonExt1, TERN(HAS_HEATED_BED, buttonBedstate, nullptr));  // etapa 37\n'
+# y en la principal: íconos de abajo + color y titileo de sus temperaturas
+PRINC_ANIM_VIEJO = '    TERN_(HAS_FAN, labelFan = lv_label_create_empty(scr));\n\n    lv_temp_refr();\n  }\n'
+PRINC_ANIM_NUEVO = ('    TERN_(HAS_FAN, labelFan = lv_label_create_empty(scr));\n\n    lv_temp_refr();\n'
+                    '    magna_anim_registrar(nullptr, nullptr, labelExt1, TERN(HAS_HEATED_BED, labelBed, nullptr));  // Magna2-230 (etapa 37)\n'
+                    '    magna_anim_iconos(buttonExt1, TERN(HAS_HEATED_BED, buttonBedstate, nullptr));\n  }\n')
+LIMPIAR_PRINC_ANIM_VIEJO = '  magna_principal_olvidar();  // Magna2-230 (etapa 30): sus objetos se borran con la pantalla\n'
+LIMPIAR_PRINC_ANIM_NUEVO = LIMPIAR_PRINC_ANIM_VIEJO + '  magna_anim_olvidar();  // etapa 37\n'
 LIMPIAR_IMP_VIEJO = 'void lv_clear_printing() {\n'
 LIMPIAR_IMP_NUEVO = LIMPIAR_IMP_VIEJO + '  magna_anim_olvidar();  // Magna2-230 (etapa 32): sus objetos se borran con la pantalla\n'
 ASSETS_VIEJO = '  F("bmp_fan_state.bin"),\n'
 ASSETS_NUEVO = ASSETS_VIEJO + ('  F("bmp_fan_state1.bin"),  // Magna2-230 (etapa 32): el ventilador que gira\n  F("bmp_fan_state2.bin"),\n'
+                               '  F("bmp_bed_state1.bin"),  // Magna2-230 (etapa 37): calor de la cama y gota del hotend\n  F("bmp_bed_state2.bin"),\n'
+                               '  F("bmp_ext1_state1.bin"),\n  F("bmp_ext1_state2.bin"),\n'
                                '  F("bmp_tornillo1.bin"),    // Magna2-230 (etapa 32): arranque animado\n  F("bmp_tornillo2.bin"),\n  F("bmp_tornillo3.bin"),\n')
 LOGO_VIEJO = '  #if PIN_EXISTS(TFT_BACKLIGHT)\n    OUT_WRITE(TFT_BACKLIGHT_PIN, HIGH);\n  #endif\n  TERN_(HAS_LOGO_IN_FLASH, delay(2000));\n'
 LOGO_NUEVO = ('  #if PIN_EXISTS(TFT_BACKLIGHT)\n    OUT_WRITE(TFT_BACKLIGHT_PIN, HIGH);\n  #endif\n'
@@ -386,12 +398,86 @@ M262_INC_NUEVO = M262_INC_VIEJO + '  void magna_m262();  // Magna2-230 (etapa 33
 M262_VIEJO = '        case 259: magna_m259(); break;                          // Magna2-230: M259 L<capa> T<total> (Cura)\n'
 M262_NUEVO = M262_VIEJO + '        case 262: magna_m262(); break;                          // Magna2-230: M262 <pieza> (Cura)\n        case 263: magna_m263(); break;                          // Magna2-230: M263 <mensaje> (editor de MagnAir)\n'
 
+# Etapa 37: los íconos de la memoria SPI están comprimidos (RLE) y el original solo sabía volver al
+# principio (seek a 4). Cuando LVGL redibujaba un pedazo de un ícono (por ejemplo al juntar las zonas de
+# dos textos que cambian, o al cerrar algo que lo tapaba) leía las filas equivocadas: rayas o íconos en
+# blanco. Ahora se lleva la posición real: si piden más adelante se saltean bytes, si piden más atrás
+# se vuelve al principio y se avanza. Así se puede animar un ícono o redibujar cualquier parte.
+FLASH_LEER_VIEJO = """lv_fs_res_t spi_flash_read_cb (lv_fs_drv_t * drv, void * file_p, void * buf, uint32_t btr, uint32_t * br) {
+  lv_pic_test((uint8_t *)buf, pic_read_addr_offset, btr);
+  *br = btr;
+  return LV_FS_RES_OK;
+}
+
+lv_fs_res_t spi_flash_seek_cb(lv_fs_drv_t * drv, void * file_p, uint32_t pos) {
+  #if HAS_SPI_FLASH_COMPRESSION
+    if (pos == 4) {
+      uint8_t bmp_header[4];
+      SPIFlash.beginRead(pic_read_base_addr);
+      SPIFlash.readData(bmp_header, 4);
+      currentFlashPage = 1;
+    }
+    pic_read_addr_offset = pic_read_base_addr;
+  #else
+    pic_read_addr_offset = pic_read_base_addr + pos;
+  #endif
+  return LV_FS_RES_OK;
+}
+
+lv_fs_res_t spi_flash_tell_cb(lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p) {
+  *pos_p = pic_read_addr_offset - pic_read_base_addr;
+  return LV_FS_RES_OK;
+}"""
+FLASH_LEER_NUEVO = """// Magna2-230 (etapa 37): posición real dentro del ícono comprimido (bytes ya entregados)
+static uint32_t magna_pos_flash = 0;
+
+lv_fs_res_t spi_flash_read_cb (lv_fs_drv_t * drv, void * file_p, void * buf, uint32_t btr, uint32_t * br) {
+  #if HAS_SPI_FLASH_COMPRESSION
+    if (currentFlashPage == 0) magna_pos_flash = 0;   // recién abierto: lv_pic_test empieza del principio
+  #endif
+  lv_pic_test((uint8_t *)buf, pic_read_addr_offset, btr);
+  magna_pos_flash += btr;
+  *br = btr;
+  return LV_FS_RES_OK;
+}
+
+lv_fs_res_t spi_flash_seek_cb(lv_fs_drv_t * drv, void * file_p, uint32_t pos) {
+  #if HAS_SPI_FLASH_COMPRESSION
+    // Magna2-230 (etapa 37): ir a cualquier posición (antes solo al principio)
+    if (currentFlashPage == 0 || pos < magna_pos_flash || pos == 4) {
+      uint8_t bmp_header[4];
+      SPIFlash.beginRead(pic_read_base_addr);
+      SPIFlash.readData(bmp_header, 4);
+      currentFlashPage = 1;
+      magna_pos_flash = 4;
+    }
+    uint8_t descarte[64];
+    while (magna_pos_flash < pos) {                   // avanzar descomprimiendo hasta donde piden
+      const uint32_t n = pos - magna_pos_flash < sizeof(descarte) ? pos - magna_pos_flash : sizeof(descarte);
+      SPIFlash.readData(descarte, n);
+      magna_pos_flash += n;
+    }
+    pic_read_addr_offset = pic_read_base_addr;
+  #else
+    pic_read_addr_offset = pic_read_base_addr + pos;
+    magna_pos_flash = pos;
+  #endif
+  return LV_FS_RES_OK;
+}
+
+lv_fs_res_t spi_flash_tell_cb(lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p) {
+  *pos_p = magna_pos_flash;
+  return LV_FS_RES_OK;
+}"""
 CAMBIOS_EXTRA = [
+    ('draw_ready_print.cpp', PRINC_ANIM_VIEJO, PRINC_ANIM_NUEVO, 'etapa 37: principal: íconos y temperaturas animados'),
+    ('tft_lvgl_configuration.cpp', FLASH_LEER_VIEJO, FLASH_LEER_NUEVO, 'etapa 37: íconos comprimidos: leer desde cualquier fila'),
     ('draw_ui.h', DECL_ANCLA, DECL_NUEVAS, 'etapa 30: declaraciones (hora, capas, información)'),
     ('draw_ui.cpp', TAREAS_VIEJO, TAREAS_NUEVO, 'etapa 30: hora e íconos una vez por segundo'),
     ('tft_lvgl_configuration.cpp', INIT_VIEJO, INIT_NUEVO, 'etapa 30: hora chica en todas las pantallas'),
     ('draw_ready_print.cpp', PRINCIPAL_VIEJO, PRINCIPAL_NUEVO, 'etapa 30: principal con hora grande e íconos'),
     ('draw_ready_print.cpp', LIMPIAR_PRINCIPAL_VIEJO, LIMPIAR_PRINCIPAL_NUEVO, 'etapa 30: principal: olvidar sus objetos al salir'),
+    ('draw_ready_print.cpp', LIMPIAR_PRINC_ANIM_VIEJO, LIMPIAR_PRINC_ANIM_NUEVO, 'etapa 37: principal: olvidar los íconos animados'),
     ('draw_printing.cpp', VARS_VIEJO, VARS_NUEVO, 'etapa 30: imprimiendo: variables de la línea de información'),
     ('draw_printing.cpp', BARRA_VIEJA, BARRA_NUEVA, 'etapa 30: imprimiendo: barra 4 px más arriba'),
     ('draw_printing.cpp', INFO_ANCLA, INFO_NUEVO, 'etapa 30: imprimiendo: línea "Capa · faltan · fin"'),

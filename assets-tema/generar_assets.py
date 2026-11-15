@@ -150,12 +150,14 @@ def g_bobina(c):
     c.arco(CX, CY, 16, 200, 340, GR, 2)
     c.linea([(CX + 24, CY + 4), (CX + 30, CY + 26)], RD, 3)
 
-def g_boquilla(c, cx=CX, cy=CY, gota=True, num=None):
+def g_boquilla(c, cx=CX, cy=CY, gota=True, num=None, fase=0):
     c.rect(cx - 16, cy - 24, cx + 16, cy - 2, radio=3)
     c.poli([(cx - 10, cy), (cx + 10, cy), (cx + 3, cy + 12), (cx - 3, cy + 12)], relleno=WH)
     if gota:
-        c.poli([(cx, cy + 16), (cx - 5, cy + 25), (cx + 5, cy + 25)], relleno=RD)
-        c.circulo(cx, cy + 26, 5, None, 0, relleno=RD)
+        # fase 0, 1, 2: la gota se forma y cae (animación del hotend caliente, etapa 37)
+        d = (0, 4, 8)[fase]; r = (5, 5.5, 4.5)[fase]
+        c.poli([(cx, cy + 16 + d), (cx - r, cy + 25 + d), (cx + r, cy + 25 + d)], relleno=RD)
+        c.circulo(cx, cy + 26 + d, r, None, 0, relleno=RD)
     if num: c.texto(cx, cy - 13, num, 15, RD)
 
 def g_ventilador(c, cx=CX, cy=CY, r=24, col=WH, giro=0):
@@ -324,10 +326,12 @@ def g_idioma(c, txt):
         c.texto(58.5, 50, txt, 34, WH)
     c.linea([(44, 76), (73, 76)], RD, 4)
 
-def g_cama_caliente(c):
+def g_cama_caliente(c, fase=0):
     c.poli([(28, 64), (89, 64), (82, 76), (35, 76)], relleno=WH)
+    # fase 0, 1, 2: el calor sube y la línea roja va pasando de una a otra (animación de la cama, etapa 37)
+    d = fase * 4
     for i, x in enumerate((44, 58.5, 73)):
-        c.linea([(x, 56), (x + 5, 47), (x - 5, 38), (x, 29)], RD if i == 1 else WH, 3)
+        c.linea([(x, 56 - d), (x + 5, 47 - d), (x - 5, 38 - d), (x, 29 - d)], RD if i == (1 + fase) % 3 else WH, 3)
 
 def g_cargar(c, entra=True):
     g_boquilla(c, cx=58.5, cy=58, gota=False)
@@ -446,6 +450,8 @@ def estado_45(nombre):
         c.im.paste(im, (int((45 - 58.5) / 2 * S), int((45 - 50) / 2 * S)))
     m = {"bed_state": g_cama_caliente, "ext1_state": lambda b: g_boquilla(b, num="1"), "ext2_state": lambda b: g_boquilla(b, num="2"),
          "fan_state": g_ventilador, "fan_state1": lambda b: g_ventilador(b, giro=40), "fan_state2": lambda b: g_ventilador(b, giro=80),
+         "bed_state1": lambda b: g_cama_caliente(b, 1), "bed_state2": lambda b: g_cama_caliente(b, 2),
+         "ext1_state1": lambda b: g_boquilla(b, num="1", fase=1), "ext1_state2": lambda b: g_boquilla(b, num="1", fase=2),
          "time_state": None, "zpos_state": None, "speed_state": lambda b: g_velocimetro(b, 0.6),
          "power_state": g_apagado, "init_state": g_impresora, "times_state": None}
     f = m[nombre]
@@ -789,7 +795,8 @@ def lvgl_bin(im, transparente=False):
 
 TAM_150 = ["operate", "pause", "resume", "stop"]
 TAM_45 = ["bed_state", "ext1_state", "ext2_state", "fan_state", "init_state", "power_state", "speed_state", "time_state", "times_state", "zpos_state",
-          "fan_state1", "fan_state2"]   # etapa 32: el ventilador girado 40° y 80° (animación: 3 aspas = se repite cada 120°)
+          "fan_state1", "fan_state2",   # etapa 32: el ventilador girado 40° y 80° (animación: 3 aspas = se repite cada 120°)
+          "bed_state1", "bed_state2", "ext1_state1", "ext1_state2"]   # etapa 37: calor de la cama y gota del hotend
 TAM_92 = ["back", "pageUp", "pageDown"]
 CHICOS = ["back70x40", "value_blank", "blank_sel", "enable", "disable", "arrow"]
 
