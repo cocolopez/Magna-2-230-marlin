@@ -1,7 +1,7 @@
-# Publica una versión (Release) del firmware de la Hellbot Magna 2 230 en GitHub.
+# Publica una versión (Release) del firmware de las Hellbot Magna 2 en GitHub.
 #
 # Cómo se usa:
-#   A) Manual: Actions > "Publicar versión Magna 2 230" > Run workflow.
+#   A) Manual: Actions > "Publicar versión Magna 2" > Run workflow.
 #      - "version": nombre de la versión (por ejemplo v1.0). Si queda vacío, se usa la fecha (v2026.11.13-2040).
 #      - "borrador": si se marca, la versión queda como borrador para revisarla antes de publicarla.
 #   B) Automático: al subir un tag que empiece con "v" (por ejemplo: git tag v1.0 && git push --tags).
@@ -9,12 +9,14 @@
 # Qué publica (en la pestaña Releases del repo):
 #   - Magna2-230-firmware-<versión>.zip  -> Robin_nano35.bin + assets + opcional-wifi + COMO-FLASHEAR.md
 #   - Magna2-230-firmware-BLTouch-<versión>.zip -> lo mismo, compilado para BLTouch (+ BLTOUCH.md)
-#   - Magna2-230-perfiles-slicer-<versión>.zip -> perfiles de Cura, PrusaSlicer y OrcaSlicer
-#   - Robin_nano35.bin suelto (sin BLTouch)
+#   - Magna2-300/400/400D/500/500D-firmware-UNTESTED-<versión>.zip -> otros modelos, SIN PROBAR
+#     (+ LEEME-SIN-PROBAR.txt y MODELOS.md)
+#   - Magna2-perfiles-slicer-<versión>.zip -> perfiles de Cura, PrusaSlicer y OrcaSlicer (todos los modelos)
+#   - Robin_nano35.bin suelto (230 sin BLTouch)
 #
 # Este archivo va en .github/workflows/publicar-release.yml (junto a compilar-mm2.yml).
 
-name: Publicar versión Magna 2 230
+name: Publicar versión Magna 2
 
 on:
   workflow_dispatch:
@@ -39,8 +41,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publicar:
+  # 1) Versión y nombre (lo usan los otros dos trabajos)
+  version:
     runs-on: ubuntu-24.04  # fijo: ubuntu-latest pasa a Ubuntu 26 y podría romper herramientas
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      marlin: ${{ steps.ver.outputs.marlin }}
     steps:
       - name: Descargar el repo
         uses: actions/checkout@v6
@@ -64,18 +70,38 @@ jobs:
       - name: Verificar que el repo tenga la configuración
         run: |
           if [ ! -f Marlin/Configuration.h ] || [ ! -f platformio.ini ]; then
-            echo "::error::Falta Marlin/Configuration.h o platformio.ini. Subí primero mm2.zip y esperá que termine 'Compilar Magna 2 230 (mm2.zip)'."
+            echo "::error::Falta Marlin/Configuration.h o platformio.ini. Subí primero mm2.zip y esperá que termine 'Compilar Magna 2 (mm2.zip)'."
             exit 1
           fi
 
-      - name: Bajar Marlin y aplicar la configuración y el tema
+  # 2) Un firmware por modelo, en paralelo (variantes/armar.sh, lo mismo que el workflow de compilar)
+  compilar:
+    needs: version
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: true   # para publicar tienen que salir todos
+      matrix:
+        modelo: ['230', '230-BLTouch', '300', '400', '400D', '500', '500D']
+    steps:
+      - name: Descargar el repo
+        uses: actions/checkout@v6
+
+      - name: Nombre del paquete
+        id: nom
         run: |
-          git clone -q --depth 1 -b "${{ steps.ver.outputs.marlin }}" https://github.com/MarlinFirmware/Marlin build
+          M="${{ matrix.modelo }}"; V="${{ needs.version.outputs.version }}"
+          case "$M" in
+            230) N="Magna2-230-firmware-$V" ;;
+            230-BLTouch) N="Magna2-230-firmware-BLTouch-$V" ;;
+            *) N="Magna2-$M-firmware-UNTESTED-$V" ;;   # sin probar en una máquina real
+          esac
+          echo "nombre=$N" >> "$GITHUB_OUTPUT"
+
+      - name: Bajar Marlin y copiar los archivos de la Magna
+        run: |
+          git clone -q --depth 1 -b "${{ needs.version.outputs.marlin }}" https://github.com/MarlinFirmware/Marlin build
           rm -rf build/.github
           tar cf - --exclude=./.git --exclude=./.github --exclude=./build . | tar xf - -C build
-          if [ -f build/assets-tema/aplicar_colores.py ]; then
-            python3 build/assets-tema/aplicar_colores.py build
-          fi
 
       - uses: actions/setup-python@v6
         with:
@@ -92,103 +118,91 @@ jobs:
       - name: Instalar PlatformIO
         run: pip install --upgrade platformio pillow
 
-      - name: Pruebas
+      - name: Compilar y armar el paquete
         working-directory: build
         run: |
-          python3 pruebas/preflight.py
-          bash pruebas/sanity-check.sh
-          bash pruebas/verificar-valores.sh
-          python3 pruebas/verificar-perfiles.py
+          bash variantes/armar.sh "${{ matrix.modelo }}" "publicar/${{ steps.nom.outputs.nombre }}"
+          stat -c%s "publicar/${{ steps.nom.outputs.nombre }}/Robin_nano35.bin" > "publicar/${{ steps.nom.outputs.nombre }}.tam"
 
-      - name: Compilar (mks_robin_nano_v1_3_f4)
-        working-directory: build
-        run: pio run -e mks_robin_nano_v1_3_f4
+      - name: Guardar el paquete para publicar
+        uses: actions/upload-artifact@v6
+        with:
+          name: paquete-${{ matrix.modelo }}
+          path: build/publicar
+          retention-days: 3
 
-      - name: Prueba de render de íconos (LVGL de la pantalla)
-        working-directory: build
-        run: |
-          LV=$(find .pio/libdeps -maxdepth 2 -type d -name lvgl | head -1)
-          if [ -n "$LV" ] && [ -d assets-tema/assets ]; then
-            python3 pruebas/render-lvgl/verificar_render.py "$LV" assets-tema/assets render-pantalla-principal.png
-          else
-            echo "Sin LVGL o sin tema: se saltea"
-          fi
+  # 3) Juntar todo y publicar
+  publicar:
+    needs: [version, compilar]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Descargar el repo
+        uses: actions/checkout@v6
 
-      - name: Armar paquetes
+      - name: Juntar los paquetes
+        uses: actions/download-artifact@v7
+        with:
+          pattern: paquete-*
+          path: publicar
+          merge-multiple: true
+
+      - name: Armar los zip
         id: paq
-        working-directory: build
         run: |
-          V="${{ steps.ver.outputs.version }}"
-          PB=.pio/build/mks_robin_nano_v1_3_f4
-          OUT=publicar/Magna2-230-firmware-$V
-          mkdir -p "$OUT/assets"
-          cp $PB/Robin_nano35.bin "$OUT/"
-          [ -d $PB/assets ] && cp -r $PB/assets/. "$OUT/assets/"
-          [ -d assets-tema/assets ] && cp assets-tema/assets/*.bin "$OUT/assets/"
-          if [ -f wifi/MksWifi.bin ]; then mkdir -p "$OUT/opcional-wifi"; cp wifi/MksWifi.bin wifi/README.md "$OUT/opcional-wifi/"; fi
-          cp docs-magna/COMO-FLASHEAR.md "$OUT/"
-          (cd publicar && zip -qr "Magna2-230-firmware-$V.zip" "Magna2-230-firmware-$V")
-          (zip -qr "publicar/Magna2-230-perfiles-slicer-$V.zip" perfiles-slicer -x "*/__pycache__/*")
-          cp $PB/Robin_nano35.bin publicar/Robin_nano35.bin
-          TAM=$(stat -c%s $PB/Robin_nano35.bin)
-          echo "tam=$TAM" >> "$GITHUB_OUTPUT"
-
-      - name: Compilar y armar la versión BLTouch
-        working-directory: build
-        run: |
-          V="${{ steps.ver.outputs.version }}"
-          python3 variantes/bltouch.py .
-          python3 pruebas/preflight.py
-          bash pruebas/sanity-check.sh
-          pio run -e mks_robin_nano_v1_3_f4
-          OUT=publicar/Magna2-230-firmware-BLTouch-$V
-          cp -r "publicar/Magna2-230-firmware-$V" "$OUT"
-          cp .pio/build/mks_robin_nano_v1_3_f4/Robin_nano35.bin "$OUT/"
-          cp docs-magna/BLTOUCH.md "$OUT/"
-          (cd publicar && zip -qr "Magna2-230-firmware-BLTouch-$V.zip" "Magna2-230-firmware-BLTouch-$V")
+          V="${{ needs.version.outputs.version }}"
+          cd publicar
+          for d in Magna2-*-$V; do [ -d "$d" ] && zip -qr "$d.zip" "$d"; done
+          cd ..
+          zip -qr "publicar/Magna2-perfiles-slicer-$V.zip" perfiles-slicer -x "*/__pycache__/*"
+          cp "publicar/Magna2-230-firmware-$V/Robin_nano35.bin" publicar/Robin_nano35.bin
+          echo "tam=$(cat "publicar/Magna2-230-firmware-$V.tam")" >> "$GITHUB_OUTPUT"
           ls -la publicar
 
       - name: Notas de la versión
         run: |
-          V="${{ steps.ver.outputs.version }}"
-          cat > build/publicar/NOTAS.md <<EOF
-          ## Hellbot Magna 2 230 · Marlin ${{ steps.ver.outputs.marlin }}
+          V="${{ needs.version.outputs.version }}"
+          cat > publicar/NOTAS.md <<EOF
+          ## Hellbot Magna 2 · Marlin ${{ needs.version.outputs.marlin }}
 
-          Firmware para **MKS Robin Nano V1.3** (STM32F407) con pantalla **MKS TFT35**, tema propio negro y rojo.
+          Firmware para **MKS Robin Nano V1.3** (STM32F407) con pantalla **MKS TFT35**, tema propio negro y rojo, pantalla en castellano.
+
+          > ⚠️ **Solo la Magna 2 230 está probada.** Los paquetes de 300, 400, 400D, 500 y 500D dicen **UNTESTED**: están armados con los valores de los firmware oficiales de Hellbot, pero nadie los instaló todavía en una máquina real. Leé \`LEEME-SIN-PROBAR.txt\` adentro antes de usarlos.
 
           ### Descargas
           | Archivo | Contenido |
           |---|---|
-          | \`Magna2-230-firmware-$V.zip\` | \`Robin_nano35.bin\` + carpeta \`assets\` + \`opcional-wifi/\` + instrucciones |
-          | \`Magna2-230-firmware-BLTouch-$V.zip\` | Lo mismo, para la impresora con **BLTouch** (nivelación automática). Ver \`BLTOUCH.md\` adentro |
-          | \`Magna2-230-perfiles-slicer-$V.zip\` | Perfiles de Cura, PrusaSlicer y OrcaSlicer |
-          | \`Robin_nano35.bin\` | Solo el firmware sin BLTouch (sin íconos) |
+          | \`Magna2-230-firmware-$V.zip\` | Magna 2 230: \`Robin_nano35.bin\` + carpeta \`assets\` + \`opcional-wifi/\` + instrucciones |
+          | \`Magna2-230-firmware-BLTouch-$V.zip\` | Lo mismo, para la 230 con **BLTouch** (nivelación automática). Ver \`BLTOUCH.md\` adentro |
+          | \`Magna2-300-firmware-UNTESTED-$V.zip\` | Magna 2 300 · **sin probar** |
+          | \`Magna2-400-firmware-UNTESTED-$V.zip\` / \`Magna2-400D-…\` | Magna 2 400 (bowden) / 400D (directa), con BLTouch · **sin probar** |
+          | \`Magna2-500-firmware-UNTESTED-$V.zip\` / \`Magna2-500D-…\` | Magna 2 500 (bowden) / 500D (directa), con BLTouch · **sin probar** |
+          | \`Magna2-perfiles-slicer-$V.zip\` | Perfiles de Cura, PrusaSlicer y OrcaSlicer para todos los modelos |
+          | \`Robin_nano35.bin\` | Solo el firmware de la 230 sin BLTouch (sin íconos) |
 
           ### Instalación
           1. Guardá tu configuración actual con \`M503\`.
-          2. Copiá \`Robin_nano35.bin\` y la carpeta \`assets\` a la raíz de una microSD en FAT32 (y \`opcional-wifi/MksWifi.bin\` si querés actualizar el WiFi).
+          2. Copiá \`Robin_nano35.bin\` y la carpeta \`assets\` a la raíz de una microSD en FAT32 (y \`opcional-wifi/MksWifi.bin\` si querés actualizar el WiFi). Si en la SD quedó una carpeta \`_assets\` vieja, podés borrarla.
           3. Encendé la impresora con la SD puesta y **no la apagues** mientras actualiza.
           4. Cargá la configuración nueva: \`M502\` y luego \`M500\`.
-          5. Calibrá con los botones de **Ajustes → Más** (Calib. hotend y Calib. cama), y después \`M900\` y \`M593\` (ver CALIBRACION.md).
+          5. Si la pantalla sigue en inglés: Ajustes → Idioma → Español (queda guardado el idioma que tenías).
+          6. Calibrá con los botones de **Ajustes → Más** (Calib. hotend y Calib. cama), y después \`M900\` y \`M593\` (ver CALIBRACION.md).
 
           ### Incluye
-          Doble extrusor con hotend 2 en 1 · versión opcional con BLTouch · Input Shaping · MPC · Linear Advance · S-Curve · 2 sensores de filamento · pausa/M600 · recuperación ante cortes de luz · apagado por inactividad · cancelar objetos (M486) · tiempo restante (M73) · WiFi MKS.
+          Doble extrusor con hotend 2 en 1 · BLTouch (230 opcional, 400 y 500) · Input Shaping · MPC · Linear Advance · S-Curve · 2 sensores de filamento · pausa/M600 · recuperación ante cortes de luz · apagado por inactividad · cancelar objetos (M486) · tiempo restante (M73) · WiFi MKS (MagnAir).
 
-          Firmware: $(( ${{ steps.paq.outputs.tam }} / 1024 )) KB · Compilado desde \`${GITHUB_SHA::7}\`.
+          Firmware 230: $(( ${{ steps.paq.outputs.tam }} / 1024 )) KB · Compilado desde \`${GITHUB_SHA::7}\`.
           Más información en el [README](${{ github.server_url }}/${{ github.repository }}#readme).
           EOF
-          sed -i 's/^          //' build/publicar/NOTAS.md
-          cat build/publicar/NOTAS.md
+          sed -i 's/^          //' publicar/NOTAS.md
+          cat publicar/NOTAS.md
 
       - name: Publicar en Releases
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ steps.ver.outputs.version }}
-          name: Magna 2 230 · ${{ steps.ver.outputs.version }}
-          body_path: build/publicar/NOTAS.md
+          tag_name: ${{ needs.version.outputs.version }}
+          name: Magna 2 · ${{ needs.version.outputs.version }}
+          body_path: publicar/NOTAS.md
           draft: ${{ github.event.inputs.borrador == 'true' }}
           files: |
-            build/publicar/Magna2-230-firmware-${{ steps.ver.outputs.version }}.zip
-            build/publicar/Magna2-230-firmware-BLTouch-${{ steps.ver.outputs.version }}.zip
-            build/publicar/Magna2-230-perfiles-slicer-${{ steps.ver.outputs.version }}.zip
-            build/publicar/Robin_nano35.bin
+            publicar/*.zip
+            publicar/Robin_nano35.bin

@@ -1,4 +1,4 @@
-# CLAUDE.md — Marlin para Hellbot Magna 2 230
+# CLAUDE.md — Marlin para Hellbot Magna 2 230 (y 300/400/500 sin probar)
 
 ## Proyecto
 Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano V1.3 (STM32F407VE), pantalla MKS TFT35 v1 con interfaz MKS LVGL, doble extrusor con hotend 2 en 1. Incluye perfiles de Cura, PrusaSlicer y OrcaSlicer.
@@ -344,3 +344,13 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - `M264 P<0..2> H<hotend> B<cama>` (nuevo, `magna_m264` en `extras_pantalla.py`): guarda en RAM los precalentados que manda MagnAir (0 = PLA, 1 = PETG, 2 = ABS). `magna_pre_temp(material, cual, predeterminada)` los devuelve o la de siempre si no llegaron. `draw_preHeat.cpp` (cambio `PRE_CAMBIOS`) los usa en los botones PLA/ABS. No es `M145` porque la UI de MKS no tiene los presets de MarlinUI.
 - Errores: `draw_error_message.cpp` llama a `magna_avisar_error(motivo)` (débil, para que compile sin WiFi); `wifi_module.cpp` la define y manda `Error:MAGNA_DETENIDA <motivo>` al módulo con `package_to_wifi` + `flush` (la impresora se queda detenida después, así que tiene que salir ya).
 - Compila: 86 % de la flash.
+
+### Etapa 39 (2026-11-15) — otros modelos (sin probar), pantalla en castellano y carpeta _assets
+- **Modelos** 300, 400, 400D, 500 y 500D: valores de los firmware oficiales de Hellbot ("Marlin-2.0.3-Magna-2-XXX-Placa v1.3": mismo `.bin` para todos, lo que cambia es `robin_nano35_cfg.txt`; los paquetes D son idénticos a los sin D). `variantes/modelo.py MODELO` hace los reemplazos exactos (marca `// Magna2-XXX`), corre `bltouch.py` en 400/500 y define `MAGNA_SIN_PROBAR`. Decisiones propias y tabla comparada: `docs-magna/MODELOS.md`. **Solo la 230 está probada**: los paquetes se llaman `Magna2-XXX-firmware-UNTESTED`, llevan `LEEME-SIN-PROBAR.txt` y Acerca de muestra "Magna 2 XXX - SIN PROBAR". INVERT_Z_DIR es false en los oficiales (true en la 230).
+- `variantes/armar.sh MODELO SALIDA`: variante + tema + pruebas (verificar-valores y perfiles solo en la 230) + `pio run` + carpeta para la SD + letra con acentos. Lo usan los dos workflows, que ahora compilan los 7 (230, 230-BLTouch, 300, 400, 400D, 500, 500D) en una matriz; `publicar-release.yml` junta los paquetes en un tercer trabajo.
+- **Castellano** (`assets-tema/aplicar_idioma.py`, lo llama `aplicar_colores.py` al final; textos en `traduccion_es.py`): `tft_Language_sp.h` completo (el de Makerbase traía ~210 de ~380), el bloque de Español de `disp_language_init` es copia del de inglés con `_SP`, `machine_setting_disp` suma un bloque en Español, las asignaciones fijas en inglés usan `MAGNA_ES(k)`. `LCD_LANGUAGE es`. Pantallas con la letra fija ASCII de 16 px (carga de imágenes, error grave) van sin tildes; el motivo del error se pasa a mayúsculas sin tildes. Lo que sale por serie/WiFi sigue en inglés (lo leen Cura, MagnAir, etc.).
+- **Letra**: FontUNIGBK.bin no tenía í ú ü Á É Í Ó Ú Ñ ¡ °. `assets-tema/fuente_acentos.py` las arma con la base + el acento de la é / la tilde de la ñ y las agrega al final (tabla xbf: min/max/bpp, posiciones uint32, avance + ancho + bits a 1 bpp en 21 filas). Lo corre `armar.sh` sobre la carpeta assets.
+- **_assets**: `UpdateAssets` borra la `_assets` vieja (`rmRfStar`) antes de renombrar; antes el renombre fallaba y cargaba los íconos en cada arranque.
+- **Modelo por WiFi**: M115 por WiFi manda además `MACHINE_TYPE:` CUSTOM_MACHINE_NAME (MagnAir 1.6.0 lo usa para el tamaño de la cama).
+- Perfiles: `generar_perfiles.py` genera los 6 modelos (`configurar(modelo)`; al importarlo quedan los de la 230). D: retracción 1 mm y estacionado 60 mm (sin medir). Los de la 230 no cambiaron.
+- Compila (local): 230 88 %, 230-BLTouch 91 %, 300 87 %, 400/400D/500/500D 90 %.

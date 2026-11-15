@@ -4,6 +4,8 @@ Marlin 2.1.3-beta3 configurado para la Hellbot Magna 2 230 con placa MKS Robin N
 
 Se compila solo en GitHub: subís `mm2.zip` y te devuelve lo que va en la SD.
 
+> ⚠️ **Solo tengo la Magna 2 230 y es la única probada.** También salen versiones para la 300, 400, 400D, 500 y 500D, armadas con los valores de los firmware oficiales de Hellbot, pero **nadie las probó en una máquina real**: sus paquetes dicen **UNTESTED** y traen un `LEEME-SIN-PROBAR.txt`. Ver [Otros modelos](#otros-modelos-sin-probar).
+
 <p align="center">
   <img src="docs-magna/capturas/arranque.gif" width="49%" alt="Arranque">
   <img src="docs-magna/capturas/principal.png" width="49%" alt="Pantalla principal">
@@ -18,6 +20,8 @@ Se compila solo en GitHub: subís `mm2.zip` y te devuelve lo que va en la SD.
   - [Mensajes, bloqueo y siempre encendida](#mensajes-bloqueo-y-siempre-encendida)
   - [Menús](#menús)
   - [Nivelación con BLTouch](#nivelación-con-bltouch)
+  - [En castellano](#en-castellano)
+- [Otros modelos (sin probar)](#otros-modelos-sin-probar)
 - [Qué cambia en Marlin](#qué-cambia-en-marlin)
 - [Ventilador del hotend automático](#ventilador-del-hotend-automático)
 - [Hardware](#hardware)
@@ -98,6 +102,27 @@ Si tenés BLTouch hay una versión aparte del firmware con nivelación automáti
 
 <p><img src="docs-magna/capturas/nivelacion-bltouch.png" width="49%" alt="Nivelación con BLTouch"></p>
 
+### En castellano
+
+La pantalla viene en castellano. El archivo de idioma de Makerbase traía menos de la mitad de los textos y lo que faltaba salía en inglés (los ajustes de la máquina, varios carteles); ahora están todos, igual que los mensajes de error grave y la pantalla que aparece mientras carga los íconos. A la letra de la pantalla le faltaban la í, la ú y las mayúsculas con tilde: se las agrego al armar la carpeta `assets`. Los textos están en [assets-tema/traduccion_es.py](assets-tema/traduccion_es.py).
+
+Lo que la impresora manda por el cable o el WiFi (`ok`, `echo:`, `Error:`, la respuesta de `M503`) sigue en inglés, porque Cura, MagnAir y los demás programas leen esas palabras.
+
+Si ya tenías la pantalla en inglés, queda en inglés (el idioma se guarda): *Ajustes → Idioma → Español*.
+
+## Otros modelos (sin probar)
+
+Con los firmware oficiales de Hellbot de cada modelo armé versiones para las otras Magna 2. Los oficiales traen todos el mismo `.bin`; lo que cambia es un archivo de texto con las medidas y los valores de la máquina, que es de donde los saqué.
+
+| Modelo | Cama | Nivelación | Extrusor | Estado |
+|---|---|---|---|---|
+| Magna 2 230 | 230 × 230 × 250 | manual (o BLTouch aparte) | bowden | **probada** |
+| Magna 2 300 | 300 × 300 × 400 | manual | bowden | **sin probar** |
+| Magna 2 400 / 400D | 400 × 400 × 400 | BLTouch | bowden / directo | **sin probar** |
+| Magna 2 500 / 500D | 500 × 500 × 500 | BLTouch | bowden / directo | **sin probar** |
+
+Los paquetes se llaman `Magna2-XXX-firmware-UNTESTED`, en la pantalla *Acerca de* dice "SIN PROBAR" y adentro va `LEEME-SIN-PROBAR.txt` con qué revisar la primera vez (sobre todo el sentido del motor Z, que en estos modelos es al revés que en la 230). Qué valores salen del oficial y cuáles no: [docs-magna/MODELOS.md](docs-magna/MODELOS.md). Si probás alguna, avisame cómo te fue.
+
 ## Qué cambia en Marlin
 
 Los valores mecánicos (pasos, sentido de los motores, finales de carrera, termistores, aceleraciones y PID de la cama) salen de un firmware 2.1.2.1 que ya andaba bien en esta máquina. El detalle está en [docs-magna/CONFIGURACION.md](docs-magna/CONFIGURACION.md).
@@ -130,7 +155,7 @@ El ventilador del hotend se prende solo cuando pasa los 50 °C y se apaga cuando
 
 | | |
 |---|---|
-| Impresora | Hellbot Magna 2 230 |
+| Impresora | Hellbot Magna 2 230 (300, 400, 400D, 500 y 500D sin probar) |
 | Placa | MKS Robin Nano **V1.3** (STM32F407, 512 KB) |
 | Pantalla | MKS TFT35 táctil (480 × 320) |
 | Extrusión | Doble extrusor Dual Drive con hotend 2 en 1 |
@@ -142,7 +167,7 @@ El ventilador del hotend se prende solo cuando pasa los 50 °C y se apaga cuando
 
 ## Perfiles de slicer
 
-En [perfiles-slicer/](perfiles-slicer/) hay perfiles hechos para esta máquina y este firmware:
+En [perfiles-slicer/](perfiles-slicer/) hay perfiles hechos para este firmware, uno por modelo (los que no son la 230 dicen "sin probar"; las D tienen retracción de extrusor directo):
 
 | Slicer | Cómo se instala |
 |---|---|
@@ -166,7 +191,7 @@ Con GitHub Actions:
 1. La primera vez, copiá los archivos de [github-workflows/](github-workflows/) a `.github/workflows/` en el repo.
 2. Subí `mm2.zip` a la raíz del repo (Add file → Upload files).
 3. El workflow descomprime el zip, baja Marlin oficial, le aplica la configuración y el tema, corre las pruebas y compila.
-4. En Actions bajás **Magna2-230-firmware** o **Magna2-230-firmware-BLTouch**:
+4. En Actions bajás el de tu modelo: **Magna2-230-firmware** o **Magna2-230-firmware-BLTouch**, y sin probar **Magna2-300-firmware-UNTESTED**, **…-400-…**, **…-400D-…**, **…-500-…** y **…-500D-…**. Se compilan los siete en paralelo ([variantes/armar.sh](variantes/armar.sh)).
 
 ```
 Magna2-230-firmware/
@@ -176,7 +201,7 @@ Magna2-230-firmware/
 └── COMO-FLASHEAR.md
 ```
 
-Para publicar una versión en Releases: Actions → Publicar versión Magna 2 230 → Run workflow (o un tag `v1.0`).
+Para publicar una versión en Releases: Actions → Publicar versión Magna 2 → Run workflow (o un tag `v1.0`). Publica todos los modelos, con UNTESTED en el nombre de los que no son la 230.
 
 En la compu:
 
@@ -194,6 +219,10 @@ Antes de compilar se corren varias pruebas: los chequeos de Marlin sobre la conf
 2. En una microSD en FAT32 copiá `Robin_nano35.bin` y la carpeta `assets`.
 3. Con la impresora apagada, poné la SD y prendela. No la apagues mientras actualiza (primero el firmware y después los íconos).
 4. Cargá la configuración nueva: `M502` y `M500`.
+
+La pantalla, al terminar de cargar la carpeta `assets`, la renombra a `_assets` para no volver a cargarla en cada arranque. Antes, si en la SD ya había una `_assets` de otra instalación, quedaban las dos y cargaba los íconos cada vez que prendías; ahora borra la vieja sola. Después de instalar podés borrar `_assets` sin problema.
+
+Si es una 300, 400 o 500: leé antes `LEEME-SIN-PROBAR.txt`.
 
 Paso a paso: [docs-magna/COMO-FLASHEAR.md](docs-magna/COMO-FLASHEAR.md). Para volver atrás se hace lo mismo con el `.bin` anterior.
 

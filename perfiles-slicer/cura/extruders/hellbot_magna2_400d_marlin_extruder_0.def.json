@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "name": "Extrusor 1",
+  "inherits": "fdmextruder",
+  "metadata": {
+    "machine": "hellbot_magna2_400d_marlin",
+    "position": "0"
+  },
+  "overrides": {
+    "extruder_nr": {
+      "default_value": 0,
+      "maximum_value": "1"
+    },
+    "machine_nozzle_size": {
+      "default_value": 0.4
+    },
+    "material_diameter": {
+      "default_value": 1.75
+    },
+    "machine_nozzle_offset_x": {
+      "default_value": 0.0
+    },
+    "machine_nozzle_offset_y": {
+      "default_value": 0.0
+    },
+    "machine_extruder_start_code": {
+      "default_value": "; --- cargar T0 (hotend 2 en 1) ---\nG1 X395 Y5 F6000 ; esquina de cambio\nG92 E0\nG1 E54 F1500 ; baja desde la union\nG92 E0\nG91\nG1 Z-1 F600 ; vuelve a la altura (sube 1 mm al estacionar)\nG90"
+    },
+    "machine_extruder_end_code": {
+      "default_value": "; --- estacionar T0 (hotend 2 en 1) ---\nG91\nG1 Z1 F600 ; despega la boquilla de la pieza\nG90\nG1 X395 Y5 F6000 ; esquina de cambio\nG92 E0\nG1 E-54 F1500 ; sube por encima de la union\nG92 E0"
+    },
+    "machine_extruder_start_code_duration": {
+      "default_value": 4
+    },
+    "machine_extruder_end_code_duration": {
+      "default_value": 4
+    }
+  }
+}

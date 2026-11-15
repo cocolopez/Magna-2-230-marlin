@@ -1,0 +1,42 @@
+{
+  "type": "process",
+  "name": "0.28 Rapida - Magna 2 500D",
+  "from": "User",
+  "inherits": "",
+  "print_settings_id": "0.28 Rapida - Magna 2 500D",
+  "version": "2.1.0.0",
+  "compatible_printers": [
+    "Magna 2 500D Marlin 2.1 0.4"
+  ],
+  "layer_height": "0.28",
+  "initial_layer_print_height": "0.2",
+  "wall_loops": "2",
+  "top_shell_layers": "4",
+  "bottom_shell_layers": "3",
+  "sparse_infill_density": "12%",
+  "sparse_infill_pattern": "grid",
+  "outer_wall_speed": "35",
+  "inner_wall_speed": "55",
+  "sparse_infill_speed": "75",
+  "internal_solid_infill_speed": "65",
+  "top_surface_speed": "40",
+  "travel_speed": "100",
+  "initial_layer_speed": "20",
+  "initial_layer_infill_speed": "30",
+  "default_acceleration": "200",
+  "outer_wall_acceleration": "1000",
+  "travel_acceleration": "200",
+  "initial_layer_acceleration": "800",
+  "skirt_loops": "2",
+  "skirt_distance": "3",
+  "enable_prime_tower": "1",
+  "prime_tower_width": "40",
+  "prime_volume": "45",
+  "wipe_tower_x": [
+    "170"
+  ],
+  "wipe_tower_y": [
+    "170"
+  ],
+  "gcode_label_objects": "1"
+}

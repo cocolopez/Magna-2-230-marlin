@@ -421,3 +421,9 @@ for f, a, b, para in CAMBIOS:
     if s.count(a) != 1: print('NO ENCONTRADO (se deja el color original):', f, '-', para); falta += 1; continue
     open(p, 'w', encoding='utf-8').write(s.replace(a, b)); print('ok:', para); ok += 1
 print(f'Colores del tema: {ok} aplicados, {falta} no encontrados')
+
+# Etapa 39: pantalla en castellano completa, carpeta _assets y aviso de modelo sin probar
+import subprocess
+_r = subprocess.run([sys.executable, os.path.join(AQUI, 'aplicar_idioma.py'), sys.argv[1] if len(sys.argv) > 1 else '.'])
+if _r.returncode:
+    sys.exit(_r.returncode)

@@ -1,0 +1,22 @@
+FIRMWARE PARA LA MAGNA 2 {MODELO} - SIN PROBAR (UNTESTED)
+=========================================================
+
+Este firmware NO se probó nunca en una Magna 2 {MODELO}. El autor solo tiene la Magna 2 230: esta
+versión está armada con los valores del firmware oficial de Hellbot para la {MODELO}
+(robin_nano35_cfg.txt), pero nadie la instaló todavía en una máquina real.
+
+Si la instalás, hacelo sabiendo eso, y la primera vez:
+
+1. Guardá tu configuración actual: mandá M503 (desde Cura, Pronterface o la consola de MagnAir)
+   y guardá lo que responde. Tené a mano el firmware oficial para volver atrás.
+2. Con la mano cerca del interruptor, mové cada eje unos milímetros desde la pantalla
+   (Mover) y fijate que vaya para el lado que dice. En especial Z: en la 230 el motor Z está
+   invertido y en el oficial de la {MODELO} no; este firmware usa lo del oficial.
+3. Recién después hacé Inicio (home) de cada eje por separado, X, después Y, después Z.
+4. Calentá la cama y el pico sin imprimir y mirá que lleguen a la temperatura sin error.
+5. Si tiene BLTouch: calibrá la altura de la sonda con el asistente antes de imprimir
+   (ver BLTOUCH.md). Arranca en 0: el pico queda en el aire, no choca.
+
+Qué se sacó del oficial y qué no: MODELOS.md.
+
+Si la probás, avisá cómo te fue: andreslondero@gmail.com

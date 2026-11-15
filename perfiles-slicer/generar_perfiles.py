@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Genera los perfiles de slicer para la Hellbot Magna 2 230 con el firmware Marlin de este repo.
+Genera los perfiles de slicer para las Hellbot Magna 2 (230, y sin probar 300, 400, 400D, 500 y 500D)
+con el firmware Marlin de este repo. Los nombres de abajo son los de la 230; los otros modelos usan su número.
 
 Salida (en esta misma carpeta):
   cura/definitions/hellbot_magna2_230_marlin.def.json
@@ -22,66 +23,149 @@ import shutil
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 
-# ---------------------------------------------------------------- máquina
-MAQUINA = dict(
-    nombre="Hellbot Magna 2 230 Marlin 2.1",
-    ancho=230, profundo=230, alto=250,
-    boquilla=0.4, diametro=1.75,
-    extrusores=2,                  # doble extrusor, hotend 2 en 1 (una sola boquilla)
-    # límites = los del firmware (Configuration.h). E máx 25 mm/s: ninguna retracción puede ir más rápido.
-    vmax=dict(x=300, y=300, z=5, e=25),
-    amax=dict(x=2000, y=2000, z=100, e=8000),
-    jerk=dict(x=10, y=10, z=0.3, e=5),
-)
+# ---------------------------------------------------------------- modelos
+# Valores de cada Magna 2. Los de 300/400/500 salen de los firmware oficiales de Hellbot (ver
+# docs-magna/MODELOS.md) y NO están probados en una máquina real: solo existe la 230 acá.
+#   estacionar: mm que sube cada filamento en el hotend 2 en 1 (por encima de la unión en Y).
+#     Bowden: 100 (perfil oficial de Hellbot para la 230). Directo (D): 60, SIN MEDIR: con 100 el
+#     filamento saldría de los engranajes del extrusor, que están arriba del hotend.
+#   retr: retracción. Bowden 5 mm; directo 1 mm.
+MODELOS = {
+    "230":  dict(xy=230, z=250, vxy=300, vz=5, axy=2000, cama_max=110, estacionar=100, retr=5.0, retr_petg=1.0, vel_retr=25, probado=True),
+    "300":  dict(xy=300, z=400, vxy=200, vz=4, axy=800, cama_max=100, estacionar=100, retr=5.0, retr_petg=1.0, vel_retr=25, probado=False),
+    "400":  dict(xy=400, z=400, vxy=100, vz=5, axy=200, cama_max=85, estacionar=100, retr=5.0, retr_petg=1.0, vel_retr=25, probado=False),
+    "400D": dict(xy=400, z=400, vxy=100, vz=5, axy=200, cama_max=85, estacionar=60, retr=1.0, retr_petg=0.5, vel_retr=30, probado=False),
+    "500":  dict(xy=500, z=500, vxy=100, vz=5, axy=200, cama_max=85, estacionar=100, retr=5.0, retr_petg=1.0, vel_retr=25, probado=False),
+    "500D": dict(xy=500, z=500, vxy=100, vz=5, axy=200, cama_max=85, estacionar=60, retr=1.0, retr_petg=0.5, vel_retr=30, probado=False),
+}
 
-# ---------------------------------------------------------------- cambio de filamento 2 en 1
-# El hotend 2 en 1 tiene una unión en Y: para que entre el otro filamento, el activo tiene que
-# subir por encima de la unión. Hellbot usa 100-105 mm en su perfil oficial de Cura
-# (hellbot_magna_2_230_dual: "G1 E-5" + "G1 E-100"). Acá usamos 100 mm en total.
-#
-# Lo hace el SLICER (como el perfil de fábrica), no el firmware: Marlin solo retira el filamento
-# viejo si ya lo "cebó" él mismo en esa sesión, así que el primer T0 -> T1 después de prender la
-# máquina no retiraba T0. Por eso todos los gcode de inicio mandan M217 S0 (apaga el cambio del
-# firmware aunque la EEPROM tenga guardado otro valor).
-#
-# Estado de reposo: LOS DOS filamentos estacionados 100 mm arriba de la punta de la boquilla.
-# Cada impresión los carga cuando los usa y los vuelve a estacionar al terminar.
-CAMBIO = dict(
-    largo=100,          # mm desde la punta de la boquilla hasta la posición de estacionado
-    retraccion_corta=6, # mm que retrae el slicer en el lugar antes de ir a la esquina (Hellbot: 6)
-    velocidad=25,       # mm/s (límite E del firmware)
-    esquina=(225, 5),   # X, Y donde descarga/carga (adelante a la derecha, lejos de la torre)
-)
-CAMBIO["resto"] = CAMBIO["largo"] - CAMBIO["retraccion_corta"]
 
-INICIO_COMUN = [
-    "; --- Magna 2 230 inicio ---",
-    "; Antes de imprimir: los dos filamentos estacionados (asi quedan al terminar cada impresion).",
-    "; Si cargaste filamento a mano hasta la boquilla, corre gcode-utiles/estacionar_T0.gcode o _T1.",
-    "M217 S0 ; el cambio 2 en 1 lo hace el slicer, no el firmware",
-    "G90 ; absoluto",
-    "M82 ; extrusor absoluto",
-    "M140 S{BED0} ; cama",
-    "M104 S{TEMP0} ; hotend (sin esperar)",
-    "G28 ; home",
-    "M190 S{BED0}",
-    "M109 S{TEMP0}",
-    "G92 E0",
-    "G1 Z5 F600",
-    "; --- fin inicio ---",
-]
-FIN_COMUN = [
-    "; --- Magna 2 230 fin ---",
-    "G91 ; relativo",
-    "G1 Z10 F600 ; subir",
-    "G90",
-    "G1 X0 Y220 F3000 ; presentar la pieza",
-    "M106 S0 ; ventilador off",
-    "M104 S0 ; hotend off",
-    "M140 S0 ; cama off",
-    "M84 X Y E ; motores off (Z queda trabado)",
-    "; --- fin ---",
-]
+def configurar(modelo):
+    """Arma todos los valores de un modelo (las funciones de abajo los leen de acá)."""
+    global ID, MOD, MAQUINA, CAMBIO, INICIO_COMUN, FIN_COMUN, PROCESOS, VIAJE, ACEL_IMPRESION, ACEL_PERIM_EXT
+    global ACEL_VIAJE, ACEL_1RA, FILAMENTOS, CARGA_INICIAL, ESTACIONAR_FINAL, CURA_ID, ARCH
+    ID = modelo
+    MOD = MODELOS[modelo]
+    CURA_ID = f"hellbot_magna2_{modelo.lower()}_marlin"
+    ARCH = f"Magna2-{modelo}"   # para nombres de archivo
+    # ---------------------------------------------------------------- máquina
+    MAQUINA = dict(
+        nombre=f"Hellbot Magna 2 {ID} Marlin 2.1" + ("" if MOD["probado"] else " (sin probar)"),
+        ancho=MOD["xy"], profundo=MOD["xy"], alto=MOD["z"],
+        boquilla=0.4, diametro=1.75,
+        extrusores=2,                  # doble extrusor, hotend 2 en 1 (una sola boquilla)
+        # límites = los del firmware (Configuration.h). E máx 25 mm/s: ninguna retracción puede ir más rápido.
+        vmax=dict(x=MOD["vxy"], y=MOD["vxy"], z=MOD["vz"], e=25),
+        amax=dict(x=MOD["axy"], y=MOD["axy"], z=100, e=8000),
+        jerk=dict(x=10, y=10, z=0.3, e=5),
+    )
+
+    # ---------------------------------------------------------------- cambio de filamento 2 en 1
+    # El hotend 2 en 1 tiene una unión en Y: para que entre el otro filamento, el activo tiene que
+    # subir por encima de la unión. Hellbot usa 100-105 mm en su perfil oficial de Cura
+    # (hellbot_magna_2_230_dual: "G1 E-5" + "G1 E-100"). Acá usamos 100 mm en total.
+    #
+    # Lo hace el SLICER (como el perfil de fábrica), no el firmware: Marlin solo retira el filamento
+    # viejo si ya lo "cebó" él mismo en esa sesión, así que el primer T0 -> T1 después de prender la
+    # máquina no retiraba T0. Por eso todos los gcode de inicio mandan M217 S0 (apaga el cambio del
+    # firmware aunque la EEPROM tenga guardado otro valor).
+    #
+    # Estado de reposo: LOS DOS filamentos estacionados 100 mm arriba de la punta de la boquilla.
+    # Cada impresión los carga cuando los usa y los vuelve a estacionar al terminar.
+    CAMBIO = dict(
+        largo=MOD["estacionar"],  # mm desde la punta de la boquilla hasta la posición de estacionado
+        retraccion_corta=6, # mm que retrae el slicer en el lugar antes de ir a la esquina (Hellbot: 6)
+        velocidad=25,       # mm/s (límite E del firmware)
+        esquina=(MOD["xy"] - 5, 5),  # X, Y donde descarga/carga (adelante a la derecha, lejos de la torre)
+    )
+    CAMBIO["resto"] = CAMBIO["largo"] - CAMBIO["retraccion_corta"]
+
+    INICIO_COMUN = [
+        f"; --- Magna 2 {ID} inicio ---",
+        "; Antes de imprimir: los dos filamentos estacionados (asi quedan al terminar cada impresion).",
+        "; Si cargaste filamento a mano hasta la boquilla, corre gcode-utiles/estacionar_T0.gcode o _T1.",
+        "M217 S0 ; el cambio 2 en 1 lo hace el slicer, no el firmware",
+        "G90 ; absoluto",
+        "M82 ; extrusor absoluto",
+        "M140 S{BED0} ; cama",
+        "M104 S{TEMP0} ; hotend (sin esperar)",
+        "G28 ; home",
+        "M190 S{BED0}",
+        "M109 S{TEMP0}",
+        "G92 E0",
+        "G1 Z5 F600",
+        "; --- fin inicio ---",
+    ]
+    FIN_COMUN = [
+        f"; --- Magna 2 {ID} fin ---",
+        "G91 ; relativo",
+        "G1 Z10 F600 ; subir",
+        "G90",
+        f"G1 X0 Y{MOD['xy'] - 10} F3000 ; presentar la pieza",
+        "M106 S0 ; ventilador off",
+        "M104 S0 ; hotend off",
+        "M140 S0 ; cama off",
+        "M84 X Y E ; motores off (Z queda trabado)",
+        "; --- fin ---",
+    ]
+
+
+    # ---------------------------------------------------------------- procesos
+    # Hellbot recomienda 50 mm/s (80 máx.) para la Magna 2 230. Con Input Shaping y MPC del
+    # firmware se puede ir un poco más rápido en relleno; los perímetros externos se mantienen
+    # lentos porque es un bowden largo con unión 2 en 1.
+    PROCESOS = [
+        dict(q="fine", peso=1, id="0.12 Fina", capa=0.12, perim=3, top=7, bottom=5, relleno=15,
+             v=40, v_ext=25, v_int=40, v_relleno=55, v_1ra=20),
+        dict(q="standard", peso=0, id="0.16 Estandar", capa=0.16, perim=3, top=6, bottom=5, relleno=15,
+             v=50, v_ext=30, v_int=45, v_relleno=60, v_1ra=20),
+        dict(q="normal", peso=-1, id="0.20 Normal", capa=0.20, perim=3, top=5, bottom=4, relleno=15,
+             v=50, v_ext=30, v_int=50, v_relleno=65, v_1ra=20),
+        dict(q="draft", peso=-2, id="0.28 Rapida", capa=0.28, perim=2, top=4, bottom=3, relleno=12,
+             v=60, v_ext=35, v_int=55, v_relleno=75, v_1ra=20),
+    ]
+    VIAJE = min(150, MOD["vxy"])
+    ACEL_IMPRESION = min(1500, MOD["axy"])
+    ACEL_PERIM_EXT = min(1000, MOD["axy"])
+    ACEL_VIAJE = min(2000, MOD["axy"])
+    ACEL_1RA = min(800, MOD["axy"])
+
+    # ---------------------------------------------------------------- filamentos
+    # retr = retracción bowden normal (rango típico 3-6 mm); vel_max = tope de velocidad del material
+    FILAMENTOS = [
+        dict(id="PLA", tipo="PLA", cura="generic_pla", temp=205, temp0=210, cama=60, cama0=65,
+             fan_min=100, fan_max=100, fan_desde=2, densidad=1.24, retr=MOD["retr"], vel_retr=MOD["vel_retr"], vel_max=None,
+             capa_min=8),
+        dict(id="PETG", tipo="PETG", cura="generic_petg", temp=235, temp0=240, cama=75, cama0=80,
+             fan_min=30, fan_max=50, fan_desde=3, densidad=1.27, retr=MOD["retr"] + MOD["retr_petg"], vel_retr=MOD["vel_retr"], vel_max=45,
+             capa_min=10),
+        dict(id="ABS", tipo="ABS", cura="generic_abs", temp=240, temp0=245, cama=min(100, MOD["cama_max"]), cama0=min(105, MOD["cama_max"]),
+             fan_min=0, fan_max=15, fan_desde=3, densidad=1.04, retr=MOD["retr"], vel_retr=MOD["vel_retr"], vel_max=50,
+             capa_min=12),
+    ]
+
+
+    # carga del primer filamento (PrusaSlicer/Orca) y estacionado del último al terminar
+    CARGA_INICIAL = [
+        "T[initial_tool]",
+        "; carga el primer filamento desde la posicion de estacionado y purga",
+        "G92 E0",
+        f"G1 E{CAMBIO['largo']} F{CAMBIO['velocidad'] * 60}",
+        "G92 E0",
+        "G1 X5 Y20 Z0.3 F5000",
+        "G1 X5 Y200 Z0.3 F1500 E15 ; linea de purga",
+        "G1 X5.4 Y200 Z0.3 F5000",
+        "G1 X5.4 Y20 Z0.3 F1500 E30 ; segunda linea",
+        "G92 E0",
+        "G1 Z2.0 F600",
+    ]
+    ESTACIONAR_FINAL = [
+        "; estaciona el ultimo filamento arriba de la union 2 en 1",
+        "G92 E0",
+        f"G1 E-{CAMBIO['largo']} F{CAMBIO['velocidad'] * 60}",
+        "G92 E0",
+    ]
+
 
 
 def cargar(n, previa=0):
@@ -111,41 +195,6 @@ def descargar(n, previa=0):
     ]
 
 
-# ---------------------------------------------------------------- procesos
-# Hellbot recomienda 50 mm/s (80 máx.) para la Magna 2 230. Con Input Shaping y MPC del
-# firmware se puede ir un poco más rápido en relleno; los perímetros externos se mantienen
-# lentos porque es un bowden largo con unión 2 en 1.
-PROCESOS = [
-    dict(q="fine", peso=1, id="0.12 Fina", capa=0.12, perim=3, top=7, bottom=5, relleno=15,
-         v=40, v_ext=25, v_int=40, v_relleno=55, v_1ra=20),
-    dict(q="standard", peso=0, id="0.16 Estandar", capa=0.16, perim=3, top=6, bottom=5, relleno=15,
-         v=50, v_ext=30, v_int=45, v_relleno=60, v_1ra=20),
-    dict(q="normal", peso=-1, id="0.20 Normal", capa=0.20, perim=3, top=5, bottom=4, relleno=15,
-         v=50, v_ext=30, v_int=50, v_relleno=65, v_1ra=20),
-    dict(q="draft", peso=-2, id="0.28 Rapida", capa=0.28, perim=2, top=4, bottom=3, relleno=12,
-         v=60, v_ext=35, v_int=55, v_relleno=75, v_1ra=20),
-]
-VIAJE = 150
-ACEL_IMPRESION = 1500
-ACEL_PERIM_EXT = 1000
-ACEL_VIAJE = 2000
-ACEL_1RA = 800
-
-# ---------------------------------------------------------------- filamentos
-# retr = retracción bowden normal (rango típico 3-6 mm); vel_max = tope de velocidad del material
-FILAMENTOS = [
-    dict(id="PLA", tipo="PLA", cura="generic_pla", temp=205, temp0=210, cama=60, cama0=65,
-         fan_min=100, fan_max=100, fan_desde=2, densidad=1.24, retr=5.0, vel_retr=25, vel_max=None,
-         capa_min=8),
-    dict(id="PETG", tipo="PETG", cura="generic_petg", temp=235, temp0=240, cama=75, cama0=80,
-         fan_min=30, fan_max=50, fan_desde=3, densidad=1.27, retr=6.0, vel_retr=25, vel_max=45,
-         capa_min=10),
-    dict(id="ABS", tipo="ABS", cura="generic_abs", temp=240, temp0=245, cama=100, cama0=105,
-         fan_min=0, fan_max=15, fan_desde=3, densidad=1.04, retr=5.0, vel_retr=25, vel_max=50,
-         capa_min=12),
-]
-
-
 def gcode(lineas, temp0, bed0):
     return "\n".join(lineas).replace("{TEMP0}", temp0).replace("{BED0}", bed0)
 
@@ -160,29 +209,7 @@ def escribir(ruta, contenido):
 
 
 
-# carga del primer filamento (PrusaSlicer/Orca) y estacionado del último al terminar
-CARGA_INICIAL = [
-    "T[initial_tool]",
-    "; carga el primer filamento desde la posicion de estacionado y purga",
-    "G92 E0",
-    f"G1 E{CAMBIO['largo']} F{CAMBIO['velocidad'] * 60}",
-    "G92 E0",
-    "G1 X5 Y20 Z0.3 F5000",
-    "G1 X5 Y200 Z0.3 F1500 E15 ; linea de purga",
-    "G1 X5.4 Y200 Z0.3 F5000",
-    "G1 X5.4 Y20 Z0.3 F1500 E30 ; segunda linea",
-    "G92 E0",
-    "G1 Z2.0 F600",
-]
-ESTACIONAR_FINAL = [
-    "; estaciona el ultimo filamento arriba de la union 2 en 1",
-    "G92 E0",
-    f"G1 E-{CAMBIO['largo']} F{CAMBIO['velocidad'] * 60}",
-    "G92 E0",
-]
-
 # ================================================================== CURA
-CURA_ID = "hellbot_magna2_230_marlin"
 CURA_SETTING_VERSION = 25   # Cura 5.10 / 5.11. Cura 5.12+ lo actualiza solo al cargarlo.
 
 
@@ -209,10 +236,10 @@ def cura():
     m = MAQUINA
     c = CAMBIO
     # limpiar calidades viejas para no dejar archivos huérfanos
-    shutil.rmtree(os.path.join(AQUI, "cura", "quality"), ignore_errors=True)
+    # (las calidades viejas se borran una sola vez en __main__, antes de generar todos los modelos)
 
     inicio = [
-        "; --- Magna 2 230 (Marlin 2.1) inicio ---",
+        f"; --- Magna 2 {ID} (Marlin 2.1) inicio ---",
         ";  Antes de imprimir: los DOS filamentos estacionados 100 mm arriba de la boquilla",
         ";  (asi quedan solos al terminar cada impresion). Si cargaste uno a mano hasta la",
         ";  boquilla, imprimi primero gcode-utiles/estacionar_T0.gcode (o _T1).",
@@ -239,13 +266,10 @@ def cura():
         "inherits": "fdmprinter",
         "metadata": {
             "visible": True,
-            "author": "Magna 2 230 Marlin",
+            "author": f"Magna 2 {ID} Marlin",
             "manufacturer": "Hellbot",
             "file_formats": "text/x-gcode",
-            # cama y textura que ya trae Cura para la Magna 2 230 oficial
-            "platform": "Hellbot_Magna_2_230.obj",
-            "platform_texture": "Magna2_230.png",
-            "has_textured_buildplate": True,
+            # (la cama y la textura de la 230 se agregan abajo: Cura las trae para la 230 oficial)
             "has_materials": True,
             "has_machine_quality": True,
             "preferred_quality_type": "normal",
@@ -343,6 +367,9 @@ def cura():
             "ooze_shield_enabled": {"value": False},
         },
     }
+    if ID == "230":
+        defin["metadata"].update({"platform": "Hellbot_Magna_2_230.obj", "platform_texture": "Magna2_230.png",
+                                  "has_textured_buildplate": True})
     escribir(f"cura/definitions/{CURA_ID}.def.json", json.dumps(defin, indent=2, ensure_ascii=False))
 
     for n in range(2):
@@ -417,7 +444,7 @@ def cura():
 
 
 INSTALAR_BAT = r"""@echo off
-rem Instala el perfil "Hellbot Magna 2 230 Marlin 2.1" en la version MAS NUEVA de Cura instalada.
+rem Instala los perfiles "Hellbot Magna 2 ... Marlin 2.1" (230, 300, 400, 400D, 500, 500D) en la version MAS NUEVA de Cura instalada.
 rem Cerra Cura antes de correrlo. Abri Cura al menos una vez despues de instalarlo/actualizarlo.
 setlocal
 cd /d "%~dp0"
@@ -430,13 +457,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "New-Item -ItemType Directory -Force (Join-Path $d 'definitions'),(Join-Path $d 'extruders'),(Join-Path $d 'quality') | Out-Null;" ^
   "Copy-Item 'definitions\*.def.json' (Join-Path $d 'definitions') -Force;" ^
   "Copy-Item 'extruders\*.def.json' (Join-Path $d 'extruders') -Force;" ^
-  "Copy-Item 'quality\hellbot_magna2_230_marlin' (Join-Path $d 'quality') -Recurse -Force;" ^
-  "Write-Host 'Listo. Abri Cura > Agregar impresora > No conectada en red > Hellbot > Hellbot Magna 2 230 Marlin 2.1'"
+  "Copy-Item 'quality\*' (Join-Path $d 'quality') -Recurse -Force;" ^
+  "Write-Host 'Listo. Abri Cura > Agregar impresora > No conectada en red > Hellbot > Hellbot Magna 2 (tu modelo) Marlin 2.1'"
 pause
 """
 
 INSTALAR_SH = r"""#!/bin/sh
-# Instala el perfil "Hellbot Magna 2 230 Marlin 2.1" en la version MAS NUEVA de Cura.
+# Instala los perfiles "Hellbot Magna 2 ... Marlin 2.1" (230, 300, 400, 400D, 500, 500D) en la version MAS NUEVA de Cura.
 # Cerra Cura antes de correrlo. Uso: sh instalar-mac-linux.sh
 set -e
 cd "$(dirname "$0")"
@@ -450,8 +477,8 @@ for base in "$HOME/Library/Application Support/cura" "$HOME/.local/share/cura" \
   mkdir -p "$d/definitions" "$d/extruders" "$d/quality"
   cp definitions/*.def.json "$d/definitions/"
   cp extruders/*.def.json "$d/extruders/"
-  cp -R quality/hellbot_magna2_230_marlin "$d/quality/"
-  echo "Listo. Abri Cura > Agregar impresora > No conectada en red > Hellbot > Hellbot Magna 2 230 Marlin 2.1"
+  cp -R quality/* "$d/quality/"
+  echo "Listo. Abri Cura > Agregar impresora > No conectada en red > Hellbot > Hellbot Magna 2 (tu modelo) Marlin 2.1"
   exit 0
 done
 echo "No encontre la carpeta de configuracion de Cura. Abri Cura una vez y volve a correr esto."
@@ -463,14 +490,15 @@ exit 1
 def utiles():
     t = 210
     for n in range(2):
-        cab = [f"; Magna 2 230 - utilidad para T{n}", "M217 S0 ; cambio 2 en 1 manual", f"M109 S{t} ; PLA (subi a 235-240 para PETG/ABS)",
+        cab = [f"; Magna 2 {ID} - utilidad para T{n}", "M217 S0 ; cambio 2 en 1 manual", f"M109 S{t} ; PLA (subi a 235-240 para PETG/ABS)",
                f"T{n}", "G90", "M82"]
         pie = ["M104 S0", "M84 E", "; fin"]
-        escribir(f"gcode-utiles/estacionar_T{n}.gcode", "\n".join(
+        carpeta = "gcode-utiles" if ID == "230" else f"gcode-utiles/{ARCH}"
+        escribir(f"{carpeta}/estacionar_T{n}.gcode", "\n".join(
             cab + [f"; Usalo cuando el filamento T{n} llega hasta la boquilla (por ejemplo, recien cargado).",
                    "G92 E0", f"G1 E-{CAMBIO['largo']} F{CAMBIO['velocidad'] * 60} ; sube {CAMBIO['largo']} mm, por encima de la union",
                    "G92 E0"] + pie) + "\n")
-        escribir(f"gcode-utiles/cargar_T{n}.gcode", "\n".join(
+        escribir(f"{carpeta}/cargar_T{n}.gcode", "\n".join(
             cab + [f"; Baja T{n} desde la posicion de estacionado y purga un poco.",
                    "; El OTRO filamento tiene que estar estacionado.",
                    "G92 E0", f"G1 E{CAMBIO['largo']} F{CAMBIO['velocidad'] * 60}",
@@ -485,9 +513,9 @@ def ini_val(v):
 def prusa():
     m = MAQUINA
     two = lambda v: f"{v},{v}"
-    out = ["# Bundle PrusaSlicer - Hellbot Magna 2 230 (Marlin 2.1)",
+    out = [f"# Bundle PrusaSlicer - Hellbot Magna 2 {ID} (Marlin 2.1)" + ("" if MOD["probado"] else " - SIN PROBAR en una maquina real"),
            "# Importar: Archivo > Importar > Importar paquete de configuracion (Import Config Bundle)", ""]
-    pname = "Magna 2 230 Marlin 2.1"
+    pname = f"Magna 2 {ID} Marlin 2.1"
     printer = {
         "printer_technology": "FFF",
         "printer_model": "",
@@ -532,7 +560,7 @@ def prusa():
     out += [f"{k} = {v}" for k, v in printer.items()]
     out.append("")
     for p in PROCESOS:
-        out.append(f"[print:{p['id']} - Magna 2 230]")
+        out.append(f"[print:{p['id']} - Magna 2 {ID}]")
         cfg = {
             "layer_height": p["capa"], "first_layer_height": 0.2,
             "perimeters": p["perim"], "top_solid_layers": p["top"], "bottom_solid_layers": p["bottom"],
@@ -552,7 +580,7 @@ def prusa():
         out += [f"{k} = {v}" for k, v in cfg.items()]
         out.append("")
     for f in FILAMENTOS:
-        out.append(f"[filament:{f['id']} - Magna 2 230]")
+        out.append(f"[filament:{f['id']} - Magna 2 {ID}]")
         cfg = {
             "filament_type": f["tipo"], "filament_diameter": m["diametro"], "filament_density": f["densidad"],
             "temperature": f["temp"], "first_layer_temperature": f["temp0"],
@@ -568,15 +596,15 @@ def prusa():
         }
         out += [f"{k} = {v}" for k, v in cfg.items()]
         out.append("")
-    out += ["[presets]", f"printer = {pname}", "print = 0.20 Normal - Magna 2 230", "filament = PLA - Magna 2 230", ""]
-    escribir("prusaslicer/Magna2-230_PrusaSlicer_bundle.ini", "\n".join(out))
+    out += ["[presets]", f"printer = {pname}", f"print = 0.20 Normal - Magna 2 {ID}", f"filament = PLA - Magna 2 {ID}", ""]
+    escribir(f"prusaslicer/{ARCH}_PrusaSlicer_bundle.ini", "\n".join(out))
 
 
 # ================================================================== ORCASLICER
 def orca():
     m = MAQUINA
     two = lambda v: [str(v), str(v)]
-    mname = "Magna 2 230 Marlin 2.1 0.4"
+    mname = f"Magna 2 {ID} Marlin 2.1 0.4"
     machine = {
         "type": "machine", "name": mname, "from": "User", "inherits": "",
         "printer_settings_id": mname, "printer_technology": "FFF", "version": "2.1.0.0",
@@ -607,9 +635,9 @@ def orca():
         "change_filament_gcode": "T[next_extruder] ; la torre de purga descarga/carga el filamento (2 en 1)",
         "use_relative_e_distances": "0",
     }
-    escribir("orcaslicer/machine/Magna2-230_machine.json", json.dumps(machine, indent=2, ensure_ascii=False))
+    escribir(f"orcaslicer/machine/{ARCH}_machine.json", json.dumps(machine, indent=2, ensure_ascii=False))
     for p in PROCESOS:
-        name = f"{p['id']} - Magna 2 230"
+        name = f"{p['id']} - Magna 2 {ID}"
         proc = {
             "type": "process", "name": name, "from": "User", "inherits": "",
             "print_settings_id": name, "version": "2.1.0.0",
@@ -628,9 +656,9 @@ def orca():
             "wipe_tower_x": ["170"], "wipe_tower_y": ["170"],
             "gcode_label_objects": "1",
         }
-        escribir(f"orcaslicer/process/{p['id'].replace(' ', '_')}_Magna2-230.json", json.dumps(proc, indent=2, ensure_ascii=False))
+        escribir(f"orcaslicer/process/{p['id'].replace(' ', '_')}_{ARCH}.json", json.dumps(proc, indent=2, ensure_ascii=False))
     for f in FILAMENTOS:
-        name = f"{f['id']} - Magna 2 230"
+        name = f"{f['id']} - Magna 2 {ID}"
         fil = {
             "type": "filament", "name": name, "from": "User", "inherits": "",
             "filament_settings_id": [name], "version": "2.1.0.0",
@@ -649,13 +677,20 @@ def orca():
             "filament_max_volumetric_speed": ["10" if f["tipo"] == "PLA" else "8"],
             "filament_start_gcode": ["; Linear Advance: descomentar y poner tu K calibrado\n;M900 K0.0"],
         }
-        escribir(f"orcaslicer/filament/{f['id']}_Magna2-230.json", json.dumps(fil, indent=2, ensure_ascii=False))
+        escribir(f"orcaslicer/filament/{f['id']}_{ARCH}.json", json.dumps(fil, indent=2, ensure_ascii=False))
 
+
+configurar("230")  # al importarlo (pruebas/verificar-perfiles.py) quedan los valores de la 230
 
 if __name__ == "__main__":
-    print("Generando perfiles:")
-    cura()
-    prusa()
-    orca()
-    utiles()
+    # limpiar calidades viejas para no dejar archivos huérfanos
+    shutil.rmtree(os.path.join(AQUI, "cura", "quality"), ignore_errors=True)
+    for modelo in MODELOS:
+        configurar(modelo)
+        print(f"Generando perfiles Magna 2 {modelo}" + ("" if MOD["probado"] else " (SIN PROBAR)") + ":")
+        cura()
+        prusa()
+        orca()
+        utiles()
+    configurar("230")
     print("Listo.")

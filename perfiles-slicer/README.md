@@ -9,6 +9,8 @@ Pensados para **este firmware**: mismos límites de velocidad y aceleración, ca
 | Materiales | PLA, PETG y ABS (calidades propias por material) | PLA, PETG, ABS | PLA, PETG, ABS |
 | Cambio 2 en 1 | sí (gcode de cada extrusor) | sí (torre de purga, modo SEMM) | sí (torre de purga, modo SEMM) |
 
+> **Otros modelos:** también hay perfiles para la 300, 400, 400D, 500 y 500D (archivos con su número; en Cura dicen "(sin probar)"). Usan las medidas y límites de su firmware y **no están probados**: solo existe la 230. Las D (extrusor directo) retraen 1 mm y en el cambio 2 en 1 suben cada filamento 60 mm, un valor sin medir (ver `docs-magna/MODELOS.md`). Los gcode útiles de cada modelo están en `gcode-utiles/Magna2-XXX/`.
+
 > Todo sale de `generar_perfiles.py` (los valores están arriba de todo). Si cambiás algo, corré `python3 generar_perfiles.py` y después `python3 ../pruebas/verificar-perfiles.py`.
 
 ## Cura

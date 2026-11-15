@@ -1,4 +1,4 @@
-# Compila el firmware Marlin de la Hellbot Magna 2 230 a partir de mm2.zip
+# Compila el firmware Marlin de las Hellbot Magna 2 a partir de mm2.zip
 #
 # mm2.zip trae SOLO los archivos propios de la Magna (Configuration.h, Configuration_adv.h,
 # platformio.ini, docs, perfiles, pruebas). El código de Marlin se baja de GitHub en la
@@ -8,11 +8,14 @@
 #   1. Subí mm2.zip a la raíz del repo (Add file > Upload files).
 #   2. Este workflow lo descomprime en el repo, guarda los archivos (commit) y borra mm2.zip.
 #   3. Baja Marlin, le copia encima los archivos de la Magna y compila (mks_robin_nano_v1_3_f4).
-#   4. Descargá el artefacto "Magna2-230-firmware" (Robin_nano35.bin + assets) en la pestaña Actions.
+#   4. Descargá el artefacto de tu modelo en la pestaña Actions (Robin_nano35.bin + assets):
+#      Magna2-230-firmware, Magna2-230-firmware-BLTouch y, SIN PROBAR (UNTESTED):
+#      Magna2-300/400/400D/500/500D-firmware-UNTESTED.
+#   Los modelos se compilan en paralelo (un trabajo por modelo, ver variantes/armar.sh).
 #
-# También se puede correr a mano: Actions > Compilar Magna 2 230 (mm2.zip) > Run workflow.
+# También se puede correr a mano: Actions > Compilar Magna 2 (mm2.zip) > Run workflow.
 
-name: Compilar Magna 2 230 (mm2.zip)
+name: Compilar Magna 2 (mm2.zip)
 
 on:
   push:
@@ -29,7 +32,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  compilar:
+  # 1) Si se subió mm2.zip, se descomprime en el repo y se guarda (una sola vez)
+  preparar:
     runs-on: ubuntu-24.04  # fijo: ubuntu-latest pasa a Ubuntu 26 y podría romper herramientas
     steps:
       - name: Descargar el repo
@@ -75,20 +79,39 @@ jobs:
             git push
           fi
 
-      - name: Bajar Marlin y aplicar los archivos de la Magna
+  # 2) Un firmware por modelo, en paralelo
+  compilar:
+    needs: preparar
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        modelo: ['230', '230-BLTouch', '300', '400', '400D', '500', '500D']
+    steps:
+      - name: Descargar el repo (con lo que guardó "preparar")
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Nombre del paquete
+        id: nom
+        run: |
+          M="${{ matrix.modelo }}"
+          case "$M" in
+            230) N=Magna2-230-firmware ;;
+            230-BLTouch) N=Magna2-230-firmware-BLTouch ;;
+            *) N="Magna2-$M-firmware-UNTESTED" ;;   # sin probar en una máquina real
+          esac
+          echo "nombre=$N" >> "$GITHUB_OUTPUT"
+
+      - name: Bajar Marlin y copiar los archivos de la Magna
         run: |
           VER=$(tr -d ' \r\n' < MARLIN_VERSION 2>/dev/null || echo "2.1.3-b3")
           [ -n "$VER" ] || VER="2.1.3-b3"
-          echo "Marlin $VER"
           git clone -q --depth 1 -b "$VER" https://github.com/MarlinFirmware/Marlin build
           rm -rf build/.github
-          # Copiar encima todo lo del repo (Configuration.h, _adv.h, platformio.ini, docs, perfiles, pruebas)
           tar cf - --exclude=./.git --exclude=./.github --exclude=./build . | tar xf - -C build
-          echo "### Marlin $VER + configuración Magna 2 230" >> "$GITHUB_STEP_SUMMARY"
-          # Tema negro/rojo de la pantalla MKS (si existe la carpeta assets-tema)
-          if [ -f build/assets-tema/aplicar_colores.py ]; then
-            python3 build/assets-tema/aplicar_colores.py build | tee -a "$GITHUB_STEP_SUMMARY"
-          fi
+          echo "### Magna 2 ${{ matrix.modelo }} · Marlin $VER" >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/setup-python@v6
         with:
@@ -105,82 +128,29 @@ jobs:
       - name: Instalar PlatformIO
         run: pip install --upgrade platformio pillow
 
-      - name: Pruebas de configuración y perfiles
+      - name: Compilar y armar la carpeta para la SD
         working-directory: build
         run: |
-          python3 pruebas/preflight.py
-          bash pruebas/sanity-check.sh
-          bash pruebas/verificar-valores.sh
-          python3 pruebas/verificar-perfiles.py
-
-      - name: Compilar (mks_robin_nano_v1_3_f4)
-        working-directory: build
-        run: |
-          pio run -e mks_robin_nano_v1_3_f4
-          bash pruebas/verificar-buffer-pantalla.sh .pio/build/mks_robin_nano_v1_3_f4/firmware.elf
+          bash variantes/armar.sh "${{ matrix.modelo }}" "dist/${{ steps.nom.outputs.nombre }}" | tee armar.log
+          tail -1 armar.log >> "$GITHUB_STEP_SUMMARY"
 
       - name: Prueba de render de íconos (LVGL de la pantalla)
+        if: matrix.modelo == '230'
         working-directory: build
         run: |
           LV=$(find .pio/libdeps -maxdepth 2 -type d -name lvgl | head -1)
           if [ -n "$LV" ] && [ -d assets-tema/assets ]; then
             python3 pruebas/render-lvgl/verificar_render.py "$LV" assets-tema/assets render-pantalla-principal.png
             python3 assets-tema/simular_arranque.py arranque-animado.gif   # etapa 32: tiras y constantes del arranque
+            OUT="dist/${{ steps.nom.outputs.nombre }}"
+            [ -f render-pantalla-principal.png ] && cp render-pantalla-principal.png "$OUT/vista-previa-pantalla.png"
+            [ -f render-pantalla-principal-menu.png ] && cp render-pantalla-principal-menu.png "$OUT/vista-previa-menu.png"
           else
             echo "Sin LVGL o sin tema: se saltea"
           fi
 
-      - name: Preparar archivos para la SD
-        working-directory: build
-        run: |
-          OUT=dist/Magna2-230
-          mkdir -p "$OUT"
-          cp .pio/build/mks_robin_nano_v1_3_f4/Robin_nano35.bin "$OUT/"
-          if [ -d .pio/build/mks_robin_nano_v1_3_f4/assets ]; then
-            cp -r .pio/build/mks_robin_nano_v1_3_f4/assets "$OUT/"
-          fi
-          # Íconos y logo del tema propio encima de los de Makerbase (se conservan la fuente y bmp_preview)
-          if [ -d assets-tema/assets ]; then
-            mkdir -p "$OUT/assets"
-            cp assets-tema/assets/*.bin "$OUT/assets/"
-            echo "Tema: $(ls assets-tema/assets/*.bin | wc -l) archivos de assets propios" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          cp docs-magna/COMO-FLASHEAR.md "$OUT/"
-          [ -f render-pantalla-principal.png ] && cp render-pantalla-principal.png "$OUT/vista-previa-pantalla.png"
-          [ -f render-pantalla-principal-menu.png ] && cp render-pantalla-principal-menu.png "$OUT/vista-previa-menu.png"
-          # Firmware del WiFi (opcional): va aparte para que solo se cargue si se quiere
-          if [ -f wifi/MksWifi.bin ]; then
-            mkdir -p "$OUT/opcional-wifi"
-            cp wifi/MksWifi.bin wifi/README.md "$OUT/opcional-wifi/"
-          fi
-          ls -la "$OUT"
-          echo "Robin_nano35.bin: $(stat -c%s "$OUT/Robin_nano35.bin") bytes" >> "$GITHUB_STEP_SUMMARY"
-
-      # ---------------------------------------------------------------- versión con BLTouch
-      # Mismo firmware + variantes/bltouch.py (sonda BLTouch, nivelación automática 5x5).
-      - name: Compilar versión BLTouch
-        working-directory: build
-        run: |
-          python3 variantes/bltouch.py .
-          python3 pruebas/preflight.py
-          bash pruebas/sanity-check.sh
-          pio run -e mks_robin_nano_v1_3_f4
-          bash pruebas/verificar-buffer-pantalla.sh .pio/build/mks_robin_nano_v1_3_f4/firmware.elf
-          OUT=dist/Magna2-230-BLTouch
-          rm -rf "$OUT"
-          cp -r dist/Magna2-230 "$OUT"
-          cp .pio/build/mks_robin_nano_v1_3_f4/Robin_nano35.bin "$OUT/"
-          cp docs-magna/BLTOUCH.md "$OUT/"
-          echo "Robin_nano35.bin (BLTouch): $(stat -c%s "$OUT/Robin_nano35.bin") bytes" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Subir artefacto (sin BLTouch)
+      - name: Subir artefacto
         uses: actions/upload-artifact@v6
         with:
-          name: Magna2-230-firmware
-          path: build/dist/Magna2-230
-
-      - name: Subir artefacto (con BLTouch)
-        uses: actions/upload-artifact@v6
-        with:
-          name: Magna2-230-firmware-BLTouch
-          path: build/dist/Magna2-230-BLTouch
+          name: ${{ steps.nom.outputs.nombre }}
+          path: build/dist/${{ steps.nom.outputs.nombre }}
