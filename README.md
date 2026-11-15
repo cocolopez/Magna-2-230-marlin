@@ -69,6 +69,8 @@ Un resumen con lo que tardó, el filamento que usó y lo que costó, y una melod
 
 Desde la app, la página o el bot de Telegram se le puede mandar un mensaje a la pantalla ("cambiá el filamento a PETG negro"). El gcode también puede traerlos: el editor de la app los pone en la capa que elijas.
 
+Si la impresora se detiene por un error (temperatura, termistor…), además del cartel en la pantalla le avisa al módulo, y MagnAir lo manda por Telegram. Y los botones PLA y ABS de Precalentar usan las temperaturas que elegiste en la app.
+
 Mientras imprime se puede bloquear la pantalla para que nadie toque nada (se desbloquea deslizando), y si querés que no se apague hay un modo "siempre encendida" con la hora, el porcentaje y la hora de fin en grande.
 
 <p>

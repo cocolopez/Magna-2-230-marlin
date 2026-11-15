@@ -30,10 +30,10 @@ concurrency:
 
 jobs:
   compilar:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # fijo: ubuntu-latest pasa a Ubuntu 26 y podría romper herramientas
     steps:
       - name: Descargar el repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Extraer mm2.zip en el repo
         id: extraer
@@ -90,12 +90,12 @@ jobs:
             python3 build/assets-tema/aplicar_colores.py build | tee -a "$GITHUB_STEP_SUMMARY"
           fi
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
       - name: Cache de PlatformIO
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.platformio
@@ -174,13 +174,13 @@ jobs:
           echo "Robin_nano35.bin (BLTouch): $(stat -c%s "$OUT/Robin_nano35.bin") bytes" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Subir artefacto (sin BLTouch)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: Magna2-230-firmware
           path: build/dist/Magna2-230
 
       - name: Subir artefacto (con BLTouch)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: Magna2-230-firmware-BLTouch
           path: build/dist/Magna2-230-BLTouch

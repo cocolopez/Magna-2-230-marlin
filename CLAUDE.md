@@ -336,3 +336,11 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - **Causa de fondo de las rayas e íconos en blanco**: los íconos están comprimidos (RLE) y `spi_flash_seek_cb` solo sabía volver al principio. Si LVGL redibujaba un pedazo de un ícono (zonas de dos textos que se juntan, algo que lo tapaba, un cambio de cuadro) leía filas corridas. Ahora `tft_lvgl_configuration.cpp` lleva la posición real (`magna_pos_flash`): para adelante saltea descomprimiendo, para atrás vuelve al principio y avanza. El rehacer de la etapa 35 queda igual (no molesta).
 - Compila: 426.724 bytes (86 %). Render y assets OK. Sin probar en la impresora.
 
+
+### Workflows al día (2026-11-15)
+- Avisos de GitHub (Node.js 20 obsoleto, setup-java v4, ubuntu-latest pasa a Ubuntu 26): acciones subidas a las versiones que corren en Node 24 (checkout v6, cache v5, setup-java v5, setup-node v5, setup-python v6, upload-artifact v6, download-artifact v7, gradle/actions/setup-gradle v5, softprops/action-gh-release v3) y los trabajos de Linux fijos en `ubuntu-24.04` (el cambio a Ubuntu 26 podría romper PlatformIO o el compilador; se sube a mano cuando convenga).
+
+### Etapa 38 (2026-11-15) — aviso de errores y precalentado desde MagnAir
+- `M264 P<0..2> H<hotend> B<cama>` (nuevo, `magna_m264` en `extras_pantalla.py`): guarda en RAM los precalentados que manda MagnAir (0 = PLA, 1 = PETG, 2 = ABS). `magna_pre_temp(material, cual, predeterminada)` los devuelve o la de siempre si no llegaron. `draw_preHeat.cpp` (cambio `PRE_CAMBIOS`) los usa en los botones PLA/ABS. No es `M145` porque la UI de MKS no tiene los presets de MarlinUI.
+- Errores: `draw_error_message.cpp` llama a `magna_avisar_error(motivo)` (débil, para que compile sin WiFi); `wifi_module.cpp` la define y manda `Error:MAGNA_DETENIDA <motivo>` al módulo con `package_to_wifi` + `flush` (la impresora se queda detenida después, así que tiene que salir ya).
+- Compila: 86 % de la flash.

@@ -41,6 +41,21 @@ void magna_m262() {
   #endif
 }
 
+// M264 P<0=PLA,1=PETG,2=ABS> H<hotend> B<cama>: temperaturas de precalentar que se ponen en la app
+// (etapa 38). MagnAir las manda junto con la hora; los botones PLA y ABS de la pantalla las usan. Se
+// guardan en RAM: si la impresora se reinicia, el módulo las vuelve a mandar al reconectarse.
+static int16_t magna_pre[3][2] = {{0, 0}, {0, 0}, {0, 0}};
+void magna_m264() {
+  const int i = parser.intval('P', -1);
+  if (i < 0 || i > 2) return;
+  if (parser.seenval('H')) magna_pre[i][0] = constrain(parser.value_int(), 0, HEATER_0_MAXTEMP - 15);
+  if (parser.seenval('B')) magna_pre[i][1] = TERN(HAS_HEATED_BED, constrain(parser.value_int(), 0, BED_MAXTEMP - 10), 0);
+}
+int magna_pre_temp(int material, int cual, int predeterminada) {
+  if (material < 0 || material > 2 || cual < 0 || cual > 1) return predeterminada;
+  return magna_pre[material][cual] > 0 ? magna_pre[material][cual] : predeterminada;
+}
+
 // M263 <texto>: mensaje en la pantalla desde el gcode (lo agrega el editor de MagnAir, etapa 34)
 void magna_m263() {
   if (parser.string_arg && parser.string_arg[0]) { magna_pantalla_despertar(); magna_mensaje(parser.string_arg); }
@@ -248,6 +263,9 @@ void magna_arranque_animado();
 void magna_botones_impresion(lv_obj_t *scr);
 void magna_boton_grafico_principal(lv_obj_t *scr);
 void magna_rehacer_funcion(void (*f)(void));
+// Magna2-230 (etapa 38): precalentado de la app (M264) y aviso de error grave al WiFi
+int magna_pre_temp(int material, int cual, int predeterminada);
+void magna_avisar_error(const char *motivo);
 void magna_nivel_abrir(int nx, int ny);
 void magna_vista_crear_impresion(lv_obj_t *scr);
 void magna_vista_olvidar(void);
@@ -394,9 +412,32 @@ G1_NUEVO = G1_VIEJO + ('  #if HAS_TFT_LVGL_UI\n    if (destination.e > current_p
 PARSER_VIEJO = '    TERN_(HAS_STATUS_MESSAGE, case 117:)\n'
 PARSER_NUEVO = PARSER_VIEJO + '    TERN_(HAS_TFT_LVGL_UI, case 262: case 263:)   // Magna2-230 (etapas 33-34): M262 <pieza>, M263 <mensaje>\n'
 M262_INC_VIEJO = '  void magna_m259();  // Magna2-230 (etapa 30): capa actual/total desde Cura (mks_ui/magna_extras.cpp)\n'
-M262_INC_NUEVO = M262_INC_VIEJO + '  void magna_m262();  // Magna2-230 (etapa 33): pieza actual (Cura ;MESH:) para cancelar piezas\n  void magna_m263();  // Magna2-230 (etapa 34): mensaje en la pantalla desde el gcode\n'
+M262_INC_NUEVO = M262_INC_VIEJO + '  void magna_m262();  // Magna2-230 (etapa 33): pieza actual (Cura ;MESH:) para cancelar piezas\n  void magna_m263();  // Magna2-230 (etapa 34): mensaje en la pantalla desde el gcode\n  void magna_m264();  // Magna2-230 (etapa 38): temperaturas de precalentar de la app\n'
 M262_VIEJO = '        case 259: magna_m259(); break;                          // Magna2-230: M259 L<capa> T<total> (Cura)\n'
-M262_NUEVO = M262_VIEJO + '        case 262: magna_m262(); break;                          // Magna2-230: M262 <pieza> (Cura)\n        case 263: magna_m263(); break;                          // Magna2-230: M263 <mensaje> (editor de MagnAir)\n'
+M262_NUEVO = M262_VIEJO + '        case 262: magna_m262(); break;                          // Magna2-230: M262 <pieza> (Cura)\n        case 263: magna_m263(); break;                          // Magna2-230: M263 <mensaje> (editor de MagnAir)\n        case 264: magna_m264(); break;                          // Magna2-230: M264 P<material> H B (precalentar de la app)\n'
+
+# Etapa 38: botones PLA y ABS de la pantalla con las temperaturas de la app (M264)
+PRE_CAMBIOS = [
+    ('TERN_(HAS_HOTEND, thermalManager.setTargetHotend(PREHEAT_2_TEMP_HOTEND, 0));', 'TERN_(HAS_HOTEND, thermalManager.setTargetHotend(magna_pre_temp(2, 0, PREHEAT_2_TEMP_HOTEND), 0));  // Magna2-230 (etapa 38)'),
+    ('TERN_(HAS_HEATED_BED, thermalManager.setTargetBed(PREHEAT_2_TEMP_BED));', 'TERN_(HAS_HEATED_BED, thermalManager.setTargetBed(magna_pre_temp(2, 1, PREHEAT_2_TEMP_BED)));'),
+    ('TERN_(HAS_HOTEND, thermalManager.setTargetHotend(PREHEAT_1_TEMP_HOTEND, 0));', 'TERN_(HAS_HOTEND, thermalManager.setTargetHotend(magna_pre_temp(0, 0, PREHEAT_1_TEMP_HOTEND), 0));  // Magna2-230 (etapa 38)'),
+    ('TERN_(HAS_HEATED_BED, thermalManager.setTargetBed(PREHEAT_1_TEMP_BED));', 'TERN_(HAS_HEATED_BED, thermalManager.setTargetBed(magna_pre_temp(0, 1, PREHEAT_1_TEMP_BED)));'),
+]
+# Etapa 38: si Marlin se frena por un error grave, avisarle al módulo WiFi antes (MagnAir -> Telegram)
+ERROR_VIEJO = 'void lv_draw_error_message(FSTR_P const fmsg) {\n'
+ERROR_NUEVO = ('// Magna2-230 (etapa 38): lo define wifi_module.cpp; sin módulo WiFi no hace nada\n'
+               '__attribute__((weak)) void magna_avisar_error(const char *) {}\n\n'
+               'void lv_draw_error_message(FSTR_P const fmsg) {\n'
+               '  magna_avisar_error(fmsg ? FTOP(fmsg) : nullptr);  // Magna2-230 (etapa 38): aviso por Telegram\n')
+WIFI_ERROR_VIEJO = 'int usartFifoAvailable(SZ_USART_FIFO *fifo) { return WIFISERIAL.available(); }\n'
+WIFI_ERROR_NUEVO = WIFI_ERROR_VIEJO + ('\n// Magna2-230 (etapa 38): Marlin se frena por un error grave (termistor, calentador...). Antes de que\n'
+                   '// se corte todo se le manda una línea al módulo WiFi; MagnAir la reconoce y avisa por Telegram.\n'
+                   'void magna_avisar_error(const char *motivo) {\n'
+                   '  char l[96];\n'
+                   '  snprintf(l, sizeof l, "Error:MAGNA_DETENIDA %s\\n", motivo && motivo[0] ? motivo : "PRINTER HALTED");\n'
+                   '  package_to_wifi(WIFI_TRANS_INF, (uint8_t *)l, strlen(l));\n'
+                   '  WIFISERIAL.flush();  // que salga todo antes de que Marlin apague las interrupciones\n'
+                   '}\n')
 
 # Etapa 37: los íconos de la memoria SPI están comprimidos (RLE) y el original solo sabía volver al
 # principio (seek a 4). Cuando LVGL redibujaba un pedazo de un ícono (por ejemplo al juntar las zonas de
@@ -470,6 +511,12 @@ lv_fs_res_t spi_flash_tell_cb(lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p
   return LV_FS_RES_OK;
 }"""
 CAMBIOS_EXTRA = [
+    ('draw_preHeat.cpp', PRE_CAMBIOS[0][0], PRE_CAMBIOS[0][1], 'etapa 38: precalentar con las temperaturas de la app'),
+    ('draw_preHeat.cpp', PRE_CAMBIOS[1][0], PRE_CAMBIOS[1][1], 'etapa 38: precalentar con las temperaturas de la app'),
+    ('draw_preHeat.cpp', PRE_CAMBIOS[2][0], PRE_CAMBIOS[2][1], 'etapa 38: precalentar con las temperaturas de la app'),
+    ('draw_preHeat.cpp', PRE_CAMBIOS[3][0], PRE_CAMBIOS[3][1], 'etapa 38: precalentar con las temperaturas de la app'),
+    ('draw_error_message.cpp', ERROR_VIEJO, ERROR_NUEVO, 'etapa 38: avisar el error grave al WiFi'),
+    ('wifi_module.cpp', WIFI_ERROR_VIEJO, WIFI_ERROR_NUEVO, 'etapa 38: mandar el error grave al módulo'),
     ('draw_ready_print.cpp', PRINC_ANIM_VIEJO, PRINC_ANIM_NUEVO, 'etapa 37: principal: íconos y temperaturas animados'),
     ('tft_lvgl_configuration.cpp', FLASH_LEER_VIEJO, FLASH_LEER_NUEVO, 'etapa 37: íconos comprimidos: leer desde cualquier fila'),
     ('draw_ui.h', DECL_ANCLA, DECL_NUEVAS, 'etapa 30: declaraciones (hora, capas, información)'),
