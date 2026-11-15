@@ -427,3 +427,8 @@ import subprocess
 _r = subprocess.run([sys.executable, os.path.join(AQUI, 'aplicar_idioma.py'), sys.argv[1] if len(sys.argv) > 1 else '.'])
 if _r.returncode:
     sys.exit(_r.returncode)
+
+# mm12 (placa V1.2): extras recortados si Configuration.h tiene MAGNA_LIVIANO
+_r = subprocess.run([sys.executable, os.path.join(AQUI, 'liviano.py'), sys.argv[1] if len(sys.argv) > 1 else '.'])
+if _r.returncode:
+    sys.exit(_r.returncode)

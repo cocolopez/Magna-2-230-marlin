@@ -19,7 +19,8 @@ completo de Marlin: python3 aplicar_idioma.py <raíz del proyecto>
    borra la vieja antes.
 5. Firmware de un modelo sin probar (MAGNA_SIN_PROBAR, lo define variantes/modelo.py): Acerca de
    muestra el modelo con "SIN PROBAR".
-6. M115 por WiFi manda también "MACHINE_TYPE:Magna 2 XXX" (MagnAir sabe el modelo).
+6. M115 por WiFi manda también "MACHINE_TYPE:Magna 2 XXX" y "MAGNA_PLACA:1.3" o "1.2" (MagnAir sabe el
+   modelo y la placa).
 
 Si un cambio no se encuentra, FALLA (no se compila algo a medias).
 """
@@ -236,7 +237,12 @@ cambiar('draw_about.cpp', '  website = lv_label_create(scr, WEBSITE_URL);\n',
 # El modelo por WiFi: a la respuesta de M115 se le agrega una línea con CUSTOM_MACHINE_NAME
 # ("Magna 2 400D"). MagnAir la usa para saber el tamaño de la cama (visor 3D y nivelación).
 cambiar('wifi_module.cpp', '        #define SENDFW "FIRMWARE_NAME:Robin_nano\\r\\n"\n',
-        '        #define SENDFW "FIRMWARE_NAME:Robin_nano\\r\\nMACHINE_TYPE:" CUSTOM_MACHINE_NAME "\\r\\n"  ' + MARCA + ': el modelo para MagnAir\n',
+        '        #ifdef MAGNA_PLACA_12  ' + MARCA + ': la placa (MagnAir pregunta menos seguido y esconde lo que no hay)\n'
+        '          #define MAGNA_PLACA_TXT "MAGNA_PLACA:1.2\\r\\n"\n'
+        '        #else\n'
+        '          #define MAGNA_PLACA_TXT "MAGNA_PLACA:1.3\\r\\n"\n'
+        '        #endif\n'
+        '        #define SENDFW "FIRMWARE_NAME:Robin_nano\\r\\nMACHINE_TYPE:" CUSTOM_MACHINE_NAME "\\r\\n" MAGNA_PLACA_TXT  ' + MARCA + ': el modelo para MagnAir\n',
         'M115 por WiFi: el modelo (MACHINE_TYPE)')
 
 if errores:

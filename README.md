@@ -163,7 +163,7 @@ El ventilador del hotend se prende solo cuando pasa los 50 °C y se apaga cuando
 | WiFi | MKS Robin WiFi (ESP8266) |
 | BLTouch (opcional) | Conector BLTouch y Z-, con la versión BLTouch del firmware |
 
-> Este firmware es **solo para la Robin Nano V1.3**. La V1.2 (STM32F103) y la V3 usan otros.
+> Este firmware es **solo para la Robin Nano V1.3**. Para la **V1.2** (STM32F103) hay una versión recortada y sin probar, **mm12**, hecha con este mismo código: ver [docs-magna/PLACA-V12.md](docs-magna/PLACA-V12.md). La V3 usa otro.
 
 ## Perfiles de slicer
 

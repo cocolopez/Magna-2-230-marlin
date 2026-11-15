@@ -1,0 +1,139 @@
+# mm12: firmware de las Hellbot Magna 2 con placa MKS Robin Nano V1.2 (STM32F103), versión recortada.
+# Mismo código que mm2 (mm2.zip): este workflow sube y compila mm12.zip con la placa V1.2
+# (variantes/placa12.py + assets-tema/liviano.py). TODO SIN PROBAR: nadie tiene una placa V1.2.
+#
+# mm12.zip trae SOLO los archivos propios de la Magna (Configuration.h, Configuration_adv.h,
+# platformio.ini, docs, perfiles, pruebas). El código de Marlin se baja de GitHub en la
+# versión indicada en MARLIN_VERSION (2.1.3-b3, idéntica al zip original).
+#
+# Uso:
+#   1. Subí mm12.zip a la raíz del repo (Add file > Upload files).
+#   2. Este workflow lo descomprime en el repo, guarda los archivos (commit) y borra mm12.zip.
+#   3. Baja Marlin, le copia encima los archivos de la Magna y compila (mks_robin_nano_v1_3_f4).
+#   4. Descargá el artefacto de tu modelo en la pestaña Actions (Robin_nano35.bin + assets):
+#      Magna2-230-firmware, Magna2-230-firmware-BLTouch y, SIN PROBAR (UNTESTED):
+#      Magna2-300/400/400D/500/500D-firmware-UNTESTED.
+#   Los modelos se compilan en paralelo (un trabajo por modelo, ver variantes/armar.sh).
+#
+# También se puede correr a mano: Actions > Compilar Magna 2 placa V1.2 (mm12.zip) > Run workflow.
+
+name: Compilar Magna 2 placa V1.2 (mm12.zip)
+
+on:
+  push:
+    branches: ['**']
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: compilar-mm12-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 1) Si se subió mm12.zip, se descomprime en el repo y se guarda (una sola vez)
+  preparar:
+    runs-on: ubuntu-24.04  # fijo: ubuntu-latest pasa a Ubuntu 26 y podría romper herramientas
+    steps:
+      - name: Descargar el repo
+        uses: actions/checkout@v6
+
+      - name: Extraer mm12.zip en el repo
+        id: extraer
+        run: |
+          if [ ! -f mm12.zip ]; then
+            echo "No hay mm12.zip: se compila lo que ya está en el repo."
+            echo "extraido=no" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          TMP=$(mktemp -d)
+          unzip -q mm12.zip -d "$TMP"
+          # Si el zip trae una sola carpeta arriba de todo, usar su contenido
+          SRC="$TMP"
+          if [ "$(find "$TMP" -mindepth 1 -maxdepth 1 | wc -l)" = "1" ] && [ -d "$(find "$TMP" -mindepth 1 -maxdepth 1)" ]; then
+            SRC="$(find "$TMP" -mindepth 1 -maxdepth 1)"
+          fi
+          if [ ! -f "$SRC/Marlin/Configuration.h" ] || [ ! -f "$SRC/platformio.ini" ]; then
+            echo "::error::mm12.zip debe tener Marlin/Configuration.h y platformio.ini en la raíz."
+            exit 1
+          fi
+          command -v rsync >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q rsync; }
+          # Copiar al repo (borra lo que ya no esté en el zip; nunca toca .git ni .github)
+          rsync -a --delete \
+            --exclude '.git/' --exclude '.github/' --exclude 'mm12.zip' \
+            "$SRC"/ ./
+          rm -f mm12.zip
+          echo "extraido=si" >> "$GITHUB_OUTPUT"
+
+      - name: Guardar los archivos extraídos en el repo
+        if: steps.extraer.outputs.extraido == 'si'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Sin cambios para guardar."
+          else
+            git commit -q -m "Extraer mm12.zip [skip ci]"
+            git push
+          fi
+
+  # 2) Un firmware por modelo, en paralelo
+  compilar:
+    needs: preparar
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        modelo: ['230', '300', '400', '500']   # los paquetes oficiales de Hellbot para la V1.2
+    steps:
+      - name: Descargar el repo (con lo que guardó "preparar")
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Nombre del paquete
+        id: nom
+        run: |
+          M="${{ matrix.modelo }}"
+          N="Magna2-$M-placaV12-firmware-UNTESTED"   # placa V1.2: todo sin probar
+          echo "nombre=$N" >> "$GITHUB_OUTPUT"
+
+      - name: Bajar Marlin y copiar los archivos de la Magna
+        run: |
+          VER=$(tr -d ' \r\n' < MARLIN_VERSION 2>/dev/null || echo "2.1.3-b3")
+          [ -n "$VER" ] || VER="2.1.3-b3"
+          git clone -q --depth 1 -b "$VER" https://github.com/MarlinFirmware/Marlin build
+          rm -rf build/.github
+          tar cf - --exclude=./.git --exclude=./.github --exclude=./build . | tar xf - -C build
+          echo "### Magna 2 ${{ matrix.modelo }} · placa V1.2 · Marlin $VER" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Cache de PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.platformio
+            build/.pio/libdeps
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini', 'MARLIN_VERSION') }}
+
+      - name: Instalar PlatformIO
+        run: pip install --upgrade platformio pillow
+
+      - name: Compilar y armar la carpeta para la SD
+        working-directory: build
+        run: |
+          bash variantes/armar.sh "${{ matrix.modelo }}" "dist/${{ steps.nom.outputs.nombre }}" 12 | tee armar.log
+          tail -1 armar.log >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Subir artefacto
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ steps.nom.outputs.nombre }}
+          path: build/dist/${{ steps.nom.outputs.nombre }}

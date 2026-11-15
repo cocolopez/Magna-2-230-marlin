@@ -4,7 +4,9 @@
 Uso (desde la raíz del proyecto completo): python3 pruebas/preflight.py"""
 import os, re, subprocess, sys, configparser
 R = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-ENV = 'mks_robin_nano_v1_3_f4'
+# entorno de PlatformIO: el de platformio.ini (mks_robin_nano_v1_3_f4; mks_robin_nano_v1v2 en mm12)
+_m = re.search(r'^default_envs\s*=\s*(\S+)', open(os.path.join(R, 'platformio.ini'), encoding='utf-8').read(), re.M)
+ENV = _m.group(1) if _m else 'mks_robin_nano_v1_3_f4'
 out = subprocess.check_output(
     'g++ -D__MARLIN_DEPS__ -DARDUINO_ARCH_STM32 -DSTM32F4 -DSTM32F4xx -w -dM -E -x c++ '
     'buildroot/share/PlatformIO/scripts/common-dependencies.h', shell=True, cwd=R, text=True)

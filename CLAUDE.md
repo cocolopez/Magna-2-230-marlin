@@ -354,3 +354,13 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - **Modelo por WiFi**: M115 por WiFi manda además `MACHINE_TYPE:` CUSTOM_MACHINE_NAME (MagnAir 1.6.0 lo usa para el tamaño de la cama).
 - Perfiles: `generar_perfiles.py` genera los 6 modelos (`configurar(modelo)`; al importarlo quedan los de la 230). D: retracción 1 mm y estacionado 60 mm (sin medir). Los de la 230 no cambiaron.
 - Compila (local): 230 88 %, 230-BLTouch 91 %, 300 87 %, 400/400D/500/500D 90 %.
+
+### Etapa 40 (2026-11-15) — mm12: placa MKS Robin Nano V1.2 (recortada, sin probar)
+- Pedido: versión para las Magna 2 con placa V1.2 (STM32F103VE: 72 MHz, 64 KB de RAM), en otro repo, `mm12.zip`, para 230/300/400/500 (los paquetes oficiales de Hellbot para la V1.2; sus valores de máquina son iguales a los de la V1.3, solo cambian los puntos de nivelación manual y el área del BLTouch).
+- **Mismo código**: `mm12.zip` es este proyecto con `README.md` = `docs-magna/README-mm12.md`. Workflows propios: `github-workflows/compilar-mm12.yml` (sube `mm12.zip`, matriz 230/300/400/500) y `publicar-release-mm12.yml`. `variantes/armar.sh MODELO SALIDA 12`.
+- `variantes/placa12.py`: MOTHERBOARD BOARD_MKS_ROBIN_NANO (+ `MAGNA_LIVIANO`, `MAGNA_PLACA_12`), sin INPUT_SHAPING ni ADAPTIVE_STEP_SMOOTHING, BLOCK_BUFFER_SIZE 8, `default_envs = mks_robin_nano_v1v2`.
+- `assets-tema/liviano.py` (lo llama `aplicar_colores.py` si ve `MAGNA_LIVIANO`): deja vacías las funciones de `magna_extras.cpp` de vista en vivo (5 KB), gráfico, piezas, "siempre encendida", animaciones, arranque animado, bloqueo, resumen, nivelación en vivo y la principal con hora grande (la hora chica va en todas), y `display_qrcode` de la nube de MKS (~2,3 KB). Los cambios en los archivos de MKS no se tocan: llaman a las mismas funciones y el enlazador descarta lo que nadie usa.
+- RAM medida (`pruebas/compilacion-manual/compilar_f103.sh`, gcc 13): Marlin sin tema ~62 KB; tema completo ~76 KB (no entraba); mm12 230 = 60.432 bytes, 500 = 60.916 (de 65.536; lo que queda es pila). Flash 80-82 %.
+- Ojo: en Marlin la prueba "MKS Robin nano v1.2 LVGL FSMC" está comentada (nadie la verifica en Marlin).
+- M115 por WiFi manda también `MAGNA_PLACA:1.3` o `1.2` (aplicar_idioma.py). MagnAir 1.6.0: con "1.2" el módulo consulta cada 5 s y la app y la página esconden animaciones, "siempre encendida" y M593.
+- `pruebas/sanity-check.sh`: arreglado (con `pipefail` el resultado de g++ se perdía y siempre decía OK); ahora elige F1 o F4 según la placa. `pruebas/preflight.py` toma el entorno de `platformio.ini`.
