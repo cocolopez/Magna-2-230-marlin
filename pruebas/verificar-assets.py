@@ -33,6 +33,10 @@ for f in sorted(os.listdir(A)):
     if f == 'bmp_preview.bin':   # vista previa por defecto: 200x200 RGB565 sin encabezado, va directo a la pantalla
         if len(b) != 200 * 200 * 2: err.append(f'{f}: tamaño {len(b)} (esperado 80000)')
         continue
+    if f.startswith('bmp_tornillo'):   # etapa 32: tiras del arranque animado, RGB565 sin encabezado (ver simular_arranque.py)
+        px = struct.unpack('<%dH' % (len(b) // 2), b)
+        if rle_bytes(px) + 4 > 9 * 1024: err.append(f'{f}: comprimido supera 9 KB')
+        continue
     hd = struct.unpack('<I', b[:4])[0]; cf, w, h = hd & 0x1f, (hd >> 10) & 0x7ff, (hd >> 21) & 0x7ff
     if cf not in CF_OK: err.append(f'{f}: cf={cf} no soportado (usar 4 o 6)')
     if len(b) != 4 + w * h * 2 + 1: err.append(f'{f}: tamaño {len(b)} != 4+{w}x{h}x2+1')

@@ -158,10 +158,10 @@ def g_boquilla(c, cx=CX, cy=CY, gota=True, num=None):
         c.circulo(cx, cy + 26, 5, None, 0, relleno=RD)
     if num: c.texto(cx, cy - 13, num, 15, RD)
 
-def g_ventilador(c, cx=CX, cy=CY, r=24, col=WH):
+def g_ventilador(c, cx=CX, cy=CY, r=24, col=WH, giro=0):
     c.circulo(cx, cy, r + 3, col, SW)
     for i in range(3):
-        a = math.radians(i * 120 - 90)
+        a = math.radians(i * 120 - 90 + giro)
         pts = []
         for t in range(0, 11):
             aa = a + math.radians(t * 7)
@@ -445,7 +445,8 @@ def estado_45(nombre):
         big = Lienzo(117, 100); f(big); im = big.im.resize((117 * S // 2, 100 * S // 2), Image.LANCZOS)
         c.im.paste(im, (int((45 - 58.5) / 2 * S), int((45 - 50) / 2 * S)))
     m = {"bed_state": g_cama_caliente, "ext1_state": lambda b: g_boquilla(b, num="1"), "ext2_state": lambda b: g_boquilla(b, num="2"),
-         "fan_state": g_ventilador, "time_state": None, "zpos_state": None, "speed_state": lambda b: g_velocimetro(b, 0.6),
+         "fan_state": g_ventilador, "fan_state1": lambda b: g_ventilador(b, giro=40), "fan_state2": lambda b: g_ventilador(b, giro=80),
+         "time_state": None, "zpos_state": None, "speed_state": lambda b: g_velocimetro(b, 0.6),
          "power_state": g_apagado, "init_state": g_impresora, "times_state": None}
     f = m[nombre]
     if f: esc(f)
@@ -662,7 +663,7 @@ def rodamiento_mask(w, h):
 FORMAS = {"pez": pez_espada_mask, "tornillo": tornillo_mask, "tuerca": tuerca_mask, "rodamiento": rodamiento_mask, "engranaje": engranaje_mask, "diamante": diamante_mask, "pino": pino_mask, "montana": montana_mask, "torre": torre_mask, "cohete": cohete_mask, "faro": faro_mask, "jarron": jarron_mask}
 FORMA = os.environ.get("FORMA_ARRANQUE", "tornillo")   # forma que imprime la boquilla en la pantalla de arranque
 
-def fondo_capas(w, h, sem=7):
+def fondo_capas(w, h, sem=7, progreso=0.55, boquilla=True):
     """Fondo abstracto propio: líneas de capas de impresión 3D en perspectiva y una pieza en capas."""
     rnd = random.Random(sem)
     im = Image.new("RGB", (w * S, h * S), (10, 10, 10)); d = ImageDraw.Draw(im)
@@ -676,7 +677,7 @@ def fondo_capas(w, h, sem=7):
     # pieza impresa: un pez espada (diseño propio) sobre una base tipo trofeo, armado con capas
     mask = FORMAS[FORMA](w, h)
     bb = mask.getbbox(); top, bot = bb[1], bb[3]
-    progreso = 0.55                                   # porcentaje ya impreso
+    # progreso: parte ya impresa (0.55 en el arranque fijo; las maquetas animadas lo varían)
     corte = bot - (bot - top) * progreso
     paso = int(3.2 * S)
     capas = Image.new("RGB", im.size, (0, 0, 0)); cd = ImageDraw.Draw(capas)
@@ -707,9 +708,10 @@ def fondo_capas(w, h, sem=7):
     else:
         nx = centro / S
     ny = corte / S - 3
-    d.polygon([((nx - 9) * S, (ny - 12) * S), ((nx + 9) * S, (ny - 12) * S), ((nx + 3) * S, ny * S), ((nx - 3) * S, ny * S)], fill=(200, 200, 200))
-    d.rectangle([(nx - 17) * S, (ny - 32) * S, (nx + 17) * S, (ny - 12) * S], fill=(60, 60, 60))
-    d.rectangle([(nx - 17) * S, (ny - 32) * S, (nx + 17) * S, (ny - 29) * S], fill=RD)
+    if boquilla:
+      d.polygon([((nx - 9) * S, (ny - 12) * S), ((nx + 9) * S, (ny - 12) * S), ((nx + 3) * S, ny * S), ((nx - 3) * S, ny * S)], fill=(200, 200, 200))
+      d.rectangle([(nx - 17) * S, (ny - 32) * S, (nx + 17) * S, (ny - 12) * S], fill=(60, 60, 60))
+      d.rectangle([(nx - 17) * S, (ny - 32) * S, (nx + 17) * S, (ny - 29) * S], fill=RD)
     # líneas de cama en perspectiva
     hy = h * 0.88
     for i in range(-12, 13):
@@ -722,9 +724,9 @@ def fondo_capas(w, h, sem=7):
         v = rnd.randint(24, 46); d.point((x * S, y * S), fill=(v, v, v))
     return im
 
-def logo():
+def logo(progreso=0.55, boquilla=True):
     w, h = 480, 320
-    im = fondo_capas(w, h)
+    im = fondo_capas(w, h, progreso=progreso, boquilla=boquilla)
     d = ImageDraw.Draw(im)
     fB = lambda t: ImageFont.truetype(FONT_B, int(t * S)); fR = lambda t: ImageFont.truetype(FONT_R, int(t * S))
     x0 = 30
@@ -786,7 +788,8 @@ def lvgl_bin(im, transparente=False):
     return struct.pack("<I", hdr) + datos + b"\x0a"
 
 TAM_150 = ["operate", "pause", "resume", "stop"]
-TAM_45 = ["bed_state", "ext1_state", "ext2_state", "fan_state", "init_state", "power_state", "speed_state", "time_state", "times_state", "zpos_state"]
+TAM_45 = ["bed_state", "ext1_state", "ext2_state", "fan_state", "init_state", "power_state", "speed_state", "time_state", "times_state", "zpos_state",
+          "fan_state1", "fan_state2"]   # etapa 32: el ventilador girado 40° y 80° (animación: 3 aspas = se repite cada 120°)
 TAM_92 = ["back", "pageUp", "pageDown"]
 CHICOS = ["back70x40", "value_blank", "blank_sel", "enable", "disable", "arrow"]
 
@@ -799,6 +802,40 @@ def todos():
     for n in CHICOS: out[n] = chico(n)
     return out
 
+ANIM_TIRAS = 3
+
+def animacion_arranque():
+    """Etapa 32: el arranque muestra el tornillo imprimiéndose. bmp_logo.bin pasa a ser el logo con el
+    tornillo SIN imprimir (y sin boquilla); el firmware va copiando filas del tornillo TERMINADO (sin
+    boquilla), de abajo hacia arriba, desde 3 tiras guardadas como imágenes (bmp_tornillo1..3.bin, RGB565
+    sin encabezado, cada una < 32 kB, el lugar de una imagen en la memoria de la pantalla), y dibuja la
+    boquilla encima. Las tiras se guardan comprimidas (como todos los íconos, en lugares de 9 kB) y solo
+    se pueden leer de corrido: por eso las filas van de abajo hacia arriba. Devuelve (logo vacío, tiras,
+    constantes para el firmware)."""
+    w, h = 480, 320
+    mask = FORMAS[FORMA](w, h)
+    x0, top, x1, bot = [v / S for v in mask.getbbox()]
+    x0, x1, top, bot = int(math.floor(x0)), int(math.ceil(x1)), int(math.floor(top)), int(math.ceil(bot))
+    ay0 = max(0, top - 40)                      # lugar para la boquilla arriba del tornillo terminado
+    vacio = logo(progreso=0.0, boquilla=False)
+    lleno = logo(progreso=1.0, boquilla=False)
+    # las filas van de ABAJO hacia ARRIBA (la primera es la de más abajo): las imágenes se guardan
+    # comprimidas en la memoria de la pantalla y solo se pueden leer en orden, y la animación sube
+    caja = lleno.crop((x0, ay0, x1, bot)).transpose(Image.FLIP_TOP_BOTTOM)
+    alto = bot - ay0
+    por_tira = (alto + ANIM_TIRAS - 1) // ANIM_TIRAS
+    tiras = [caja.crop((0, i * por_tira, x1 - x0, min(alto, (i + 1) * por_tira))) for i in range(ANIM_TIRAS)]
+    # centro de la boquilla: el mismo criterio que fondo_capas (centro del tramo más ancho de la fila)
+    cx = (x0 + x1) / 2
+    constantes = {"X0": x0, "X1": x1, "Y0": ay0, "ARRIBA": top, "ABAJO": bot, "POR_TIRA": por_tira, "TIRAS": ANIM_TIRAS, "CENTRO": int(round(cx))}
+    return vacio, tiras, constantes
+
+def escribir_constantes_anim(c, destino):
+    lineas = ["/* Generado por assets-tema/generar_assets.py (animacion_arranque): no editar a mano. */"]
+    for k, v in c.items():
+        lineas.append(f"#define MAGNA_ANIM_{k} {v}")
+    open(destino, "w").write("\n".join(lineas) + "\n")
+
 def main():
     dest = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
     os.makedirs(dest, exist_ok=True)
@@ -806,11 +843,17 @@ def main():
     opacos = set(CHICOS) - {"arrow"}     # campos, interruptores y botón chico: con fondo propio
     for n, im in ims.items():
         open(os.path.join(dest, f"bmp_{n}.bin"), "wb").write(lvgl_bin(im, transparente=n not in opacos))
-    lg = logo()
-    open(os.path.join(dest, "bmp_logo.bin"), "wb").write(rgb565(lg))
+    lg = logo()                                      # el de siempre (55 %), para la vista previa
+    vacio, tiras, constantes = animacion_arranque()
+    open(os.path.join(dest, "bmp_logo.bin"), "wb").write(rgb565(vacio))   # etapa 32: tornillo sin imprimir
+    for i, t in enumerate(tiras):
+        datos = rgb565(t)
+        assert len(datos) <= 32 * 1024, "tira del arranque demasiado grande"
+        open(os.path.join(dest, f"bmp_tornillo{i + 1}.bin"), "wb").write(datos)
+    escribir_constantes_anim(constantes, os.path.join(os.path.dirname(os.path.abspath(__file__)), "animacion_arranque.inc"))
     vp = vista_previa()
     open(os.path.join(dest, "bmp_preview.bin"), "wb").write(rgb565(vp))   # 200x200 RGB565 sin encabezado
-    print(f"{len(ims) + 2} archivos en {dest}")
+    print(f"{len(ims) + 2 + len(tiras)} archivos en {dest}")
     if "--preview" in sys.argv:
         pv = os.path.join(os.path.dirname(os.path.abspath(__file__)), "preview"); os.makedirs(pv, exist_ok=True)
         lg.save(os.path.join(pv, "logo.png"))

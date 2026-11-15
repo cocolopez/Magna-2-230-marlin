@@ -407,6 +407,14 @@ ok = falta = 0
 p = os.path.join(R, 'magna_fuente_grande.cpp')
 if os.path.exists(p) and open(p, encoding='utf-8').read() == ARCHIVO_FUENTE: print('ya aplicado: letra grande (archivo)'); ok += 1
 else: open(p, 'w', encoding='utf-8').write(ARCHIVO_FUENTE); print('ok: letra grande (archivo magna_fuente_grande.cpp)'); ok += 1
+# Etapa 30 en adelante: archivos y cambios nuevos (extras_pantalla.py)
+sys.path.insert(0, AQUI)
+import extras_pantalla
+for nombre, contenido, para in extras_pantalla.ARCHIVOS:
+    p = os.path.join(R, nombre)
+    if os.path.exists(p) and open(p, encoding='utf-8').read() == contenido: print('ya aplicado:', para); ok += 1
+    else: open(p, 'w', encoding='utf-8').write(contenido); print('ok:', para); ok += 1
+CAMBIOS += extras_pantalla.CAMBIOS_EXTRA
 for f, a, b, para in CAMBIOS:
     p = os.path.join(R, f); s = open(p, encoding='utf-8').read()
     if b in s: print('ya aplicado:', para); ok += 1; continue

@@ -14,7 +14,7 @@ mensajes de la pantalla y el porcentaje de impresión.
 Salida: fuente_grande.inc (C puro). aplicar_colores.py lo copia a la carpeta mks_ui de Marlin
 dentro de magna_fuente_grande.cpp, y la prueba de render lo compila tal cual.
 
-Uso: python3 generar_fuente.py [Roboto-Regular.woff|.ttf] [tamaño] [salida.inc] [nombre]
+Uso: python3 generar_fuente.py [Roboto-Regular.woff|.ttf] [tamaño] [salida.inc] [nombre] [numeros]
 (los últimos tres solo los usa la prueba de render, para simular la letra normal de 16 px)
 """
 import os
@@ -26,6 +26,9 @@ TAM = int(sys.argv[2]) if len(sys.argv) > 2 else 26
 SALIDA = sys.argv[3] if len(sys.argv) > 3 else os.path.join(AQUI, 'fuente_grande.inc')
 NOMBRE = sys.argv[4] if len(sys.argv) > 4 else 'magna_fuente_grande'
 RANGOS = [(0x20, 0x7E), (0xA0, 0xFF)]
+# 5.º argumento "numeros": solo espacio, % y 0-9 : (la letra enorme del modo "siempre encendida", etapa 31)
+if len(sys.argv) > 5 and sys.argv[5] == 'numeros':
+    RANGOS = [(0x20, 0x20), (0x25, 0x25), (0x30, 0x3A)]
 
 
 def buscar_fuente():
