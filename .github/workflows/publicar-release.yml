@@ -40,10 +40,10 @@ concurrency:
 
 jobs:
   publicar:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # fijo: ubuntu-latest pasa a Ubuntu 26 y podría romper herramientas
     steps:
       - name: Descargar el repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Definir versión
         id: ver
@@ -77,12 +77,12 @@ jobs:
             python3 build/assets-tema/aplicar_colores.py build
           fi
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
       - name: Cache de PlatformIO
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.platformio
@@ -181,7 +181,7 @@ jobs:
           cat build/publicar/NOTAS.md
 
       - name: Publicar en Releases
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.ver.outputs.version }}
           name: Magna 2 230 · ${{ steps.ver.outputs.version }}
