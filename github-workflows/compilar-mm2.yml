@@ -154,3 +154,4 @@ jobs:
         with:
           name: ${{ steps.nom.outputs.nombre }}
           path: build/dist/${{ steps.nom.outputs.nombre }}
+          retention-days: 5  # que no se llene el espacio de artefactos de GitHub (500 MB gratis)

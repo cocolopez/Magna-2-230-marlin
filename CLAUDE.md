@@ -376,3 +376,6 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 ### mm12 descartado (2026-11-24)
 - El usuario lo descartó: en la placa V1.2 real no arrancó (loop de reinicio, ver el diagnóstico de arriba). No se sigue armando ni entregando `mm12.zip`.
 - Lo de la placa V1.2 que vive en este repo (`variantes/placa12.py`, `assets-tema/liviano.py`, `compilar_f103.sh`, `docs-magna/PLACA-V12.md`, `README-mm12.md`, workflows `*-mm12.yml`) quedó como estaba y no afecta a mm2 (solo se usa con PLACA=12). Si se retoma: Marlin puro con Color UI (sin WiFi de MKS) era la opción con más chances.
+
+### Artefactos de GitHub con vencimiento (2026-11-24)
+- Una corrida falló entera con "Artifact storage quota has been hit": los artefactos sin `retention-days` duran 90 días y llenan el espacio gratis de la cuenta (500 MB). Todos los `upload-artifact` de `github-workflows/` tienen ahora `retention-days` (5 días los compilados y las capturas, 3 los reportes de pruebas). Los de publicar-release ya tenían 3 y solo se usan dentro de la misma corrida. Las versiones publicadas (Releases) no cuentan para ese límite.
