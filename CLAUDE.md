@@ -364,3 +364,15 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 - Ojo: en Marlin la prueba "MKS Robin nano v1.2 LVGL FSMC" está comentada (nadie la verifica en Marlin).
 - M115 por WiFi manda también `MAGNA_PLACA:1.3` o `1.2` (aplicar_idioma.py). MagnAir 1.6.0: con "1.2" el módulo consulta cada 5 s y la app y la página esconden animaciones, "siempre encendida" y M593.
 - `pruebas/sanity-check.sh`: arreglado (con `pipefail` el resultado de g++ se perdía y siempre decía OK); ahora elige F1 o F4 según la placa. `pruebas/preflight.py` toma el entorno de `platformio.ini`.
+- Diagnóstico mm12 (2026-11-16): en una placa V1.2 real, mm12 se reinicia en loop (Booting... → logo → reinicio, ~8 s): se traba al arrancar la pantalla y el watchdog la reinicia. Versión de prueba **B**: `MAGNA_PRUEBA=B` (aplicar_colores.py salta extras_pantalla, castellano y liviano; queda solo el tema). En GitHub: Actions → Compilar Magna 2 placa V1.2 → Run workflow → prueba = B (artefactos `Magna2-XXX-placaV12-PRUEBA-B`). RAM medida de B (230): 62.268 bytes (data+bss) contra 62.940 de mm12: casi igual, porque casi toda la RAM es de Marlin + MKS UI (`bmp_public_buf` 16 KB, que es el buffer de dibujo de LVGL —480×17×2— y el FIFO del WiFi —14 × 1 KB—; heap de LVGL 16 KB). Si B también se reinicia, lo siguiente es achicar `bmp_public_buf` a 8 KB (LVGL de a 8 filas, FIFO de 7 bloques, vista previa de 20 columnas) o pedir el log por USB.
+
+### Etapa 41 (2026-11-24) — subida por WiFi con nombre largo reiniciaba la placa
+- Síntoma (230 real): al pasar por WiFi un archivo con nombre largo, la placa se reiniciaba ("Booting...") justo al recibirlo, MagnAir decía que falló y el archivo no quedaba en la SD.
+- Causa, en el código de Marlin: `file_first_msg_handle` copia el nombre que manda el módulo (hasta 255 bytes) en `file_writer.saveFileName[30]`, y `utf8_2_unicode` lo pasa por un buffer de pila `FileName_unicode[30]`. Con más de 29 bytes pisa la memoria y la pila. El chequeo contra `saveFilePath` llega tarde (después del memcpy).
+- Arreglo (`aplicar_colores.py`, se aplica también en la prueba B y en mm12): `magna_nombre_recortado()` copia como mucho 29 bytes, conservando la extensión (hasta 7 bytes con el punto) y sin cortar una letra UTF-8 a la mitad; `utf8_2_unicode` recibe ese largo. El archivo se guarda con nombre 8.3 (sin LONG_FILENAME_WRITE_SUPPORT), que sale de las primeras letras: queda igual que antes.
+- MagnAir 1.6.1 recorta el nombre también del lado del módulo, así anda aunque la impresora tenga un firmware viejo.
+- Compilado local (230, V1.3): 433.400 bytes (88 %).
+
+### mm12 descartado (2026-11-24)
+- El usuario lo descartó: en la placa V1.2 real no arrancó (loop de reinicio, ver el diagnóstico de arriba). No se sigue armando ni entregando `mm12.zip`.
+- Lo de la placa V1.2 que vive en este repo (`variantes/placa12.py`, `assets-tema/liviano.py`, `compilar_f103.sh`, `docs-magna/PLACA-V12.md`, `README-mm12.md`, workflows `*-mm12.yml`) quedó como estaba y no afecta a mm2 (solo se usa con PLACA=12). Si se retoma: Marlin puro con Color UI (sin WiFi de MKS) era la opción con más chances.

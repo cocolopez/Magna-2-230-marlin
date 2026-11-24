@@ -25,6 +25,13 @@ on:
     paths-ignore:
       - '**.md'
   workflow_dispatch:
+    inputs:
+      prueba:
+        description: 'Versión de prueba para encontrar fallas (B = solo el tema, sin extras ni castellano). Vacío = la normal.'
+        required: false
+        default: ''
+        type: choice
+        options: ['', 'B']
 
 permissions:
   contents: write
@@ -100,6 +107,7 @@ jobs:
         run: |
           M="${{ matrix.modelo }}"
           N="Magna2-$M-placaV12-firmware-UNTESTED"   # placa V1.2: todo sin probar
+          [ "${{ inputs.prueba }}" = B ] && N="Magna2-$M-placaV12-PRUEBA-B"   # solo el tema (diagnóstico)
           echo "nombre=$N" >> "$GITHUB_OUTPUT"
 
       - name: Bajar Marlin y copiar los archivos de la Magna
@@ -129,7 +137,7 @@ jobs:
       - name: Compilar y armar la carpeta para la SD
         working-directory: build
         run: |
-          bash variantes/armar.sh "${{ matrix.modelo }}" "dist/${{ steps.nom.outputs.nombre }}" 12 | tee armar.log
+          MAGNA_PRUEBA="${{ inputs.prueba }}" bash variantes/armar.sh "${{ matrix.modelo }}" "dist/${{ steps.nom.outputs.nombre }}" 12 | tee armar.log
           tail -1 armar.log >> "$GITHUB_STEP_SUMMARY"
 
       - name: Subir artefacto

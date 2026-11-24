@@ -403,18 +403,58 @@ CAMBIOS = [
     ('draw_about.cpp', ACERCA_FIN, ACERCA_FIN + '  magna_creditos(scr, &tft_style_label_rel, magna_idioma_latino());  // Magna2-230: créditos\n', 'Acerca de: créditos (Andrés Londero)'),
     ('draw_ready_print.cpp', '  scr = lv_screen_create(PRINT_READY_UI, "");\n', '  scr = lv_screen_create(PRINT_READY_UI, "");\n' + DECORACION, 'pantalla principal: MAGNA 2 + raya roja + líneas de capas'),
 ]
+# Etapa 41: subida por WiFi con nombre largo. En Marlin, file_writer.saveFileName y el buffer de
+# utf8_2_unicode tienen 30 bytes, pero el nombre que manda el módulo puede tener hasta 255: con un
+# nombre largo se pisaba la memoria (y la pila) y la placa se reiniciaba al recibir el archivo.
+# Se recorta a 29 bytes conservando la extensión y sin cortar una letra con tilde a la mitad.
+# Marlin guarda el archivo con nombre 8.3, que sale de las primeras letras: no cambia.
+SUBIDA_NOMBRE_FUNC_ANCLA = 'static void file_first_msg_handle(const uint8_t * const msg, const uint16_t msgLen) {\n'
+SUBIDA_NOMBRE_FUNC = """// Magna2-230: copia el nombre del archivo recortado a 'cap' bytes (sin contar el 0 del final),
+// conservando la extensión (hasta 7 bytes con el punto) y sin dejar media letra UTF-8.
+static uint8_t magna_nombre_recortado(uint8_t *sal, const uint8_t cap, const uint8_t *nombre, const uint8_t largo) {
+  if (largo <= cap) { memcpy(sal, nombre, largo); return largo; }
+  uint8_t ext = 0;
+  for (uint8_t i = largo; i > 0 && largo - i < 7; i--)
+    if (nombre[i - 1] == '.') { ext = largo - (i - 1); break; }
+  uint8_t base = cap - ext;
+  while (base > 0 && (nombre[base] & 0xC0) == 0x80) base--;  // no cortar una letra de varios bytes
+  memcpy(sal, nombre, base);
+  memcpy(sal + base, nombre + largo - ext, ext);
+  return base + ext;
+}
+
+"""
+SUBIDA_NOMBRE_VIEJO = """  memcpy(file_writer.saveFileName, msg + 5, fileNameLen);
+
+  utf8_2_unicode(file_writer.saveFileName, fileNameLen);
+"""
+SUBIDA_NOMBRE_NUEVO = """  // Magna2-230: el nombre puede traer hasta 255 bytes y acá entran 29 (ver magna_nombre_recortado)
+  const uint8_t largoNombre = magna_nombre_recortado(file_writer.saveFileName, sizeof(file_writer.saveFileName) - 1, msg + 5, fileNameLen);
+
+  utf8_2_unicode(file_writer.saveFileName, largoNombre);
+"""
+CAMBIOS += [
+    ('wifi_module.cpp', SUBIDA_NOMBRE_FUNC_ANCLA, SUBIDA_NOMBRE_FUNC + SUBIDA_NOMBRE_FUNC_ANCLA, 'WiFi: función para recortar el nombre del archivo subido'),
+    ('wifi_module.cpp', SUBIDA_NOMBRE_VIEJO, SUBIDA_NOMBRE_NUEVO, 'WiFi: nombre largo al subir ya no pisa la memoria (reinicio)'),
+]
 ok = falta = 0
 p = os.path.join(R, 'magna_fuente_grande.cpp')
 if os.path.exists(p) and open(p, encoding='utf-8').read() == ARCHIVO_FUENTE: print('ya aplicado: letra grande (archivo)'); ok += 1
 else: open(p, 'w', encoding='utf-8').write(ARCHIVO_FUENTE); print('ok: letra grande (archivo magna_fuente_grande.cpp)'); ok += 1
-# Etapa 30 en adelante: archivos y cambios nuevos (extras_pantalla.py)
-sys.path.insert(0, AQUI)
-import extras_pantalla
-for nombre, contenido, para in extras_pantalla.ARCHIVOS:
-    p = os.path.join(R, nombre)
-    if os.path.exists(p) and open(p, encoding='utf-8').read() == contenido: print('ya aplicado:', para); ok += 1
-    else: open(p, 'w', encoding='utf-8').write(contenido); print('ok:', para); ok += 1
-CAMBIOS += extras_pantalla.CAMBIOS_EXTRA
+# Versión de prueba B (MAGNA_PRUEBA=B, para buscar fallas en la placa V1.2): solo el tema (colores, íconos,
+# diálogos, decoración, créditos, M256/M257 de MagnAir); sin extras_pantalla.py, castellano ni liviano.py.
+PRUEBA_B = os.environ.get('MAGNA_PRUEBA', '').strip().upper() == 'B'
+if PRUEBA_B:
+    print('*** VERSIÓN DE PRUEBA B: solo el tema, sin extras ni castellano ***')
+else:
+    # Etapa 30 en adelante: archivos y cambios nuevos (extras_pantalla.py)
+    sys.path.insert(0, AQUI)
+    import extras_pantalla
+    for nombre, contenido, para in extras_pantalla.ARCHIVOS:
+        p = os.path.join(R, nombre)
+        if os.path.exists(p) and open(p, encoding='utf-8').read() == contenido: print('ya aplicado:', para); ok += 1
+        else: open(p, 'w', encoding='utf-8').write(contenido); print('ok:', para); ok += 1
+    CAMBIOS += extras_pantalla.CAMBIOS_EXTRA
 for f, a, b, para in CAMBIOS:
     p = os.path.join(R, f); s = open(p, encoding='utf-8').read()
     if b in s: print('ya aplicado:', para); ok += 1; continue
@@ -424,6 +464,8 @@ print(f'Colores del tema: {ok} aplicados, {falta} no encontrados')
 
 # Etapa 39: pantalla en castellano completa, carpeta _assets y aviso de modelo sin probar
 import subprocess
+if PRUEBA_B:
+    sys.exit(0)
 _r = subprocess.run([sys.executable, os.path.join(AQUI, 'aplicar_idioma.py'), sys.argv[1] if len(sys.argv) > 1 else '.'])
 if _r.returncode:
     sys.exit(_r.returncode)

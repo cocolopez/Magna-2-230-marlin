@@ -61,3 +61,15 @@ Para probar la compilación en la compu sin PlatformIO: `pruebas/compilacion-man
 
 Seguí `LEEME-SIN-PROBAR.txt` (va adentro de cada paquete). Si la pantalla se reinicia sola o se cuelga, lo más
 probable es la memoria: avisame (andreslondero@gmail.com) y recortamos más.
+
+## Estado (2026-11-16)
+
+Probado en una placa V1.2 real: **se reinicia en loop** al arrancar (aparece "Booting...", el logo y vuelve a
+empezar). Para encontrar la causa hay una versión de prueba **B**, que es solo el tema, sin ninguno de los extras
+ni el castellano: Actions → "Compilar Magna 2 placa V1.2 (mm12.zip)" → Run workflow → prueba = **B**. Si B arranca,
+el problema está en los extras; si también se reinicia, está en Marlin con la pantalla MKS en esta placa (la memoria
+de B es casi la misma que la de mm12).
+
+Para volver al firmware oficial: copiar a la SD el `Robin_nano35.bin` (y `mks_pic` / `robin_nano35_cfg.txt` si los
+trae) del paquete oficial de Hellbot para la V1.2 y prender la impresora; lo instala el bootloader aunque esté en el
+loop.
