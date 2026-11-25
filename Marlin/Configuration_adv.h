@@ -2303,6 +2303,7 @@
 #define USE_WATCHDOG
 #if ENABLED(USE_WATCHDOG)
   //#define WATCHDOG_RESET_MANUAL
+  #define WATCHDOG_DURATION_8S  // Magna2-230 (etapa 42): 8 s en vez de 4. Al terminar una impresion se guardan las estadisticas en la flash del STM32F4: borrar ese sector de 128 KB tarda 1-2 s con las interrupciones apagadas y, sumado a redibujar la pantalla del resumen, se pasaba de 4 s y la placa se reiniciaba.
 #endif
 
 // @section lcd

@@ -379,3 +379,9 @@ Firmware Marlin 2.1.3-beta3 configurado para Hellbot Magna 2 230: MKS Robin Nano
 
 ### Artefactos de GitHub con vencimiento (2026-11-24)
 - Una corrida falló entera con "Artifact storage quota has been hit": los artefactos sin `retention-days` duran 90 días y llenan el espacio gratis de la cuenta (500 MB). Todos los `upload-artifact` de `github-workflows/` tienen ahora `retention-days` (5 días los compilados y las capturas, 3 los reportes de pruebas). Los de publicar-release ya tenían 3 y solo se usan dentro de la misma corrida. Las versiones publicadas (Releases) no cuentan para ese límite.
+
+### Etapa 42 (2026-11-24) — se reiniciaba al terminar cada impresión
+- Síntoma (230 real): al terminar, un pitido (la melodía: sin SPEAKER el zumbador solo prende y apaga, las 4 notas suenan como un pitido) y enseguida la placa se reinicia (se oye el pitido del arranque).
+- Causa probable: al terminar, `print_job_timer.stop()` guarda las estadísticas (PRINTCOUNTER, `PRINTCOUNTER_SAVE_INTERVAL 0`) en la EEPROM emulada en flash. En el STM32F4 eso borra un sector de 128 KB con las interrupciones apagadas (1-2 s, `HAL/STM32/eeprom/eeprom_flash.cpp`). El watchdog (4 s) se refresca cuando Temperature::task lee temperaturas; al terminar se arma y dibuja el resumen (íconos leídos de la SPI) y la suma se pasaba de 4 s.
+- Arreglo: `hal.watchdog_refresh()` antes y después de `eeprom_buffer_flush()` (aplicar_colores.py, etapa 42) y `WATCHDOG_DURATION_8S` en Configuration_adv.h. El IWDG del F4 llega hasta ~32 s, 8 s entra.
+- Compilado local (230, V1.3): 433.408 bytes (88 %). Sin probar en la máquina todavía: si sigue, pedir si M500 (Guardar) también la reinicia y probar con melodías apagadas.

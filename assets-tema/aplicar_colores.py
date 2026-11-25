@@ -437,6 +437,25 @@ CAMBIOS += [
     ('wifi_module.cpp', SUBIDA_NOMBRE_FUNC_ANCLA, SUBIDA_NOMBRE_FUNC + SUBIDA_NOMBRE_FUNC_ANCLA, 'WiFi: función para recortar el nombre del archivo subido'),
     ('wifi_module.cpp', SUBIDA_NOMBRE_VIEJO, SUBIDA_NOMBRE_NUEVO, 'WiFi: nombre largo al subir ya no pisa la memoria (reinicio)'),
 ]
+# Etapa 42: reinicio al terminar cada impresión. Al terminar, Marlin guarda las estadísticas
+# (PRINTCOUNTER) en la EEPROM emulada en la flash del STM32F4: borra un sector de 128 KB con las
+# interrupciones apagadas (1-2 s). Si el perro guardián (watchdog) venía de no refrescarse un rato
+# (redibujar la pantalla del resumen leyendo íconos de la memoria SPI), se pasaba de los 4 s y la placa
+# se reiniciaba después del pitido. Se refresca justo antes de borrar (y el watchdog pasa a 8 s en
+# Configuration_adv.h, WATCHDOG_DURATION_8S).
+EEPROM_FLUSH_VIEJO = """      hal.isr_off();
+      eeprom_buffer_flush();
+      hal.isr_on();
+"""
+EEPROM_FLUSH_NUEVO = """      hal.watchdog_refresh();  // Magna2-230 (etapa 42): el borrado tarda 1-2 s sin interrupciones
+      hal.isr_off();
+      eeprom_buffer_flush();
+      hal.isr_on();
+      hal.watchdog_refresh();  // Magna2-230 (etapa 42)
+"""
+CAMBIOS += [
+    ('../../../HAL/STM32/eeprom/eeprom_flash.cpp', EEPROM_FLUSH_VIEJO, EEPROM_FLUSH_NUEVO, 'EEPROM: refrescar el watchdog antes de borrar la flash (reinicio al terminar)'),
+]
 ok = falta = 0
 p = os.path.join(R, 'magna_fuente_grande.cpp')
 if os.path.exists(p) and open(p, encoding='utf-8').read() == ARCHIVO_FUENTE: print('ya aplicado: letra grande (archivo)'); ok += 1
