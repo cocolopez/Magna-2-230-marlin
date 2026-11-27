@@ -183,6 +183,32 @@ WIFI_M115 = """      case 115:
         ZERO(tempBuf);"""
 WIFI_M256 = """      case 257: magna_m257(); send_ok_to_wifi(); break;  // Magna2-230 (MagnAir): datos de calibración
 
+      case 265: {  // Magna2-230 (MagnAir): "M265 V<versión del módulo>" -> se muestra en Acerca de; contesta por qué arrancó la placa
+        const char * const vStr = strchr(mStr, 'V');
+        if (vStr) {
+          uint8_t i = 0;
+          for (const char *q = vStr + 1; *q && *q != '\\r' && *q != '\\n' && i < sizeof(magna_wifi_ver) - 1; q++) magna_wifi_ver[i++] = *q;
+          magna_wifi_ver[i] = 0;
+        }
+        char linea[40];
+        snprintf(linea, sizeof(linea), "MAGNA_RESET:%s\\r\\n", magna_reset_texto());
+        print_to_wifi(linea);
+        send_ok_to_wifi();
+      } break;
+
+      case 266: {  // Magna2-230 (MagnAir): progreso real de la impresión: "M266 P<%> B<bytes leídos del archivo>"
+        // El M27 de la pantalla MKS contesta el % de la barra de la pantalla de impresión (uiCfg.print_progress), que
+        // queda en 0 si la impresión empezó por WiFi o la pantalla está en otro menú. Esto sale de la SD.
+        char linea[40];
+        #if HAS_MEDIA
+          snprintf(linea, sizeof(linea), "M266 P%u B%lu\\r\\n", (unsigned)card.percentDone(), (unsigned long)card.getIndex());
+        #else
+          snprintf(linea, sizeof(linea), "M266 P0 B0\\r\\n");
+        #endif
+        print_to_wifi(linea);
+        send_ok_to_wifi();
+      } break;
+
       case 256: {  // Magna2-230 (MagnAir): luz de la pantalla. "M256" = estado, "B0" apaga, "B1".."B255" prende
         const char * const bStr = strchr(mStr, 'B');
         if (bStr) {
@@ -214,7 +240,12 @@ WIFI_INCLUDES_NUEVO = WIFI_INCLUDES_VIEJO + """#include "../../../module/planner
 #endif
 """
 WIFI_EXEC = 'static void wifi_gcode_exec(uint8_t * const cmd_line) {\n'
-WIFI_M257_FUNC = """// Magna2-230 (MagnAir): M257 = valores de calibración guardados, por WiFi.
+WIFI_M257_FUNC = """// Magna2-230: versión del módulo WiFi (M265, la dibuja Acerca de en draw_about.cpp) y causa del último reinicio
+extern char magna_wifi_ver[24];
+extern const char *magna_reset_texto();
+__attribute__((weak)) const char *magna_reset_texto() { return "?"; }  // si no está magna_extras.cpp (versión de prueba B)
+
+// Magna2-230 (MagnAir): M257 = valores de calibración guardados, por WiFi.
 static void magna_m257_linea(const char *grupo, const char * const claves[], const float valores[], const uint8_t decimales[], const uint8_t n) {
   char linea[160], num[20];
   snprintf(linea, sizeof(linea), "M257 %s", grupo);

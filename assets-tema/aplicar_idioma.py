@@ -242,7 +242,7 @@ cambiar('wifi_module.cpp', '        #define SENDFW "FIRMWARE_NAME:Robin_nano\\r\
         '        #else\n'
         '          #define MAGNA_PLACA_TXT "MAGNA_PLACA:1.3\\r\\n"\n'
         '        #endif\n'
-        '        #define SENDFW "FIRMWARE_NAME:Robin_nano\\r\\nMACHINE_TYPE:" CUSTOM_MACHINE_NAME "\\r\\n" MAGNA_PLACA_TXT  ' + MARCA + ': el modelo para MagnAir\n',
+        '        #define SENDFW "FIRMWARE_NAME:Robin_nano\\r\\nMACHINE_TYPE:" CUSTOM_MACHINE_NAME "\\r\\nMAGNA_FW:" MAGNA_FW_REV "\\r\\n" MAGNA_PLACA_TXT  ' + MARCA + ': el modelo y la versión para MagnAir\n',
         'M115 por WiFi: el modelo (MACHINE_TYPE)')
 
 if errores:

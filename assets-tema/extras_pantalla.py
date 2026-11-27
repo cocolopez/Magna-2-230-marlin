@@ -137,7 +137,7 @@ ARCHIVO_EXTRAS = ('/**\n * Magna2-230 (etapa 30): hora, capas, línea de informa
                   ' * (el mismo que compila la prueba de render) y abajo está lo que lo une con Marlin.\n */\n'
                   '#include "../../../inc/MarlinConfigPre.h"\n\n#if HAS_TFT_LVGL_UI\n\n'
                   '#include "draw_ui.h"\n#include <lvgl.h>\n#include <stdio.h>\n#include <string.h>\n'
-                  '#include "../../../gcode/parser.h"\n#include "../../../libs/buzzer.h"\n#include "../../../module/temperature.h"\n'
+                  '#include "../../../inc/MarlinConfig.h"\n#if ENABLED(BABYSTEPPING)\n  #include "../../../feature/babystep.h"\n  #include "../../../module/planner.h"\n  #if HAS_BED_PROBE\n    #include "../../../module/probe.h"\n  #endif\n#endif\n#include "../../../gcode/parser.h"\n#include "../../../libs/buzzer.h"\n#include "../../../module/temperature.h"\n'
                   '#include "../../../libs/W25Qxx.h"\n#include "SPI_TFT.h"\n#include "pic_manager.h"\n'
                   '#if ENABLED(PRINTCOUNTER)\n  #include "../../../module/printcounter.h"\n#endif\n'
                   '#if ENABLED(MKS_WIFI_MODULE)\n  #include "wifi_module.h"\n#endif\n\n'
@@ -152,11 +152,87 @@ void magna_m259() {
 static bool magna_imprimiendo();
 static void magna_tick33(const uint32_t ahora);
 
+// ---- Ajuste fino de Z (babystepping): el valor exacto que está puesto, en vivo -----------------------------------
+// La pantalla de MKS lo muestra arriba a la derecha pero no siempre se actualiza (o muestra otro número). Acá, cada
+// ~100 ms mientras está abierta la pantalla, se escribe el valor real: se "adopta" la etiqueta de arriba a la derecha de
+// esa pantalla si existe, y si no se dibuja una propia en la capa de arriba.
+//   - Con sonda (BABYSTEP_ZPROBE_OFFSET): el offset Z de la sonda (M851), que ya incluye lo ajustado.
+//   - Sin sonda: lo acumulado con el ajuste fino desde el último G28 (BABYSTEP_DISPLAY_TOTAL), en mm.
+#if ENABLED(BABYSTEPPING)
+  #ifndef BS_TOTAL_IND
+    #define BS_TOTAL_IND(A) 0
+  #endif
+  static lv_obj_t *mg_z_ajeno = NULL, *mg_z_propio = NULL, *mg_z_pantalla = NULL;
+  static char mg_z_ultimo[40] = "";
+
+  static void magna_z_texto(char *t, const size_t n) {
+    float v = 0;
+    const char *pre = "Ajuste Z: ";
+    #if ENABLED(BABYSTEP_ZPROBE_OFFSET) && HAS_BED_PROBE
+      v = probe.offset.z; pre = "Offset Z: ";
+    #elif ENABLED(BABYSTEP_DISPLAY_TOTAL)
+      v = babystep.axis_total[BS_TOTAL_IND(Z_AXIS)] * planner.mm_per_step[Z_AXIS];
+    #endif
+    char num[16];
+    dtostrf(v, 1, 3, num);
+    snprintf(t, n, "%s%s%s mm", pre, (num[0] == '-' || fabsf(v) < 0.0005f) ? "" : "+", num);
+  }
+
+  static bool magna_es_etiqueta(lv_obj_t *o) {
+    lv_obj_type_t tipo;
+    lv_obj_get_type(o, &tipo);
+    return tipo.type[0] && strcmp(tipo.type[0], "lv_label") == 0;
+  }
+
+  static void magna_z_tick(const uint32_t ahora) {
+    static uint32_t ultimo = 0;
+    const bool abierta = disp_state == BABYSTEP_UI;
+    if (!abierta) {
+      if (mg_z_propio && !lv_obj_get_hidden(mg_z_propio)) lv_obj_set_hidden(mg_z_propio, true);
+      mg_z_ajeno = NULL; mg_z_pantalla = NULL; mg_z_ultimo[0] = 0;
+      return;
+    }
+    if (ahora - ultimo < 100) return;
+    ultimo = ahora;
+    lv_obj_t *scr = lv_scr_act();
+    if (scr != mg_z_pantalla) {                      // pantalla nueva: buscar la etiqueta de Marlin (arriba a la derecha)
+      mg_z_pantalla = scr; mg_z_ajeno = NULL; mg_z_ultimo[0] = 0;
+      for (lv_obj_t *c = lv_obj_get_child(scr, (lv_obj_t *)NULL); c; c = lv_obj_get_child(scr, c))
+        if (magna_es_etiqueta(c) && lv_obj_get_y(c) < 40 && lv_obj_get_x(c) > 240) { mg_z_ajeno = c; break; }
+    }
+    char t[40];
+    magna_z_texto(t, sizeof(t));
+    if (!strcmp(t, mg_z_ultimo)) return;             // sin cambios: no redibujar
+    strcpy(mg_z_ultimo, t);
+    if (mg_z_ajeno) {
+      lv_label_set_text(mg_z_ajeno, t);
+      lv_obj_align(mg_z_ajeno, scr, LV_ALIGN_IN_TOP_RIGHT, -10, 8);
+      if (mg_z_propio) lv_obj_set_hidden(mg_z_propio, true);
+    }
+    else {
+      if (!mg_z_propio) {
+        static lv_style_t st;
+        lv_style_copy(&st, &lv_style_plain);
+        st.text.color = LV_COLOR_MAKE(0xFF, 0xFF, 0xFF);
+        mg_z_propio = lv_label_create(lv_layer_top(), (lv_obj_t *)NULL);
+        lv_obj_set_style(mg_z_propio, &st);
+        lv_obj_set_click(mg_z_propio, false);
+      }
+      lv_label_set_text(mg_z_propio, t);
+      lv_obj_align(mg_z_propio, (lv_obj_t *)NULL, LV_ALIGN_IN_TOP_RIGHT, -10, 8);
+      lv_obj_set_hidden(mg_z_propio, false);
+    }
+  }
+#else
+  static void magna_z_tick(const uint32_t) {}
+#endif
+
 // Una vez por segundo, desde LV_TASK_HANDLER: hora chica (todas las pantallas menos la principal) y
 // hora grande, fecha e íconos de la principal.
 void magna_tick() {
   static uint32_t ultimo = 0;
   const uint32_t ahora = millis();
+  magna_z_tick(ahora);  // ajuste fino de Z en vivo (cada ~100 ms, solo con esa pantalla abierta)
   if (ahora - ultimo < 1000) return;
   ultimo = ahora;
   const bool principal = disp_state == PRINT_READY_UI;
@@ -191,6 +267,7 @@ void magna_filamento_inicio() {
 }
 
 void magna_resumen_terminada(lv_obj_t *scr, lv_obj_t *titulo) {
+  hal.watchdog_refresh();  // al terminar ya se guardaron las estadísticas en la flash (lento): margen para dibujar el resumen
   const uint32_t seg = print_time.hours * 3600UL + print_time.minutes * 60UL + print_time.seconds;
   float mm = 0;
   #if ENABLED(PRINTCOUNTER)
@@ -198,25 +275,33 @@ void magna_resumen_terminada(lv_obj_t *scr, lv_obj_t *titulo) {
     if (mm < 0) mm = 0;
   #endif
   magna_resumen(scr, titulo, seg, mm);
+  hal.watchdog_refresh();
 }
 
-// Melodías con el zumbador de la placa (se pueden apagar desde MagnAir). La cola de notas es de 4:
-// cada melodía tiene como mucho 4 notas para no frenar la impresora.
-static void magna_melodia(const uint16_t (*notas)[2], const uint8_t n) {
+// Pitido con el zumbador de la placa (se puede apagar desde MagnAir: opción "Melodías" = sonido). El hardware
+// tiene un zumbador simple de un solo tono, así que no hay melodías: un pitido corto al terminar y otro
+// cuando pide poner filamento. Una sola nota en la cola del zumbador: no frena la impresora.
+static void magna_pitido() {
   #if HAS_BEEPER
     if (!magna_opcion(MAGNA_OP_MELODIAS)) return;
-    for (uint8_t i = 0; i < n; i++) BUZZ(notas[i][1], notas[i][0]);
-  #else
-    UNUSED(notas); UNUSED(n);
+    BUZZ(120, 1760);
   #endif
 }
-void magna_melodia_fin() {        // do-mi-sol-do
-  static const uint16_t notas[4][2] = { { 1047, 140 }, { 1319, 140 }, { 1568, 140 }, { 2093, 320 } };
-  magna_melodia(notas, 4);
-}
-void magna_melodia_atencion() {   // tres pitidos
-  static const uint16_t notas[4][2] = { { 1760, 120 }, { 0, 90 }, { 1760, 120 }, { 1760, 250 } };
-  magna_melodia(notas, 4);
+void magna_melodia_fin() { magna_pitido(); }        // un pitido corto
+void magna_melodia_atencion() { magna_pitido(); }   // un pitido corto
+
+// Por qué arrancó la placa la última vez (diagnóstico del reinicio al terminar una impresión). Se lee antes de que
+// Marlin limpie las banderas del reloj (setup() -> hal.clear_reset_source()), en el constructor global.
+static uint8_t magna_reset_fuente = 0;
+static struct MagnaResetInicio { MagnaResetInicio() { magna_reset_fuente = hal.get_reset_source(); } } magna_reset_inicio;
+const char *magna_reset_texto() {
+  // valores de RST_* de Marlin: 1 encendido, 2 botón/pin, 4 baja tensión, 8 watchdog, 16 JTAG, 32 software
+  if (magna_reset_fuente & 8)  return "WATCHDOG";
+  if (magna_reset_fuente & 32) return "SOFTWARE";
+  if (magna_reset_fuente & 4)  return "BROWNOUT";
+  if (magna_reset_fuente & 1)  return "ENCENDIDO";
+  if (magna_reset_fuente & 2)  return "PIN";
+  return "OTRO";
 }
 
 ''' + ANIM_GLUE + GLUE33 + '''

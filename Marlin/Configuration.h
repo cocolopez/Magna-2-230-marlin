@@ -129,6 +129,7 @@
 
 // Name displayed in the LCD "Ready" message and Info menu
 #define CUSTOM_MACHINE_NAME "Magna 2 230"  // Magna2-230
+#define MAGNA_FW_REV "2026.11.26"          // Magna2-230: versión del firmware (FWmagna2 <modelo> <fecha>); se ve en Acerca de y en MagnAir
 //#define CONFIGURABLE_MACHINE_NAME // Add G-code M550 to set/report the machine name
 
 // Printer's unique ID, used by some programs to differentiate between machines.

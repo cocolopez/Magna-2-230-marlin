@@ -62,7 +62,7 @@ Para que aparezcan las capas y los nombres de las piezas, Cura tiene que agregar
 
 ### Al terminar
 
-Un resumen con lo que tardó, el filamento que usó y lo que costó, y una melodía corta. También suena otra cuando pide cambiar el filamento.
+Un resumen con lo que tardó, el filamento que usó y lo que costó, y un pitido corto (el zumbador de la placa es de un solo tono, así que no hay melodías; se apaga desde MagnAir). También suena un pitido cuando pide cambiar el filamento.
 
 <p>
   <img src="docs-magna/capturas/resumen.png" width="49%" alt="Resumen al terminar">
